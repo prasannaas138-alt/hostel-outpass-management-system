@@ -8,10 +8,10 @@ import ProtectedRoute from './components/ProtectedRoute';
 import { useAuth } from './context/AuthContext';
 
 const roleHome = {
-  Student: '/student',
-  HOD: '/hod',
-  Sister: '/sister',
-  Warden: '/warden',
+  Student: '/student-dashboard',
+  HOD: '/hod-dashboard',
+  Sister: '/sister-dashboard',
+  Warden: '/warden-dashboard',
 };
 
 const HomeRedirect = () => {
@@ -31,37 +31,41 @@ export default function App() {
       <Route path="/login" element={<LoginPage />} />
 
       <Route
-        path="/student"
+        path="/student-dashboard"
         element={
           <ProtectedRoute roles={["Student"]}>
             <StudentDashboard />
           </ProtectedRoute>
         }
       />
+      <Route path="/student" element={<Navigate to="/student-dashboard" replace />} />
       <Route
-        path="/hod"
+        path="/hod-dashboard"
         element={
           <ProtectedRoute roles={["HOD"]}>
             <HodDashboard />
           </ProtectedRoute>
         }
       />
+      <Route path="/hod" element={<Navigate to="/hod-dashboard" replace />} />
       <Route
-        path="/sister"
+        path="/sister-dashboard"
         element={
           <ProtectedRoute roles={["Sister"]}>
             <SisterDashboard />
           </ProtectedRoute>
         }
       />
+      <Route path="/sister" element={<Navigate to="/sister-dashboard" replace />} />
       <Route
-        path="/warden"
+        path="/warden-dashboard"
         element={
           <ProtectedRoute roles={["Warden"]}>
             <WardenDashboard />
           </ProtectedRoute>
         }
       />
+      <Route path="/warden" element={<Navigate to="/warden-dashboard" replace />} />
 
       <Route path="*" element={<Navigate to="/" replace />} />
     </Routes>

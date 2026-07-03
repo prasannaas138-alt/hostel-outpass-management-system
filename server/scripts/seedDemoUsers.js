@@ -6,33 +6,33 @@ dotenv.config();
 
 const demoUsers = [
   {
-    name: 'Demo Student',
-    email: 'student@hostel.com',
-    password: 'Pass@123',
+    name: 'Test Student',
+    email: 'student@test.com',
+    password: '123456',
     role: 'Student',
     department: 'CSE',
     year: '2',
   },
   {
-    name: 'Demo HOD',
-    email: 'hod@hostel.com',
-    password: 'Pass@123',
+    name: 'Test HOD',
+    email: 'hod@test.com',
+    password: '123456',
     role: 'HOD',
     department: 'CSE',
     year: 'NA',
   },
   {
-    name: 'Demo Sister',
-    email: 'sister@hostel.com',
-    password: 'Pass@123',
+    name: 'Test Sister',
+    email: 'sister@test.com',
+    password: '123456',
     role: 'Sister',
     department: 'Hostel',
     year: 'NA',
   },
   {
-    name: 'Demo Warden',
-    email: 'warden@hostel.com',
-    password: 'Pass@123',
+    name: 'Test Warden',
+    email: 'warden@test.com',
+    password: '123456',
     role: 'Warden',
     department: 'Hostel',
     year: 'NA',
@@ -42,11 +42,25 @@ const demoUsers = [
 const seed = async () => {
   await connectDB();
 
+  const userCount = await User.countDocuments();
+
+  if (userCount > 0) {
+    console.log('Users already exist, ensuring requested test users are present');
+  }
+
   for (const userData of demoUsers) {
-    const existingUser = await User.findOne({ email: userData.email });
-    if (!existingUser) {
-      await User.create(userData);
+    const existingUser = await User.findOne({ email: userData.email, role: userData.role });
+
+    if (existingUser) {
+      existingUser.name = userData.name;
+      existingUser.password = userData.password;
+      existingUser.department = userData.department;
+      existingUser.year = userData.year;
+      await existingUser.save();
+      continue;
     }
+
+    await User.create(userData);
   }
 
   console.log('Demo users seeded successfully');

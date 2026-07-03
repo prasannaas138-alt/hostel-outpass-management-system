@@ -1,8 +1,9 @@
 import jwt from 'jsonwebtoken';
 import User from '../models/User.js';
 
-const createToken = (userId) => {
-  return jwt.sign({ userId }, process.env.JWT_SECRET, {
+const createToken = (userId, role) => {
+  // Include the role in the token so protected UI and API checks can reuse it.
+  return jwt.sign({ id: userId, role }, process.env.JWT_SECRET, {
     expiresIn: process.env.JWT_EXPIRES_IN || '7d',
   });
 };
@@ -50,25 +51,44 @@ export const registerUser = async (req, res, next) => {
 
 export const loginUser = async (req, res, next) => {
   try {
-    const { email, password } = req.body;
+    const { email, password, role } = req.body;
 
-    if (!email || !password) {
-      return res.status(400).json({ message: 'Email and password are required' });
+    console.log('Login request received:', {
+      email,
+      role,
+      hasPassword: Boolean(password),
+    });
+
+    if (!email || !password || !role) {
+      return res.status(400).json({ message: 'Email, password, and role are required' });
     }
 
-    const user = await User.findOne({ email: email.toLowerCase() }).select('+password');
+    const normalizedEmail = email.toLowerCase().trim();
+    const normalizedRole = String(role).trim();
+    const user = await User.findOne({
+      email: normalizedEmail,
+      role: normalizedRole,
+    }).select('+password');
+
+    console.log('User lookup result:', user ? { id: user._id, role: user.role, email: user.email } : null);
 
     if (!user) {
       return res.status(401).json({ message: 'Invalid credentials' });
     }
 
     const passwordMatches = await user.matchPassword(password);
+    console.log('Password match result:', passwordMatches);
+
     if (!passwordMatches) {
       return res.status(401).json({ message: 'Invalid credentials' });
     }
 
+    const token = createToken(user._id, user.role);
+    console.log('Token created for user:', user._id.toString());
+
     res.json({
-      token: createToken(user._id),
+      success: true,
+      token,
       user: sanitizeUser(user),
     });
   } catch (error) {

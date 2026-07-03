@@ -7,10 +7,10 @@ import LoadingState from '../components/LoadingState';
 import '../styles/auth.css';
 
 const roleHome = {
-  Student: '/student',
-  HOD: '/hod',
-  Sister: '/sister',
-  Warden: '/warden',
+  Student: '/student-dashboard',
+  HOD: '/hod-dashboard',
+  Sister: '/sister-dashboard',
+  Warden: '/warden-dashboard',
 };
 
 export default function LoginPage() {
@@ -33,9 +33,12 @@ export default function LoginPage() {
     setSuccess('');
 
     try {
+      console.log('Submitting login request:', { email: form.email, role: form.role });
       const { data } = await api.post('/auth/login', form);
 
-      if (data.user.role !== form.role) {
+      console.log('Login response:', data);
+
+      if (!data?.success || data.user.role !== form.role) {
         setError(`This account is registered as ${data.user.role}, not ${form.role}.`);
         return;
       }
@@ -99,6 +102,7 @@ export default function LoginPage() {
                 type={showPassword ? 'text' : 'password'}
                 value={form.password}
                 onChange={handleChange}
+                autoComplete="current-password"
                 required
               />
               <button
