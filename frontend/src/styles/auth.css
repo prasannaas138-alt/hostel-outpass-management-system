@@ -91,6 +91,30 @@
   background: rgba(15, 23, 42, 0.72);
 }
 
+.password-field {
+  position: relative;
+}
+
+.password-field input {
+  padding-right: 3rem;
+}
+
+.password-toggle {
+  position: absolute;
+  right: 0.7rem;
+  top: 50%;
+  transform: translateY(-50%);
+  border: 0;
+  background: transparent;
+  color: var(--muted);
+  padding: 0.2rem;
+  line-height: 1;
+}
+
+.password-toggle:hover {
+  color: var(--text);
+}
+
 @media (max-width: 900px) {
   .auth-card {
     grid-template-columns: 1fr;
