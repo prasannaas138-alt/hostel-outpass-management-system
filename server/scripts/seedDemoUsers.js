@@ -1,4 +1,5 @@
 import dotenv from 'dotenv';
+import mongoose from 'mongoose';
 import connectDB from '../config/db.js';
 import User from '../models/User.js';
 
@@ -39,8 +40,10 @@ const demoUsers = [
   },
 ];
 
-const seed = async () => {
-  await connectDB();
+export const seedDemoUsers = async () => {
+  if (mongoose.connection.readyState === 0) {
+    await connectDB();
+  }
 
   const userCount = await User.countDocuments();
 
@@ -64,10 +67,13 @@ const seed = async () => {
   }
 
   console.log('Demo users seeded successfully');
-  process.exit(0);
 };
 
-seed().catch((error) => {
-  console.error('Failed to seed demo users', error);
-  process.exit(1);
-});
+if (process.argv[1] && process.argv[1].endsWith('seedDemoUsers.js')) {
+  seedDemoUsers()
+    .then(() => process.exit(0))
+    .catch((error) => {
+      console.error('Failed to seed demo users', error);
+      process.exit(1);
+    });
+}

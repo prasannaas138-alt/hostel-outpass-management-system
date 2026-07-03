@@ -65,31 +65,34 @@ export const loginUser = async (req, res, next) => {
 
     const normalizedEmail = email.toLowerCase().trim();
     const normalizedRole = String(role).trim();
-    const user = await User.findOne({
-      email: normalizedEmail,
-      role: normalizedRole,
-    }).select('+password');
+    const userByEmail = await User.findOne({ email: normalizedEmail }).select('+password');
 
-    console.log('User lookup result:', user ? { id: user._id, role: user.role, email: user.email } : null);
+    console.log('User lookup result:', userByEmail ? { id: userByEmail._id, role: userByEmail.role, email: userByEmail.email } : null);
 
-    if (!user) {
+    if (!userByEmail) {
       return res.status(401).json({ message: 'Invalid credentials' });
     }
 
-    const passwordMatches = await user.matchPassword(password);
+    if (userByEmail.role !== normalizedRole) {
+      return res.status(403).json({
+        message: `This account belongs to the ${userByEmail.role} role. Please select ${userByEmail.role} in the role list.`,
+      });
+    }
+
+    const passwordMatches = await userByEmail.matchPassword(password);
     console.log('Password match result:', passwordMatches);
 
     if (!passwordMatches) {
       return res.status(401).json({ message: 'Invalid credentials' });
     }
 
-    const token = createToken(user._id, user.role);
-    console.log('Token created for user:', user._id.toString());
+    const token = createToken(userByEmail._id, userByEmail.role);
+    console.log('Token created for user:', userByEmail._id.toString());
 
     res.json({
       success: true,
       token,
-      user: sanitizeUser(user),
+      user: sanitizeUser(userByEmail),
     });
   } catch (error) {
     next(error);
