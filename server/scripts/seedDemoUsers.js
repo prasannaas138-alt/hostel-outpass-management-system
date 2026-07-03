@@ -52,11 +52,12 @@ export const seedDemoUsers = async () => {
   }
 
   for (const userData of demoUsers) {
-    const existingUser = await User.findOne({ email: userData.email, role: userData.role });
+    const existingUser = await User.findOne({ email: userData.email });
 
     if (existingUser) {
       existingUser.name = userData.name;
       existingUser.password = userData.password;
+      existingUser.role = userData.role;
       existingUser.department = userData.department;
       existingUser.year = userData.year;
       await existingUser.save();
