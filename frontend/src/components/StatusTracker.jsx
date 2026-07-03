@@ -11,6 +11,10 @@ const statusClass = (value) => {
     return 'not-required';
   }
 
+  if (value === 'Expired') {
+    return 'expired';
+  }
+
   return 'pending';
 };
 
@@ -42,6 +46,7 @@ export default function StatusTracker({ request }) {
           </div>
         </div>
         {request.status === 'Approved' ? <div className="tracker-approved">Outpass Approved</div> : null}
+        {request.status === 'Expired' ? <div className="tracker-expired">Outpass Expired</div> : null}
       </div>
     );
   }
@@ -73,6 +78,7 @@ export default function StatusTracker({ request }) {
       </div>
 
       {request.status === 'Approved' ? <div className="tracker-approved">Outpass Approved</div> : null}
+      {request.status === 'Expired' ? <div className="tracker-expired">Outpass Expired</div> : null}
       {request.status === 'Rejected' ? <div className="tracker-rejected">Rejected: {request.rejectionReason || 'No reason provided'}</div> : null}
     </div>
   );

@@ -61,27 +61,31 @@ const outpassSchema = new mongoose.Schema(
     },
     status: {
       type: String,
-      enum: ['Pending', 'Approved', 'Rejected'],
+      enum: ['Pending', 'Approved', 'Rejected', 'Expired'],
       default: 'Pending',
     },
     hodStatus: {
       type: String,
-      enum: ['Pending', 'Approved', 'Rejected', 'NotRequired'],
+      enum: ['Pending', 'Approved', 'Rejected', 'Expired', 'NotRequired'],
       default: 'NotRequired',
     },
     sisterStatus: {
       type: String,
-      enum: ['Pending', 'Approved', 'Rejected', 'NotRequired'],
+      enum: ['Pending', 'Approved', 'Rejected', 'Expired', 'NotRequired'],
       default: 'NotRequired',
     },
     wardenStatus: {
       type: String,
-      enum: ['Pending', 'Approved', 'Rejected', 'NotRequired'],
+      enum: ['Pending', 'Approved', 'Rejected', 'Expired', 'NotRequired'],
       default: 'Pending',
     },
     rejectionReason: {
       type: String,
       default: '',
+    },
+    expiresAt: {
+      type: Date,
+      default: null,
     },
     approvedBy: [approvalEntrySchema],
   },

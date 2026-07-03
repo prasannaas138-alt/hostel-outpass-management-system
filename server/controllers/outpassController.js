@@ -2,6 +2,37 @@ import Outpass from '../models/Outpass.js';
 import { isWeekend } from '../utils/date.js';
 import { createOutpassPdf } from '../utils/pdf.js';
 
+const ACTIVE_STATUSES = ['Pending', 'Approved'];
+
+const buildExpiresAt = (date, returnTime) => {
+  // The request expires at the end of the return time on the chosen day.
+  const [returnHour, returnMinute] = String(returnTime).split(':').map(Number);
+  const expiresAt = new Date(date);
+  expiresAt.setHours(returnHour, returnMinute, 0, 0);
+  return expiresAt;
+};
+
+const isExpiredNow = (outpass) => {
+  return Boolean(outpass.expiresAt && new Date(outpass.expiresAt).getTime() <= Date.now());
+};
+
+const refreshExpiredOutpasses = async () => {
+  const now = new Date();
+
+  // Only the overall status becomes Expired. The approval trail stays intact for history and PDFs.
+  await Outpass.updateMany(
+    {
+      status: { $in: ACTIVE_STATUSES },
+      expiresAt: { $lte: now },
+    },
+    {
+      $set: {
+        status: 'Expired',
+      },
+    }
+  );
+};
+
 const buildApprovedByEntry = (role, userId) => ({
   role,
   user: userId,
@@ -15,6 +46,7 @@ const resetForReapply = (outpass) => {
   outpass.wardenStatus = 'Pending';
   outpass.rejectionReason = '';
   outpass.approvedBy = [];
+  outpass.expiresAt = buildExpiresAt(outpass.date, outpass.returnTime);
 };
 
 export const createOutpass = async (req, res, next) => {
@@ -33,6 +65,18 @@ export const createOutpass = async (req, res, next) => {
       return res.status(400).json({ message: 'Outing requests are allowed only on weekends' });
     }
 
+    const existingActiveRequest = await Outpass.findOne({
+      studentId: req.user._id,
+      requestType,
+      status: { $in: ACTIVE_STATUSES },
+    });
+
+    if (existingActiveRequest) {
+      return res.status(400).json({
+        message: `You already have an active ${requestType.toLowerCase()} request. Wait for it to finish or expire before creating another one.`,
+      });
+    }
+
     const outpass = await Outpass.create({
       studentId: req.user._id,
       studentName: req.user.name,
@@ -46,6 +90,7 @@ export const createOutpass = async (req, res, next) => {
       hodStatus: requestType === 'Home' ? 'Pending' : 'NotRequired',
       sisterStatus: 'NotRequired',
       wardenStatus: 'Pending',
+      expiresAt: buildExpiresAt(date, returnTime),
     });
 
     res.status(201).json(outpass);
@@ -80,6 +125,7 @@ export const updateOutpass = async (req, res, next) => {
     outpass.department = req.user.department;
     outpass.year = req.user.year;
     outpass.studentName = req.user.name;
+    outpass.expiresAt = buildExpiresAt(outpass.date, outpass.returnTime);
 
     if (outpass.requestType === 'Outing' && !isWeekend(outpass.date)) {
       return res.status(400).json({ message: 'Outing requests are allowed only on weekends' });
@@ -96,6 +142,7 @@ export const updateOutpass = async (req, res, next) => {
 
 export const getMyOutpasses = async (req, res, next) => {
   try {
+    await refreshExpiredOutpasses();
     const outpasses = await Outpass.find({ studentId: req.user._id }).sort({ createdAt: -1 });
     res.json(outpasses);
   } catch (error) {
@@ -105,6 +152,7 @@ export const getMyOutpasses = async (req, res, next) => {
 
 export const getOutpassById = async (req, res, next) => {
   try {
+    await refreshExpiredOutpasses();
     const outpass = await Outpass.findById(req.params.id);
 
     if (!outpass) {
@@ -118,6 +166,11 @@ export const getOutpassById = async (req, res, next) => {
       return res.status(403).json({ message: 'Not allowed' });
     }
 
+    if (isExpiredNow(outpass) && outpass.status !== 'Rejected') {
+      outpass.status = 'Expired';
+      await outpass.save();
+    }
+
     res.json(outpass);
   } catch (error) {
     next(error);
@@ -126,6 +179,7 @@ export const getOutpassById = async (req, res, next) => {
 
 export const getPendingHodRequests = async (req, res, next) => {
   try {
+    await refreshExpiredOutpasses();
     const outpasses = await Outpass.find({
       requestType: 'Home',
       hodStatus: 'Pending',
@@ -140,6 +194,7 @@ export const getPendingHodRequests = async (req, res, next) => {
 
 export const getPendingSisterRequests = async (req, res, next) => {
   try {
+    await refreshExpiredOutpasses();
     const outpasses = await Outpass.find({
       requestType: 'Home',
       hodStatus: 'Approved',
@@ -155,8 +210,9 @@ export const getPendingSisterRequests = async (req, res, next) => {
 
 export const getPendingWardenRequests = async (req, res, next) => {
   try {
+    await refreshExpiredOutpasses();
     const outpasses = await Outpass.find({
-      status: 'Pending',
+      status: { $in: ACTIVE_STATUSES },
       $or: [
         {
           requestType: 'Outing',
@@ -179,10 +235,11 @@ export const getPendingWardenRequests = async (req, res, next) => {
 
 export const hodReviewOutpass = async (req, res, next) => {
   try {
+    await refreshExpiredOutpasses();
     const { action, rejectionReason } = req.body;
     const outpass = await Outpass.findById(req.params.id);
 
-    if (!outpass || outpass.requestType !== 'Home' || outpass.hodStatus !== 'Pending') {
+    if (!outpass || outpass.requestType !== 'Home' || outpass.hodStatus !== 'Pending' || isExpiredNow(outpass)) {
       return res.status(400).json({ message: 'Request is not available for HOD review' });
     }
 
@@ -208,10 +265,11 @@ export const hodReviewOutpass = async (req, res, next) => {
 
 export const sisterReviewOutpass = async (req, res, next) => {
   try {
+    await refreshExpiredOutpasses();
     const { action, rejectionReason } = req.body;
     const outpass = await Outpass.findById(req.params.id);
 
-    if (!outpass || outpass.requestType !== 'Home' || outpass.hodStatus !== 'Approved' || outpass.sisterStatus !== 'Pending') {
+    if (!outpass || outpass.requestType !== 'Home' || outpass.hodStatus !== 'Approved' || outpass.sisterStatus !== 'Pending' || isExpiredNow(outpass)) {
       return res.status(400).json({ message: 'Request is not available for Sister review' });
     }
 
@@ -236,12 +294,13 @@ export const sisterReviewOutpass = async (req, res, next) => {
 
 export const wardenReviewOutpass = async (req, res, next) => {
   try {
+    await refreshExpiredOutpasses();
     const { action, rejectionReason } = req.body;
     const outpass = await Outpass.findById(req.params.id);
 
     const allowedForWarden =
       outpass &&
-      outpass.status === 'Pending' &&
+      (outpass.status === 'Pending' || outpass.status === 'Approved') &&
       ((outpass.requestType === 'Outing' && outpass.wardenStatus === 'Pending') ||
         (outpass.requestType === 'Home' && outpass.hodStatus === 'Approved' && outpass.sisterStatus === 'Approved' && outpass.wardenStatus === 'Pending'));
 
@@ -252,6 +311,7 @@ export const wardenReviewOutpass = async (req, res, next) => {
     if (action === 'approve') {
       outpass.wardenStatus = 'Approved';
       outpass.status = 'Approved';
+      outpass.expiresAt = buildExpiresAt(outpass.date, outpass.returnTime);
       outpass.approvedBy.push(buildApprovedByEntry('Warden', req.user._id));
       await outpass.save();
       return res.json(outpass);
@@ -269,6 +329,7 @@ export const wardenReviewOutpass = async (req, res, next) => {
 
 export const downloadOutpassPdf = async (req, res, next) => {
   try {
+    await refreshExpiredOutpasses();
     const outpass = await Outpass.findById(req.params.id).populate('approvedBy.user', 'name role');
 
     if (!outpass) {
@@ -282,7 +343,7 @@ export const downloadOutpassPdf = async (req, res, next) => {
       return res.status(403).json({ message: 'Not allowed' });
     }
 
-    if (outpass.status !== 'Approved') {
+    if (!['Approved', 'Expired'].includes(outpass.status)) {
       return res.status(400).json({ message: 'PDF is available only after approval' });
     }
 
@@ -290,8 +351,7 @@ export const downloadOutpassPdf = async (req, res, next) => {
 
     res.setHeader('Content-Type', 'application/pdf');
     res.setHeader('Content-Disposition', `attachment; filename="outpass-${outpass._id}.pdf"`);
-    pdf.pipe(res);
-    pdf.end();
+    res.send(pdf);
   } catch (error) {
     next(error);
   }

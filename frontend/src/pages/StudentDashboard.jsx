@@ -231,7 +231,7 @@ export default function StudentDashboard() {
                   ) : null}
                   {request.status === 'Approved' ? (
                     <button className="link-button" type="button" onClick={() => handleDownload(request._id)}>
-                      Download PDF
+                      Download Outpass
                     </button>
                   ) : null}
                 </div>

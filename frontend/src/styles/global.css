@@ -160,3 +160,8 @@ label {
   background: rgba(251, 113, 133, 0.14);
   color: #ffadb9;
 }
+
+.status-expired {
+  background: rgba(148, 163, 184, 0.16);
+  color: #d6dbe4;
+}
