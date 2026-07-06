@@ -38,9 +38,16 @@ export default function LoginPage() {
 
       console.log('Login response:', data);
 
-      if (!data?.success || data.user.role !== form.role) {
-        setError(`This account is registered as ${data.user.role}, not ${form.role}.`);
+      if (!data?.success) {
+        setError('Login failed.');
         return;
+      }
+
+      if (data.user.role !== form.role) {
+        console.log('Role mismatch on frontend, using backend role for redirect:', {
+          selectedRole: form.role,
+          backendRole: data.user.role,
+        });
       }
 
       login(data);

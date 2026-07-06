@@ -41,7 +41,7 @@ export const registerUser = async (req, res, next) => {
 
     res.status(201).json({
       message: 'User created successfully',
-      token: createToken(user._id),
+      token: createToken(user._id, user.role),
       user: sanitizeUser(user),
     });
   } catch (error) {
@@ -74,8 +74,9 @@ export const loginUser = async (req, res, next) => {
     }
 
     if (userByEmail.role !== normalizedRole) {
-      return res.status(403).json({
-        message: `This account belongs to the ${userByEmail.role} role. Please select ${userByEmail.role} in the role list.`,
+      console.log('Role mismatch detected, continuing with stored role:', {
+        selectedRole: normalizedRole,
+        storedRole: userByEmail.role,
       });
     }
 
