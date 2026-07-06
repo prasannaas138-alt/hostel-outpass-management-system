@@ -53,6 +53,11 @@ userSchema.pre('save', async function hashPassword(next) {
 });
 
 userSchema.methods.matchPassword = async function matchPassword(enteredPassword) {
+  // Keep bcrypt comparison in one place so the login controller never uses plain-text checks.
+  return bcrypt.compare(enteredPassword, this.password);
+};
+
+userSchema.methods.comparePassword = async function comparePassword(enteredPassword) {
   return bcrypt.compare(enteredPassword, this.password);
 };
 

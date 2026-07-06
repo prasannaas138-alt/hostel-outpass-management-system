@@ -58,6 +58,8 @@ export const loginUser = async (req, res, next) => {
       role,
       hasPassword: Boolean(password),
     });
+    console.log('Email received:', email);
+    console.log('Role received:', role);
 
     if (!email || !password || !role) {
       return res.status(400).json({ message: 'Email, password, and role are required' });
@@ -65,11 +67,18 @@ export const loginUser = async (req, res, next) => {
 
     const normalizedEmail = email.toLowerCase().trim();
     const normalizedRole = String(role).trim();
-    const userByEmail = await User.findOne({ email: normalizedEmail }).select('+password');
+    const userByEmailAndRole = await User.findOne({ email: normalizedEmail, role: normalizedRole }).select('+password');
+    console.log(
+      'User lookup by email and role:',
+      userByEmailAndRole ? { id: userByEmailAndRole._id, role: userByEmailAndRole.role, email: userByEmailAndRole.email } : null
+    );
 
-    console.log('User lookup result:', userByEmail ? { id: userByEmail._id, role: userByEmail.role, email: userByEmail.email } : null);
+    const userByEmail = userByEmailAndRole || (await User.findOne({ email: normalizedEmail }).select('+password'));
+
+    console.log('User found:', userByEmail ? { id: userByEmail._id, role: userByEmail.role, email: userByEmail.email } : null);
 
     if (!userByEmail) {
+      console.log('Login failure: no user found for email');
       return res.status(401).json({ message: 'Invalid credentials' });
     }
 
@@ -81,14 +90,16 @@ export const loginUser = async (req, res, next) => {
     }
 
     const passwordMatches = await userByEmail.matchPassword(password);
-    console.log('Password match result:', passwordMatches);
+    console.log('Password comparison result:', passwordMatches);
 
     if (!passwordMatches) {
+      console.log('Login failure: password did not match');
       return res.status(401).json({ message: 'Invalid credentials' });
     }
 
     const token = createToken(userByEmail._id, userByEmail.role);
-    console.log('Token created for user:', userByEmail._id.toString());
+    console.log('JWT created:', token ? 'yes' : 'no');
+    console.log('Login success for user:', userByEmail.email);
 
     res.json({
       success: true,

@@ -45,6 +45,8 @@ export const seedDemoUsers = async () => {
     await connectDB();
   }
 
+  console.log('Running demo user seeding');
+
   const userCount = await User.countDocuments();
 
   if (userCount > 0) {

@@ -9,6 +9,7 @@ const PORT = process.env.PORT || 5000;
 
 connectDB()
   .then(() => {
+    console.log('Database connected');
     return seedDemoUsers();
   })
   .then(() => {
