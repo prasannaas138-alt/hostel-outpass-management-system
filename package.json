@@ -6,5 +6,8 @@
     "build": "npm --prefix frontend run build",
     "dev": "npm --prefix frontend run dev",
     "start": "npm --prefix server start"
+  },
+  "dependencies": {
+    "mongodb": "^7.4.0"
   }
 }
