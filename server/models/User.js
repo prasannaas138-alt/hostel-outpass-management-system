@@ -11,9 +11,10 @@ const userSchema = new mongoose.Schema(
     email: {
       type: String,
       required: true,
-      unique: true,
       lowercase: true,
       trim: true,
+      // NOTE: uniqueness is enforced via the compound index below (email + role),
+      // so the same email address can hold multiple roles (Student, HOD, Sister, Warden).
     },
     password: {
       type: String,
@@ -28,13 +29,13 @@ const userSchema = new mongoose.Schema(
     },
     department: {
       type: String,
-      required: true,
       trim: true,
+      default: '',
     },
     year: {
       type: String,
-      required: true,
       trim: true,
+      default: '',
     },
   },
   {
@@ -42,18 +43,22 @@ const userSchema = new mongoose.Schema(
   }
 );
 
-userSchema.pre('save', async function hashPassword(next) {
+// Allow the same email to be registered under different roles.
+// A person cannot have duplicate (email + role) combinations.
+userSchema.index({ email: 1, role: 1 }, { unique: true });
+
+userSchema.pre('save', async function hashPassword() {
+  // In Mongoose v7+ async pre-hooks must NOT call next().
+  // Simply return early or throw — Mongoose handles the rest.
   if (!this.isModified('password')) {
-    return next();
+    return;
   }
 
   const salt = await bcrypt.genSalt(10);
   this.password = await bcrypt.hash(this.password, salt);
-  return next();
 });
 
 userSchema.methods.matchPassword = async function matchPassword(enteredPassword) {
-  // Keep bcrypt comparison in one place so the login controller never uses plain-text checks.
   return bcrypt.compare(enteredPassword, this.password);
 };
 

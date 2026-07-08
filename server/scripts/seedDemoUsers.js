@@ -5,35 +5,37 @@ import User from '../models/User.js';
 
 dotenv.config();
 
+// Default demo accounts — these are only created if they don't already exist.
+// The server will NOT overwrite or reset existing users on startup.
 const demoUsers = [
   {
-    name: 'Test Student',
-    email: 'student@test.com',
-    password: '123456',
+    name: 'Demo Student',
+    email: 'student@demo.com',
+    password: 'demo1234',
     role: 'Student',
     department: 'CSE',
     year: '2',
   },
   {
-    name: 'Test HOD',
-    email: 'hod@test.com',
-    password: '123456',
+    name: 'Demo HOD',
+    email: 'hod@demo.com',
+    password: 'demo1234',
     role: 'HOD',
     department: 'CSE',
     year: 'NA',
   },
   {
-    name: 'Test Sister',
-    email: 'sister@test.com',
-    password: '123456',
+    name: 'Demo Sister',
+    email: 'sister@demo.com',
+    password: 'demo1234',
     role: 'Sister',
     department: 'Hostel',
     year: 'NA',
   },
   {
-    name: 'Test Warden',
-    email: 'warden@test.com',
-    password: '123456',
+    name: 'Demo Warden',
+    email: 'warden@demo.com',
+    password: 'demo1234',
     role: 'Warden',
     department: 'Hostel',
     year: 'NA',
@@ -45,38 +47,28 @@ export const seedDemoUsers = async () => {
     await connectDB();
   }
 
-  console.log('Running demo user seeding');
-
-  const userCount = await User.countDocuments();
-
-  if (userCount > 0) {
-    console.log('Users already exist, ensuring requested test users are present');
-  }
+  console.log('Checking demo accounts...');
 
   for (const userData of demoUsers) {
-    const existingUser = await User.findOne({ email: userData.email });
+    // Only create if this exact (email + role) pair does not yet exist.
+    // We never overwrite existing users so real registered accounts are safe.
+    const exists = await User.findOne({ email: userData.email, role: userData.role });
 
-    if (existingUser) {
-      existingUser.name = userData.name;
-      existingUser.password = userData.password;
-      existingUser.role = userData.role;
-      existingUser.department = userData.department;
-      existingUser.year = userData.year;
-      await existingUser.save();
-      continue;
+    if (!exists) {
+      await User.create(userData);
+      console.log(`Created demo account: ${userData.email} [${userData.role}]`);
     }
-
-    await User.create(userData);
   }
 
-  console.log('Demo users seeded successfully');
+  console.log('Demo account check complete.');
 };
 
+// Allow running directly: node scripts/seedDemoUsers.js
 if (process.argv[1] && process.argv[1].endsWith('seedDemoUsers.js')) {
   seedDemoUsers()
     .then(() => process.exit(0))
     .catch((error) => {
-      console.error('Failed to seed demo users', error);
+      console.error('Failed to seed demo users:', error);
       process.exit(1);
     });
 }
