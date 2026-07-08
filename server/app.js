@@ -13,7 +13,27 @@ const __dirname = path.dirname(__filename);
 const frontendDistPath = path.resolve(__dirname, '../frontend/dist');
 const indexHtmlPath = path.join(frontendDistPath, 'index.html');
 
-app.use(cors());
+// Allow requests from Vercel frontend and local dev.
+// Set FRONTEND_URL on Render to your Vercel app URL, e.g. https://my-app.vercel.app
+const allowedOrigins = [
+  'http://localhost:5173',
+  'http://localhost:4173',
+  process.env.FRONTEND_URL,
+].filter(Boolean);
+
+app.use(
+  cors({
+    origin: (origin, callback) => {
+      // Allow requests with no origin (Postman, curl, server-to-server)
+      if (!origin) return callback(null, true);
+      if (allowedOrigins.includes(origin) || process.env.NODE_ENV !== 'production') {
+        return callback(null, true);
+      }
+      return callback(new Error(`CORS blocked: ${origin}`));
+    },
+    credentials: true,
+  })
+);
 app.use(express.json({ limit: '2mb' }));
 
 if (fs.existsSync(frontendDistPath)) {

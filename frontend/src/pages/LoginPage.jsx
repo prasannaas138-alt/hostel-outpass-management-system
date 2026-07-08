@@ -1,5 +1,5 @@
 import { useState } from 'react';
-import { useNavigate } from 'react-router-dom';
+import { useNavigate, Link } from 'react-router-dom';
 import api from '../services/api';
 import { useAuth } from '../context/AuthContext';
 import AlertBanner from '../components/AlertBanner';
@@ -133,7 +133,12 @@ export default function LoginPage() {
 
           {loading ? <LoadingState label="Checking credentials..." /> : null}
 
-          <p className="hint">Use the seeded demo accounts or register custom users through the API.</p>
+          <p className="hint">
+            Don&apos;t have an account?{' '}
+            <Link to="/register" style={{ color: 'var(--accent)', textDecoration: 'underline' }}>
+              Register here
+            </Link>
+          </p>
         </form>
       </section>
     </main>
