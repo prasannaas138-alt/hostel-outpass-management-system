@@ -66,11 +66,13 @@ export default function RegisterPage() {
   return (
     <main className="auth-page">
       <header className="auth-header">
-        <h2 style={{ margin: 0, color: 'var(--text)', fontSize: '1.2rem', display: 'flex', alignItems: 'center', gap: '10px' }}>
+        <div className="auth-header-left"></div>
+        <div className="auth-header-center">
           <img src="/st-joseph-logo.png" alt="St. Joseph's University" className="auth-header-logo" onError={(e) => {e.target.style.display='none';}} />
-          <span style={{ fontWeight: 700, letterSpacing: '0.05em' }}>St. Joseph's University</span>
-        </h2>
-        <img src="/homs-logo.png" alt="H.O.M.S Logo" className="auth-header-brand" onError={(e) => {e.target.style.display='none';}} />
+        </div>
+        <div className="auth-header-right">
+          <img src="/homs-logo.png" alt="H.O.M.S Logo" className="auth-header-brand" onError={(e) => {e.target.style.display='none';}} />
+        </div>
       </header>
 
       <div className="auth-main">

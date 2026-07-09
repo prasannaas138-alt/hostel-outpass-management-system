@@ -5,8 +5,8 @@
 }
 
 .auth-header {
-  display: flex;
-  justify-content: space-between;
+  display: grid;
+  grid-template-columns: 1fr auto 1fr;
   align-items: center;
   padding: 1.5rem 3rem;
   background: rgba(11, 7, 21, 0.4);
@@ -17,10 +17,24 @@
   z-index: 10;
 }
 
+.auth-header-left {
+  /* Empty space for grid balance */
+}
+
+.auth-header-center {
+  display: flex;
+  justify-content: center;
+}
+
 .auth-header-logo {
   height: 60px;
   width: auto;
   object-fit: contain;
+}
+
+.auth-header-right {
+  display: flex;
+  justify-content: flex-end;
 }
 
 .auth-header-brand {
