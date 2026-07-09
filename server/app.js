@@ -15,10 +15,13 @@ const indexHtmlPath = path.join(frontendDistPath, 'index.html');
 
 // Allow requests from Vercel frontend and local dev.
 // Set FRONTEND_URL on Render to your Vercel app URL, e.g. https://my-app.vercel.app
+const rawFrontendUrl = process.env.FRONTEND_URL || '';
+const cleanFrontendUrl = rawFrontendUrl.endsWith('/') ? rawFrontendUrl.slice(0, -1) : rawFrontendUrl;
+
 const allowedOrigins = [
   'http://localhost:5173',
   'http://localhost:4173',
-  process.env.FRONTEND_URL,
+  cleanFrontendUrl,
 ].filter(Boolean);
 
 app.use(
