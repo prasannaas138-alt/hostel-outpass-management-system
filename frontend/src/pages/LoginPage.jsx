@@ -19,7 +19,6 @@ export default function LoginPage() {
   const [form, setForm] = useState({ email: '', password: '', role: 'Student' });
   const [error, setError] = useState('');
   const [loading, setLoading] = useState(false);
-  const [success, setSuccess] = useState('');
   const [showPassword, setShowPassword] = useState(false);
 
   const handleChange = (event) => {
@@ -30,31 +29,19 @@ export default function LoginPage() {
     event.preventDefault();
     setLoading(true);
     setError('');
-    setSuccess('');
 
     try {
-      console.log('Submitting login request:', { email: form.email, role: form.role });
       const { data } = await api.post('/auth/login', form);
 
-      console.log('Login response:', data);
-
       if (!data?.success) {
-        setError('Login failed.');
+        setError('Login failed. Please check your credentials.');
         return;
       }
 
-      if (data.user.role !== form.role) {
-        console.log('Role mismatch on frontend, using backend role for redirect:', {
-          selectedRole: form.role,
-          backendRole: data.user.role,
-        });
-      }
-
       login(data);
-      setSuccess('Login successful. Redirecting to dashboard...');
       navigate(roleHome[data.user.role], { replace: true });
     } catch (err) {
-      setError(err.response?.data?.message || 'Login failed');
+      setError(err.response?.data?.message || 'Login failed. Please try again.');
     } finally {
       setLoading(false);
     }
@@ -62,85 +49,113 @@ export default function LoginPage() {
 
   return (
     <main className="auth-page">
-      <section className="auth-card">
-        <div className="auth-copy">
-          <p className="eyebrow">Hostel Outpass Management System</p>
-          <h1>Simple, role-aware outpass control.</h1>
-          <p>
-            A single login sends students and staff into focused dashboards with approval flow tracking, rejection reasons, and downloadable PDFs.
-          </p>
-          <div className="auth-highlights">
-            <div>
-              <strong>Student</strong>
-              <span>Apply, track, reapply</span>
-            </div>
-            <div>
-              <strong>HOD / Sister</strong>
-              <span>Approve home requests in sequence</span>
-            </div>
-            <div>
-              <strong>Warden</strong>
-              <span>Final approval for outing and home</span>
+      <header className="auth-header">
+        {/* Replace with actual St. Joseph's logo if needed, using text fallback for now to match brand */}
+        <h2 style={{ margin: 0, color: 'var(--text)', fontSize: '1.2rem', display: 'flex', alignItems: 'center', gap: '10px' }}>
+          <img src="/st-joseph-logo.png" alt="St. Joseph's University" className="auth-header-logo" onError={(e) => {e.target.style.display='none';}} />
+          <span style={{ fontWeight: 700, letterSpacing: '0.05em' }}>St. Joseph's University</span>
+        </h2>
+        <img src="/homs-logo.png" alt="H.O.M.S Logo" className="auth-header-brand" onError={(e) => {e.target.style.display='none';}} />
+      </header>
+
+      <div className="auth-main">
+        <section className="auth-card">
+          <div className="auth-copy">
+            <p className="eyebrow">Welcome to St. Joseph's University Hostel Portal</p>
+            <h1>H.O.M.S</h1>
+            <h3 style={{ margin: '0 0 1rem 0', color: 'var(--text)', fontWeight: 500, fontSize: '1.4rem' }}>Hostel Outpass Management System</h3>
+            <p>
+              Apply for hostel permissions, track requests, and manage approvals with ease.
+            </p>
+            
+            <div className="auth-highlights">
+              <div>
+                <strong>🎓 Student</strong>
+                <span>Apply for hostel leave and track request status.</span>
+              </div>
+              <div>
+                <strong>👩‍🏫 HOD / Sister</strong>
+                <span>Review and manage student requests.</span>
+              </div>
+              <div>
+                <strong>🛡️ Warden</strong>
+                <span>Approve hostel outpasses and monitor requests.</span>
+              </div>
             </div>
           </div>
-        </div>
 
-        <form className="auth-form" onSubmit={handleSubmit}>
-          <label>
-            Role
-            <select name="role" value={form.role} onChange={handleChange} required>
-              <option value="Student">Student</option>
-              <option value="HOD">HOD</option>
-              <option value="Sister">Sister</option>
-              <option value="Warden">Warden</option>
-            </select>
-          </label>
-
-          <label>
-            Email
-            <input name="email" type="email" value={form.email} onChange={handleChange} required />
-          </label>
-
-          <label>
-            Password
-            <div className="password-field">
-              <input
-                name="password"
-                type={showPassword ? 'text' : 'password'}
-                value={form.password}
-                onChange={handleChange}
-                autoComplete="current-password"
-                required
-              />
-              <button
-                className="password-toggle"
-                type="button"
-                onClick={() => setShowPassword((current) => !current)}
-                aria-label={showPassword ? 'Hide password' : 'Show password'}
-                aria-pressed={showPassword}
-              >
-                {showPassword ? '🙈' : '👁️'}
-              </button>
+          <form className="auth-form" onSubmit={handleSubmit}>
+            <div style={{ marginBottom: '1rem' }}>
+              <h2 style={{ margin: '0 0 0.5rem', color: 'var(--text)', fontSize: '1.8rem' }}>Sign In</h2>
+              <p style={{ margin: 0, color: 'var(--muted)', fontSize: '0.95rem' }}>Access your university portal</p>
             </div>
-          </label>
 
-          <AlertBanner type="error" message={error} />
-          <AlertBanner type="success" message={success} />
+            <label>
+              Choose Your Position
+              <select name="role" value={form.role} onChange={handleChange} required>
+                <option value="Student">Student</option>
+                <option value="HOD">HOD</option>
+                <option value="Sister">Sister</option>
+                <option value="Warden">Warden</option>
+              </select>
+            </label>
 
-          <button className="primary-button" type="submit" disabled={loading}>
-            {loading ? 'Signing in...' : 'Login'}
-          </button>
+            <label>
+              Email Address
+              <input name="email" type="email" value={form.email} onChange={handleChange} placeholder="your.name@sjctni.edu" required />
+            </label>
 
-          {loading ? <LoadingState label="Checking credentials..." /> : null}
+            <label>
+              Password
+              <div className="password-field">
+                <input
+                  name="password"
+                  type={showPassword ? 'text' : 'password'}
+                  value={form.password}
+                  onChange={handleChange}
+                  autoComplete="current-password"
+                  placeholder="Enter your password"
+                  required
+                />
+                <button
+                  className="password-toggle"
+                  type="button"
+                  onClick={() => setShowPassword((current) => !current)}
+                  aria-label={showPassword ? 'Hide password' : 'Show password'}
+                  aria-pressed={showPassword}
+                >
+                  {showPassword ? (
+                    <svg width="20" height="20" viewBox="0 0 24 24" fill="none" stroke="currentColor" strokeWidth="2" strokeLinecap="round" strokeLinejoin="round"><path d="M17.94 17.94A10.07 10.07 0 0 1 12 20c-7 0-11-8-11-8a18.45 18.45 0 0 1 5.06-5.94M9.9 4.24A9.12 9.12 0 0 1 12 4c7 0 11 8 11 8a18.5 18.5 0 0 1-2.16 3.19m-6.72-1.07a3 3 0 1 1-4.24-4.24"></path><line x1="1" y1="1" x2="23" y2="23"></line></svg>
+                  ) : (
+                    <svg width="20" height="20" viewBox="0 0 24 24" fill="none" stroke="currentColor" strokeWidth="2" strokeLinecap="round" strokeLinejoin="round"><path d="M1 12s4-8 11-8 11 8 11 8-4 8-11 8-11-8-11-8z"></path><circle cx="12" cy="12" r="3"></circle></svg>
+                  )}
+                </button>
+              </div>
+            </label>
 
-          <p className="hint">
-            Don&apos;t have an account?{' '}
-            <Link to="/register" style={{ color: 'var(--accent)', textDecoration: 'underline' }}>
-              Register here
-            </Link>
-          </p>
-        </form>
-      </section>
+            <AlertBanner type="error" message={error} />
+
+            <button className="primary-button" type="submit" disabled={loading}>
+              {loading ? 'Authenticating...' : 'Secure Login'}
+            </button>
+
+            {loading ? <LoadingState label="Connecting to university server..." /> : null}
+
+            <p className="hint" style={{ marginTop: '1rem' }}>
+              Don&apos;t have an account?{' '}
+              <Link to="/register" style={{ color: 'var(--accent)', textDecoration: 'none', fontWeight: 600 }}>
+                Register here
+              </Link>
+            </p>
+          </form>
+        </section>
+      </div>
+
+      <footer className="auth-footer">
+        <h4 style={{ margin: '0 0 0.5rem 0', color: 'var(--text)' }}>H.O.M.S — Hostel Outpass Management System</h4>
+        <p>St. Joseph's University</p>
+        <p>Making hostel management simple and accessible.</p>
+      </footer>
     </main>
   );
 }

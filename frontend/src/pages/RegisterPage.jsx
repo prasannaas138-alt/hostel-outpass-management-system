@@ -65,129 +65,151 @@ export default function RegisterPage() {
 
   return (
     <main className="auth-page">
-      <section className="auth-card">
-        <div className="auth-copy">
-          <p className="eyebrow">Hostel Outpass Management System</p>
-          <h1>Create your account.</h1>
-          <p>
-            Register with your role to get started. Each role gives you a dedicated dashboard — students can apply for outpasses, while HOD, Sister, and Warden can review and approve them.
-          </p>
-          <div className="auth-highlights">
-            <div>
-              <strong>Student</strong>
-              <span>Apply, track &amp; reapply for outpass requests</span>
+      <header className="auth-header">
+        <h2 style={{ margin: 0, color: 'var(--text)', fontSize: '1.2rem', display: 'flex', alignItems: 'center', gap: '10px' }}>
+          <img src="/st-joseph-logo.png" alt="St. Joseph's University" className="auth-header-logo" onError={(e) => {e.target.style.display='none';}} />
+          <span style={{ fontWeight: 700, letterSpacing: '0.05em' }}>St. Joseph's University</span>
+        </h2>
+        <img src="/homs-logo.png" alt="H.O.M.S Logo" className="auth-header-brand" onError={(e) => {e.target.style.display='none';}} />
+      </header>
+
+      <div className="auth-main">
+        <section className="auth-card">
+          <div className="auth-copy">
+            <p className="eyebrow">Welcome to St. Joseph's University Hostel Portal</p>
+            <h1>H.O.M.S</h1>
+            <h3 style={{ margin: '0 0 1rem 0', color: 'var(--text)', fontWeight: 500, fontSize: '1.4rem' }}>Create Your Account</h3>
+            <p>
+              Join the official university portal to apply for hostel permissions, track requests, and manage approvals with ease.
+            </p>
+            
+            <div className="auth-highlights">
+              <div>
+                <strong>🎓 Student</strong>
+                <span>Apply for hostel leave and track request status.</span>
+              </div>
+              <div>
+                <strong>👩‍🏫 HOD / Sister</strong>
+                <span>Review and manage student requests.</span>
+              </div>
+              <div>
+                <strong>🛡️ Warden</strong>
+                <span>Approve hostel outpasses and monitor requests.</span>
+              </div>
             </div>
-            <div>
-              <strong>HOD / Sister</strong>
-              <span>Review and approve home leave requests</span>
-            </div>
-            <div>
-              <strong>Warden</strong>
-              <span>Final approval authority for all outpasses</span>
-            </div>
+
+            <p style={{ marginTop: '2.5rem', fontSize: '0.95rem' }}>
+              Already registered?{' '}
+              <Link to="/login" style={{ color: 'var(--accent)', textDecoration: 'none', fontWeight: 600 }}>
+                Sign in to your account
+              </Link>
+            </p>
           </div>
-          <p style={{ marginTop: '1.5rem' }}>
-            Already have an account?{' '}
-            <Link to="/login" style={{ color: 'var(--accent)', textDecoration: 'underline' }}>
-              Sign in here
-            </Link>
-          </p>
-        </div>
 
-        <form className="auth-form" onSubmit={handleSubmit}>
-          <label>
-            Full Name
-            <input
-              name="name"
-              type="text"
-              value={form.name}
-              onChange={handleChange}
-              placeholder="Enter your full name"
-              required
-            />
-          </label>
-
-          <label>
-            Role
-            <select name="role" value={form.role} onChange={handleChange} required>
-              <option value="Student">Student</option>
-              <option value="HOD">HOD</option>
-              <option value="Sister">Sister</option>
-              <option value="Warden">Warden</option>
-            </select>
-          </label>
-
-          <label>
-            Email Address
-            <input
-              name="email"
-              type="email"
-              value={form.email}
-              onChange={handleChange}
-              placeholder="your@email.com"
-              required
-            />
-          </label>
-
-          <label>
-            Password
-            <div className="password-field">
-              <input
-                name="password"
-                type={showPassword ? 'text' : 'password'}
-                value={form.password}
-                onChange={handleChange}
-                placeholder="Minimum 6 characters"
-                autoComplete="new-password"
-                required
-                minLength={6}
-              />
-              <button
-                className="password-toggle"
-                type="button"
-                onClick={() => setShowPassword((v) => !v)}
-                aria-label={showPassword ? 'Hide password' : 'Show password'}
-              >
-                {showPassword ? '🙈' : '👁️'}
-              </button>
+          <form className="auth-form" onSubmit={handleSubmit} style={{ padding: '2.5rem 3rem' }}>
+            <div style={{ marginBottom: '1rem' }}>
+              <h2 style={{ margin: '0 0 0.5rem', color: 'var(--text)', fontSize: '1.6rem' }}>Register</h2>
+              <p style={{ margin: 0, color: 'var(--muted)', fontSize: '0.95rem' }}>Set up your portal access</p>
             </div>
-          </label>
 
-          {isStudent && (
-            <>
-              <label>
-                Department
-                <select name="department" value={form.department} onChange={handleChange} required>
-                  {DEPARTMENTS.map((d) => (
-                    <option key={d} value={d}>{d}</option>
-                  ))}
-                </select>
-              </label>
+            <label>
+              Full Name
+              <input
+                name="name"
+                type="text"
+                value={form.name}
+                onChange={handleChange}
+                placeholder="Enter your full name"
+                required
+              />
+            </label>
 
-              <label>
-                Year of Study
-                <select name="year" value={form.year} onChange={handleChange} required>
-                  {YEARS.map((y) => (
-                    <option key={y} value={y}>Year {y}</option>
-                  ))}
-                </select>
-              </label>
-            </>
-          )}
+            <label>
+              Choose Your Position
+              <select name="role" value={form.role} onChange={handleChange} required>
+                <option value="Student">Student</option>
+                <option value="HOD">HOD</option>
+                <option value="Sister">Sister</option>
+                <option value="Warden">Warden</option>
+              </select>
+            </label>
 
-          <AlertBanner type="error" message={error} />
+            <label>
+              Email Address
+              <input
+                name="email"
+                type="email"
+                value={form.email}
+                onChange={handleChange}
+                placeholder="your.name@sjctni.edu"
+                required
+              />
+            </label>
 
-          <button className="primary-button" type="submit" disabled={loading}>
-            {loading ? 'Creating Account...' : 'Create Account'}
-          </button>
+            <label>
+              Create Password
+              <div className="password-field">
+                <input
+                  name="password"
+                  type={showPassword ? 'text' : 'password'}
+                  value={form.password}
+                  onChange={handleChange}
+                  placeholder="Minimum 6 characters"
+                  autoComplete="new-password"
+                  required
+                  minLength={6}
+                />
+                <button
+                  className="password-toggle"
+                  type="button"
+                  onClick={() => setShowPassword((v) => !v)}
+                  aria-label={showPassword ? 'Hide password' : 'Show password'}
+                >
+                  {showPassword ? (
+                    <svg width="20" height="20" viewBox="0 0 24 24" fill="none" stroke="currentColor" strokeWidth="2" strokeLinecap="round" strokeLinejoin="round"><path d="M17.94 17.94A10.07 10.07 0 0 1 12 20c-7 0-11-8-11-8a18.45 18.45 0 0 1 5.06-5.94M9.9 4.24A9.12 9.12 0 0 1 12 4c7 0 11 8 11 8a18.5 18.5 0 0 1-2.16 3.19m-6.72-1.07a3 3 0 1 1-4.24-4.24"></path><line x1="1" y1="1" x2="23" y2="23"></line></svg>
+                  ) : (
+                    <svg width="20" height="20" viewBox="0 0 24 24" fill="none" stroke="currentColor" strokeWidth="2" strokeLinecap="round" strokeLinejoin="round"><path d="M1 12s4-8 11-8 11 8 11 8-4 8-11 8-11-8-11-8z"></path><circle cx="12" cy="12" r="3"></circle></svg>
+                  )}
+                </button>
+              </div>
+            </label>
 
-          {loading && <LoadingState label="Setting up your account..." />}
+            {isStudent && (
+              <div style={{ display: 'grid', gridTemplateColumns: '1fr 1fr', gap: '1rem' }}>
+                <label>
+                  Department
+                  <select name="department" value={form.department} onChange={handleChange} required>
+                    {DEPARTMENTS.map((d) => (
+                      <option key={d} value={d}>{d}</option>
+                    ))}
+                  </select>
+                </label>
 
-          <p className="hint">
-            Your account is tied to your selected role. You can register the same email under multiple roles if needed.
-          </p>
-        </form>
-      </section>
+                <label>
+                  Year of Study
+                  <select name="year" value={form.year} onChange={handleChange} required>
+                    {YEARS.map((y) => (
+                      <option key={y} value={y}>Year {y}</option>
+                    ))}
+                  </select>
+                </label>
+              </div>
+            )}
+
+            <AlertBanner type="error" message={error} />
+
+            <button className="primary-button" type="submit" disabled={loading}>
+              {loading ? 'Creating Account...' : 'Create Account'}
+            </button>
+          </form>
+        </section>
+      </div>
+
+      <footer className="auth-footer">
+        <h4 style={{ margin: '0 0 0.5rem 0', color: 'var(--text)' }}>H.O.M.S — Hostel Outpass Management System</h4>
+        <p>St. Joseph's University</p>
+        <p>Making hostel management simple and accessible.</p>
+      </footer>
     </main>
   );
 }
