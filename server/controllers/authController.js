@@ -1,4 +1,5 @@
 import jwt from 'jsonwebtoken';
+import bcrypt from 'bcryptjs';
 import User from '../models/User.js';
 
 const createToken = (userId, role) => {
@@ -11,56 +12,78 @@ const sanitizeUser = (user) => ({
   _id: user._id,
   name: user.name,
   email: user.email,
+  registerNumber: user.registerNumber,
   role: user.role,
   department: user.department,
   year: user.year,
+  hostelBlock: user.hostelBlock,
+  roomNumber: user.roomNumber,
 });
+
+const emailPattern = /^[^\s@]+@[^\s@]+\.[^\s@]+$/;
 
 export const registerUser = async (req, res, next) => {
   try {
-    const { name, email, password, role, department, year } = req.body;
+    const {
+      name,
+      email,
+      registerNumber,
+      department,
+      hostelBlock,
+      roomNumber,
+      password,
+      confirmPassword,
+      role = 'Student',
+    } = req.body;
 
-    if (!name || !email || !password || !role) {
-      return res.status(400).json({ message: 'Name, email, password and role are required' });
+    if (!name || !email || !registerNumber || !department || !hostelBlock || !roomNumber || !password || !confirmPassword) {
+      return res.status(400).json({ message: 'All fields are required.' });
     }
 
     const validRoles = ['Student', 'HOD', 'Sister', 'Warden'];
     if (!validRoles.includes(role)) {
-      return res.status(400).json({ message: 'Invalid role. Must be Student, HOD, Sister, or Warden' });
+      return res.status(400).json({ message: 'Invalid role.' });
     }
 
-    // Check if this exact (email + role) combination already exists
-    const existingUser = await User.findOne({
-      email: email.toLowerCase().trim(),
-      role,
-    });
+    const normalizedEmail = email.toLowerCase().trim();
+    if (!emailPattern.test(normalizedEmail)) {
+      return res.status(400).json({ message: 'Invalid email address.' });
+    }
+
+    if (password.length < 8) {
+      return res.status(400).json({ message: 'Password must contain at least 8 characters.' });
+    }
+
+    if (password !== confirmPassword) {
+      return res.status(400).json({ message: 'Passwords do not match.' });
+    }
+
+    const existingUser = await User.findOne({ email: normalizedEmail });
 
     if (existingUser) {
-      return res.status(400).json({
-        message: `An account with this email already exists for the role: ${role}`,
-      });
+      return res.status(400).json({ message: 'Email already exists.' });
     }
 
     const user = await User.create({
       name,
-      email,
+      email: normalizedEmail,
+      registerNumber,
+      department,
+      hostelBlock,
+      roomNumber,
       password,
       role,
-      department: department || (role === 'Student' ? '' : 'General'),
-      year: year || (role === 'Student' ? '1' : 'NA'),
+      year: role === 'Student' ? '1' : 'NA',
     });
 
     res.status(201).json({
-      message: 'Account created successfully',
-      token: createToken(user._id, user.role),
+      message: 'Registration successful.',
       user: sanitizeUser(user),
     });
   } catch (error) {
     // MongoDB duplicate key error
     if (error.code === 11000) {
-      return res.status(400).json({
-        message: 'An account with this email and role combination already exists',
-      });
+      return res.status(400).json({ message: 'Email already exists.' });
     }
     next(error);
   }
@@ -70,10 +93,8 @@ export const loginUser = async (req, res, next) => {
   try {
     const { email, password, role } = req.body;
 
-    console.log('Login attempt:', { email, role });
-
     if (!email || !password || !role) {
-      return res.status(400).json({ message: 'Email, password, and role are required' });
+      return res.status(400).json({ message: 'Email, password, and role are required.' });
     }
 
     const normalizedEmail = email.toLowerCase().trim();
@@ -85,25 +106,19 @@ export const loginUser = async (req, res, next) => {
       role: normalizedRole,
     }).select('+password');
 
-    console.log('User found:', user ? { id: user._id, email: user.email, role: user.role } : null);
-
     if (!user) {
-      console.log('Login failure: no account found for this email + role combination');
       return res.status(401).json({
-        message: `No ${normalizedRole} account found for this email address. Please check your role or register first.`,
+        message: 'Invalid email address or password.',
       });
     }
 
-    const passwordMatches = await user.matchPassword(password);
-    console.log('Password match:', passwordMatches);
+    const passwordMatches = await bcrypt.compare(password, user.password);
 
     if (!passwordMatches) {
-      console.log('Login failure: password did not match');
-      return res.status(401).json({ message: 'Incorrect password' });
+      return res.status(401).json({ message: 'Invalid email address or password.' });
     }
 
     const token = createToken(user._id, user.role);
-    console.log('Login success:', user.email, '/', user.role);
 
     res.json({
       success: true,

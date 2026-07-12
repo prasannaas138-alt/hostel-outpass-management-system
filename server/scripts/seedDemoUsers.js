@@ -11,33 +11,45 @@ const demoUsers = [
   {
     name: 'Demo Student',
     email: 'student@demo.com',
+    registerNumber: 'STU1001',
+    department: 'CSE',
+    hostelBlock: 'A Block',
+    roomNumber: 'A-101',
     password: 'demo1234',
     role: 'Student',
-    department: 'CSE',
     year: '2',
   },
   {
     name: 'Demo HOD',
     email: 'hod@demo.com',
+    registerNumber: 'HOD1001',
+    department: 'CSE',
+    hostelBlock: 'Staff Quarters',
+    roomNumber: 'SQ-01',
     password: 'demo1234',
     role: 'HOD',
-    department: 'CSE',
     year: 'NA',
   },
   {
     name: 'Demo Sister',
     email: 'sister@demo.com',
+    registerNumber: 'SIS1001',
+    department: 'Hostel',
+    hostelBlock: 'Girls Block',
+    roomNumber: 'GB-01',
     password: 'demo1234',
     role: 'Sister',
-    department: 'Hostel',
     year: 'NA',
   },
   {
     name: 'Demo Warden',
     email: 'warden@demo.com',
+    registerNumber: 'WDR1001',
+    department: 'Hostel',
+    hostelBlock: 'Admin Block',
+    roomNumber: 'AB-01',
     password: 'demo1234',
     role: 'Warden',
-    department: 'Hostel',
     year: 'NA',
   },
 ];
@@ -50,9 +62,9 @@ export const seedDemoUsers = async () => {
   console.log('Checking demo accounts...');
 
   for (const userData of demoUsers) {
-    // Only create if this exact (email + role) pair does not yet exist.
+    // Only create if this email does not yet exist.
     // We never overwrite existing users so real registered accounts are safe.
-    const exists = await User.findOne({ email: userData.email, role: userData.role });
+    const exists = await User.findOne({ email: userData.email });
 
     if (!exists) {
       await User.create(userData);

@@ -13,24 +13,38 @@ const userSchema = new mongoose.Schema(
       required: true,
       lowercase: true,
       trim: true,
-      // NOTE: uniqueness is enforced via the compound index below (email + role),
-      // so the same email address can hold multiple roles (Student, HOD, Sister, Warden).
+      unique: true,
+    },
+    registerNumber: {
+      type: String,
+      required: true,
+      trim: true,
+    },
+    department: {
+      type: String,
+      required: true,
+      trim: true,
+    },
+    hostelBlock: {
+      type: String,
+      required: true,
+      trim: true,
+    },
+    roomNumber: {
+      type: String,
+      required: true,
+      trim: true,
     },
     password: {
       type: String,
       required: true,
-      minlength: 6,
       select: false,
     },
     role: {
       type: String,
       required: true,
       enum: ['Student', 'HOD', 'Sister', 'Warden'],
-    },
-    department: {
-      type: String,
-      trim: true,
-      default: '',
+      default: 'Student',
     },
     year: {
       type: String,
@@ -43,9 +57,7 @@ const userSchema = new mongoose.Schema(
   }
 );
 
-// Allow the same email to be registered under different roles.
-// A person cannot have duplicate (email + role) combinations.
-userSchema.index({ email: 1, role: 1 }, { unique: true });
+userSchema.index({ email: 1 }, { unique: true });
 
 userSchema.pre('save', async function hashPassword() {
   // In Mongoose v7+ async pre-hooks must NOT call next().

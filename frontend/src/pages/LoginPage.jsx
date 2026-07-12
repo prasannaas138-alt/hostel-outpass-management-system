@@ -1,5 +1,5 @@
 import { useState } from 'react';
-import { useNavigate, Link } from 'react-router-dom';
+import { useLocation, useNavigate, Link } from 'react-router-dom';
 import api from '../services/api';
 import { useAuth } from '../context/AuthContext';
 import AlertBanner from '../components/AlertBanner';
@@ -15,11 +15,13 @@ const roleHome = {
 
 export default function LoginPage() {
   const navigate = useNavigate();
+  const location = useLocation();
   const { login } = useAuth();
   const [form, setForm] = useState({ email: '', password: '', role: 'Student' });
   const [error, setError] = useState('');
   const [loading, setLoading] = useState(false);
   const [showPassword, setShowPassword] = useState(false);
+  const successMessage = location.state?.successMessage || '';
 
   const handleChange = (event) => {
     setForm((current) => ({ ...current, [event.target.name]: event.target.value }));
@@ -135,17 +137,22 @@ export default function LoginPage() {
             </label>
 
             <AlertBanner type="error" message={error} />
+            <AlertBanner type="success" message={successMessage} />
 
             <button className="primary-button" type="submit" disabled={loading}>
               {loading ? 'Authenticating...' : 'Secure Login'}
             </button>
+
+            <Link to="/register" className="secondary-button auth-secondary-cta">
+              Register Here
+            </Link>
 
             {loading ? <LoadingState label="Connecting to university server..." /> : null}
 
             <p className="hint" style={{ marginTop: '1rem' }}>
               Don&apos;t have an account?{' '}
               <Link to="/register" style={{ color: 'var(--accent)', textDecoration: 'none', fontWeight: 600 }}>
-                Register here
+                create one now
               </Link>
             </p>
           </form>
