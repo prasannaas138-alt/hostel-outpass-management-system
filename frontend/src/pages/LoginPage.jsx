@@ -140,7 +140,7 @@ export default function LoginPage() {
             <AlertBanner type="success" message={successMessage} />
 
             <button className="primary-button" type="submit" disabled={loading}>
-              {loading ? 'Authenticating...' : 'Secure Login'}
+              {loading ? 'Authenticating...' : 'Sign In'}
             </button>
 
             <Link to="/register" className="secondary-button auth-secondary-cta">
@@ -162,7 +162,7 @@ export default function LoginPage() {
       <footer className="auth-footer">
         <h4 style={{ margin: '0 0 0.5rem 0', color: 'var(--text)' }}>H.O.M.S — Hostel Outpass Management System</h4>
         <p>St. Joseph's University</p>
-        <p>Making hostel management simple and accessible.</p>
+        <p>Making hostel outpass management simple and accessible.</p>
       </footer>
     </main>
   );

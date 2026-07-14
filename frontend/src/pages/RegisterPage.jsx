@@ -6,7 +6,6 @@ import LoadingState from '../components/LoadingState';
 import '../styles/auth.css';
 
 const DEPARTMENTS = ['CSE', 'ECE', 'EEE', 'MECH', 'CIVIL', 'IT', 'MBA', 'MCA', 'BBA', 'BCom', 'BA', 'Other'];
-const HOSTEL_BLOCKS = ['A Block', 'B Block', 'C Block', 'Girls Block', 'Boys Block', 'Admin Block', 'Staff Quarters'];
 const EMAIL_PATTERN = /^[^\s@]+@[^\s@]+\.[^\s@]+$/;
 
 export default function RegisterPage() {
@@ -16,7 +15,6 @@ export default function RegisterPage() {
     email: '',
     registerNumber: '',
     department: 'CSE',
-    hostelBlock: 'A Block',
     roomNumber: '',
     password: '',
     confirmPassword: '',
@@ -62,7 +60,6 @@ export default function RegisterPage() {
         email: normalizedEmail,
         registerNumber: form.registerNumber,
         department: form.department,
-        hostelBlock: form.hostelBlock,
         roomNumber: form.roomNumber,
         password: form.password,
         confirmPassword: form.confirmPassword,
@@ -183,30 +180,17 @@ export default function RegisterPage() {
               </select>
             </label>
 
-            <div className="auth-form-grid">
-              <label>
-                Hostel Block
-                <select name="hostelBlock" value={form.hostelBlock} onChange={handleChange} required>
-                  {HOSTEL_BLOCKS.map((block) => (
-                    <option key={block} value={block}>
-                      {block}
-                    </option>
-                  ))}
-                </select>
-              </label>
-
-              <label>
-                Room Number
-                <input
-                  name="roomNumber"
-                  type="text"
-                  value={form.roomNumber}
-                  onChange={handleChange}
-                  placeholder="Room / bed number"
-                  required
-                />
-              </label>
-            </div>
+            <label>
+              Room Number
+              <input
+                name="roomNumber"
+                type="text"
+                value={form.roomNumber}
+                onChange={handleChange}
+                placeholder="Room / bed number"
+                required
+              />
+            </label>
 
             <label>
               Create Password
@@ -255,7 +239,7 @@ export default function RegisterPage() {
 
             <div className="auth-info-strip">
               <span>Staff accounts are managed by the college administration.</span>
-              <span>Your password is stored securely with bcrypt hashing.</span>
+              
             </div>
 
             <AlertBanner type="error" message={error} />

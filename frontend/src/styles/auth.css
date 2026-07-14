@@ -257,6 +257,15 @@
   color: var(--accent);
 }
 
+.auth-form select {
+  color: var(--primary-light);
+  font-weight: 600;
+}
+
+.auth-form select option {
+  color: #1b102d;
+}
+
 .auth-footer {
   text-align: center;
   padding: 2rem;
