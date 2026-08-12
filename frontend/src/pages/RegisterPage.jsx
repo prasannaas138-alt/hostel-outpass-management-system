@@ -157,28 +157,30 @@ export default function RegisterPage() {
               />
             </label>
 
-            <label>
-              Register Number
-              <input
-                name="registerNumber"
-                type="text"
-                value={form.registerNumber}
-                onChange={handleChange}
-                placeholder="Enter your register number"
-                required
-              />
-            </label>
+            <div className="auth-form-grid">
+              <label>
+                Register Number
+                <input
+                  name="registerNumber"
+                  type="text"
+                  value={form.registerNumber}
+                  onChange={handleChange}
+                  placeholder="Enter your register number"
+                  required
+                />
+              </label>
 
-            <label>
-              Department
-              <select name="department" value={form.department} onChange={handleChange} required>
-                {DEPARTMENTS.map((department) => (
-                  <option key={department} value={department}>
-                    {department}
-                  </option>
-                ))}
-              </select>
-            </label>
+              <label>
+                Department
+                <select name="department" value={form.department} onChange={handleChange} required>
+                  {DEPARTMENTS.map((department) => (
+                    <option key={department} value={department}>
+                      {department}
+                    </option>
+                  ))}
+                </select>
+              </label>
+            </div>
 
             <label>
               Room Number
@@ -192,54 +194,56 @@ export default function RegisterPage() {
               />
             </label>
 
-            <label>
-              Create Password
-              <div className="password-field">
-                <input
-                  name="password"
-                  type={showPassword ? 'text' : 'password'}
-                  value={form.password}
-                  onChange={handleChange}
-                  placeholder="At least 8 characters"
-                  autoComplete="new-password"
-                  required
-                  minLength={8}
-                />
-                <button
-                  className="password-toggle"
-                  type="button"
-                  onClick={() => setShowPassword((v) => !v)}
-                  aria-label={showPassword ? 'Hide password' : 'Show password'}
-                  aria-pressed={showPassword}
-                >
-                  {showPassword ? (
-                    <svg width="20" height="20" viewBox="0 0 24 24" fill="none" stroke="currentColor" strokeWidth="2" strokeLinecap="round" strokeLinejoin="round"><path d="M17.94 17.94A10.07 10.07 0 0 1 12 20c-7 0-11-8-11-8a18.45 18.45 0 0 1 5.06-5.94M9.9 4.24A9.12 9.12 0 0 1 12 4c7 0 11 8 11 8a18.5 18.5 0 0 1-2.16 3.19m-6.72-1.07a3 3 0 1 1-4.24-4.24"></path><line x1="1" y1="1" x2="23" y2="23"></line></svg>
-                  ) : (
-                    <svg width="20" height="20" viewBox="0 0 24 24" fill="none" stroke="currentColor" strokeWidth="2" strokeLinecap="round" strokeLinejoin="round"><path d="M1 12s4-8 11-8 11 8 11 8-4 8-11 8-11-8-11-8z"></path><circle cx="12" cy="12" r="3"></circle></svg>
-                  )}
-                </button>
-              </div>
-            </label>
+            <div className="auth-form-grid">
+              <label>
+                Create Password
+                <div className="password-field">
+                  <input
+                    name="password"
+                    type={showPassword ? 'text' : 'password'}
+                    value={form.password}
+                    onChange={handleChange}
+                    placeholder="At least 8 characters"
+                    autoComplete="new-password"
+                    required
+                    minLength={8}
+                  />
+                  <button
+                    className="password-toggle"
+                    type="button"
+                    onClick={() => setShowPassword((v) => !v)}
+                    aria-label={showPassword ? 'Hide password' : 'Show password'}
+                    aria-pressed={showPassword}
+                  >
+                    {showPassword ? (
+                      <svg width="20" height="20" viewBox="0 0 24 24" fill="none" stroke="currentColor" strokeWidth="2" strokeLinecap="round" strokeLinejoin="round"><path d="M17.94 17.94A10.07 10.07 0 0 1 12 20c-7 0-11-8-11-8a18.45 18.45 0 0 1 5.06-5.94M9.9 4.24A9.12 9.12 0 0 1 12 4c7 0 11 8 11 8a18.5 18.5 0 0 1-2.16 3.19m-6.72-1.07a3 3 0 1 1-4.24-4.24"></path><line x1="1" y1="1" x2="23" y2="23"></line></svg>
+                    ) : (
+                      <svg width="20" height="20" viewBox="0 0 24 24" fill="none" stroke="currentColor" strokeWidth="2" strokeLinecap="round" strokeLinejoin="round"><path d="M1 12s4-8 11-8 11 8 11 8-4 8-11 8-11-8-11-8z"></path><circle cx="12" cy="12" r="3"></circle></svg>
+                    )}
+                  </button>
+                </div>
+              </label>
 
-            <label>
-              Confirm Password
-              <div className="password-field">
-                <input
-                  name="confirmPassword"
-                  type={showPassword ? 'text' : 'password'}
-                  value={form.confirmPassword}
-                  onChange={handleChange}
-                  placeholder="Re-enter your password"
-                  autoComplete="new-password"
-                  required
-                  minLength={8}
-                />
-              </div>
-            </label>
+              <label>
+                Confirm Password
+                <div className="password-field">
+                  <input
+                    name="confirmPassword"
+                    type={showPassword ? 'text' : 'password'}
+                    value={form.confirmPassword}
+                    onChange={handleChange}
+                    placeholder="Re-enter your password"
+                    autoComplete="new-password"
+                    required
+                    minLength={8}
+                  />
+                </div>
+              </label>
+            </div>
 
             <div className="auth-info-strip">
+              <span>Notice:</span>
               <span>Staff accounts are managed by the college administration.</span>
-              
             </div>
 
             <AlertBanner type="error" message={error} />

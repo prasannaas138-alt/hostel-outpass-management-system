@@ -258,12 +258,13 @@
 }
 
 .auth-form select {
-  color: var(--primary-light);
+  color: var(--text);
   font-weight: 600;
 }
 
 .auth-form select option {
-  color: #1b102d;
+  background-color: var(--bg-soft);
+  color: var(--text);
 }
 
 .auth-footer {

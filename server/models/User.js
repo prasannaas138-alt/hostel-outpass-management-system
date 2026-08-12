@@ -27,7 +27,6 @@ const userSchema = new mongoose.Schema(
     },
     hostelBlock: {
       type: String,
-      required: true,
       trim: true,
     },
     roomNumber: {

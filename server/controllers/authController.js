@@ -36,7 +36,7 @@ export const registerUser = async (req, res, next) => {
       role = 'Student',
     } = req.body;
 
-    if (!name || !email || !registerNumber || !department || !hostelBlock || !roomNumber || !password || !confirmPassword) {
+    if (!name || !email || !registerNumber || !department || !roomNumber || !password || !confirmPassword) {
       return res.status(400).json({ message: 'All fields are required.' });
     }
 
