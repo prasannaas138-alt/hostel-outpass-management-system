@@ -1,5 +1,8 @@
 import { useNavigate } from 'react-router-dom';
 import { useAuth } from '../context/AuthContext';
+import Sidebar from './Sidebar';
+import MobileBottomNav from './MobileBottomNav';
+import '../styles/layout.css';
 
 export default function DashboardLayout({ title, subtitle, navItems, children, actions }) {
   const { user, logout } = useAuth();
@@ -12,34 +15,16 @@ export default function DashboardLayout({ title, subtitle, navItems, children, a
 
   return (
     <div className="dashboard-shell dashboard-shell--split">
-      <aside className="sidebar">
-        <div className="sidebar-brand">
-          <p className="eyebrow">Hostel OS</p>
-          <h2>{title}</h2>
-          <p className="muted sidebar-copy">{subtitle}</p>
-        </div>
+      <Sidebar
+        title={title}
+        subtitle={subtitle}
+        navItems={navItems}
+        userName={user?.name}
+        userRole={user?.role}
+        onLogout={handleLogout}
+      />
 
-        <div className="sidebar-user">
-          <span className="sidebar-user__label">Signed in as</span>
-          <strong>{user?.name}</strong>
-          <span>{user?.role}</span>
-        </div>
-
-        <nav className="sidebar-nav" aria-label="Dashboard sections">
-          {navItems.map((item) => (
-            <a key={item.id} className="sidebar-link" href={`#${item.id}`}>
-              <span>{item.label}</span>
-              {item.description ? <small>{item.description}</small> : null}
-            </a>
-          ))}
-        </nav>
-
-        <button className="secondary-button sidebar-logout" type="button" onClick={handleLogout}>
-          Logout
-        </button>
-      </aside>
-
-      <main className="dashboard-main">
+      <main className="dashboard-main" id="main-content">
         <header className="dashboard-topbar">
           <div>
             <p className="eyebrow">Request management</p>
@@ -50,6 +35,7 @@ export default function DashboardLayout({ title, subtitle, navItems, children, a
         </header>
 
         {children}
+        <MobileBottomNav navItems={navItems} />
       </main>
     </div>
   );

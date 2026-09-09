@@ -1,0 +1,130 @@
+/* H.O.M.S layout foundation — header, sidebar, bottom nav.
+   Works with existing DashboardLayout + AppHeader markup.
+   No framework. Mobile-first. */
+
+.homs-skip-link {
+  position: absolute;
+  left: 1rem;
+  top: -4rem;
+  z-index: 100;
+  background: var(--navy-900);
+  color: #fff;
+  padding: 0.7rem 1rem;
+  border-radius: var(--radius-sm);
+  transition: top 160ms ease;
+}
+
+.homs-skip-link:focus {
+  top: 1rem;
+}
+
+/* Compact app header (used by AppHeader component) */
+.app-header {
+  display: flex;
+  align-items: flex-start;
+  justify-content: space-between;
+  gap: var(--space-4);
+  padding: var(--space-4) var(--space-5);
+  background: var(--navy-900);
+  color: #fff;
+  border-bottom: 1px solid rgba(255, 255, 255, 0.12);
+}
+
+.app-header h1 {
+  margin: 0.25rem 0;
+  font-size: var(--text-xl);
+  line-height: 1.2;
+  letter-spacing: -0.01em;
+}
+
+.app-header .eyebrow {
+  color: var(--navy-100);
+}
+
+.app-header .muted {
+  color: rgba(255, 255, 255, 0.72);
+  margin: 0;
+}
+
+.header-actions {
+  display: flex;
+  align-items: center;
+  gap: var(--space-3);
+  flex-shrink: 0;
+}
+
+.user-chip {
+  display: grid;
+  gap: 0.1rem;
+  padding: 0.55rem 0.85rem;
+  border-radius: var(--radius-md);
+  background: rgba(255, 255, 255, 0.1);
+  border: 1px solid rgba(255, 255, 255, 0.14);
+  text-align: right;
+}
+
+.user-chip strong {
+  font-size: var(--text-sm);
+}
+
+.user-chip span {
+  font-size: var(--text-xs);
+  color: rgba(255, 255, 255, 0.72);
+}
+
+.app-header .secondary-button {
+  background: #fff;
+  color: var(--navy-900);
+  border-color: #fff;
+}
+
+/* Mobile bottom navigation — touch-first, rendered by DashboardLayout */
+.mobile-bottom-nav {
+  display: none;
+}
+
+@media (max-width: 860px) {
+  .app-header {
+    padding: var(--space-3) var(--space-4);
+  }
+
+  .app-header h1 {
+    font-size: var(--text-lg);
+  }
+
+  .user-chip {
+    display: none;
+  }
+
+  .mobile-bottom-nav {
+    display: flex;
+    position: sticky;
+    bottom: 0;
+    z-index: 30;
+    gap: 0.25rem;
+    padding: 0.5rem 0.5rem calc(0.5rem + env(safe-area-inset-bottom));
+    background: rgba(255, 255, 255, 0.96);
+    backdrop-filter: blur(12px);
+    border-top: 1px solid var(--border);
+  }
+
+  .mobile-bottom-nav a {
+    flex: 1;
+    display: grid;
+    place-items: center;
+    gap: 0.15rem;
+    min-height: 52px;
+    padding: 0.45rem 0.25rem;
+    border-radius: var(--radius-sm);
+    font-size: var(--text-xs);
+    font-weight: 700;
+    color: var(--muted);
+    text-align: center;
+    line-height: 1.2;
+  }
+
+  .mobile-bottom-nav a:active {
+    background: var(--navy-50);
+    color: var(--navy-900);
+  }
+}

@@ -1,5 +1,6 @@
 import { useNavigate } from 'react-router-dom';
 import { useAuth } from '../context/AuthContext';
+import '../styles/layout.css';
 
 export default function AppHeader({ title, subtitle }) {
   const { user, logout } = useAuth();
