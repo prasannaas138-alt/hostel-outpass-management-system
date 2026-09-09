@@ -3,6 +3,7 @@ import { useNavigate, Link } from 'react-router-dom';
 import api from '../services/api';
 import AlertBanner from '../components/AlertBanner';
 import LoadingState from '../components/LoadingState';
+import { AuthBrandPanel, PasswordField } from '../components/AuthPanels';
 import '../styles/auth.css';
 
 const DEPARTMENTS = ['CSE', 'ECE', 'EEE', 'MECH', 'CIVIL', 'IT', 'MBA', 'MCA', 'BBA', 'BCom', 'BA', 'Other'];
@@ -22,7 +23,6 @@ export default function RegisterPage() {
   const [error, setError] = useState('');
   const [success, setSuccess] = useState('');
   const [loading, setLoading] = useState(false);
-  const [showPassword, setShowPassword] = useState(false);
 
   const handleChange = (e) => {
     setForm((cur) => ({ ...cur, [e.target.name]: e.target.value }));
@@ -89,157 +89,124 @@ export default function RegisterPage() {
       </header>
 
       <div className="auth-main">
-        <section className="auth-card">
-          <div className="auth-copy">
-            <p className="eyebrow">Welcome to St. Joseph's University Hostel Portal</p>
-            <h1>H.O.M.S</h1>
-            <h3 style={{ margin: '0 0 1rem 0', color: 'var(--text)', fontWeight: 500, fontSize: '1.4rem' }}>Create Your Account</h3>
-            <p>
-              Join the official university portal to apply for hostel permissions, track requests, and manage approvals with ease.
-            </p>
-
-            <div className="auth-note">
-              <strong>For first-time student users</strong>
-              <span>Create a separate H.O.M.S password. Do not use or share your Gmail password.</span>
-            </div>
-            
-            <div className="auth-highlights">
-              <div>
-                <strong>🎓 Student</strong>
-                <span>Apply for hostel leave and track request status.</span>
-              </div>
-              <div>
-                <strong>👩‍🏫 HOD / Sister</strong>
-                <span>Review and manage student requests.</span>
-              </div>
-              <div>
-                <strong>🛡️ Warden</strong>
-                <span>Approve hostel outpasses and monitor requests.</span>
-              </div>
-            </div>
-
-            <p style={{ marginTop: '2.5rem', fontSize: '0.95rem' }}>
-              Already registered?{' '}
-              <Link to="/login" style={{ color: 'var(--accent)', textDecoration: 'none', fontWeight: 600 }}>
-                Sign in to your account
-              </Link>
-            </p>
+        <div className="auth-brand-row">
+          <img src="/st-joseph-logo.png" alt="St. Joseph's University" onError={(e) => {e.target.style.display='none';}} />
+          <div>
+            <strong>H.O.M.S — Hostel Outpass Management System</strong>
+            <span>St. Joseph&apos;s University · Hostel Portal</span>
           </div>
+          <img src="/homs-logo.png" alt="H.O.M.S Logo" onError={(e) => {e.target.style.display='none';}} />
+        </div>
 
-          <form className="auth-form auth-form--register" onSubmit={handleSubmit}>
-            <div style={{ marginBottom: '1rem' }}>
-              <h2 style={{ margin: '0 0 0.5rem', color: 'var(--text)', fontSize: '1.6rem' }}>Register</h2>
-              <p style={{ margin: 0, color: 'var(--muted)', fontSize: '0.95rem' }}>Set up your portal access</p>
+        <section className="auth-card auth-card--modern">
+          <AuthBrandPanel subtitle="Create Your Account" showSignInLink />
+
+          <form className="auth-form auth-form--modern auth-form--register" onSubmit={handleSubmit}>
+            <div className="auth-form-head">
+              <h2>Register</h2>
+              <p>Set up your portal access</p>
             </div>
 
-            <label>
-              Full Name
-              <input
-                name="name"
-                type="text"
-                value={form.name}
-                onChange={handleChange}
-                placeholder="Enter your full name"
-                required
-              />
-            </label>
+            <fieldset className="auth-fieldset">
+              <legend>Personal details</legend>
+              <div className="auth-stack">
+                <label>
+                  Full Name
+                  <input
+                    name="name"
+                    type="text"
+                    value={form.name}
+                    onChange={handleChange}
+                    placeholder="Enter your full name"
+                    autoComplete="name"
+                    required
+                  />
+                </label>
 
-            <label>
-              College Email ID
-              <input
-                name="email"
-                type="email"
-                value={form.email}
-                onChange={handleChange}
-                placeholder="your.name@college.edu"
-                autoComplete="email"
-                required
-              />
-            </label>
+                <label>
+                  College Email ID
+                  <input
+                    name="email"
+                    type="email"
+                    value={form.email}
+                    onChange={handleChange}
+                    placeholder="your.name@college.edu"
+                    autoComplete="email"
+                    required
+                  />
+                </label>
+              </div>
+            </fieldset>
 
-            <div className="auth-form-grid">
+            <fieldset className="auth-fieldset">
+              <legend>Hostel details</legend>
+              <div className="auth-form-grid">
+                <label>
+                  Register Number
+                  <input
+                    name="registerNumber"
+                    type="text"
+                    value={form.registerNumber}
+                    onChange={handleChange}
+                    placeholder="Enter your register number"
+                    required
+                  />
+                </label>
+
+                <label>
+                  Department
+                  <select name="department" value={form.department} onChange={handleChange} required>
+                    {DEPARTMENTS.map((department) => (
+                      <option key={department} value={department}>
+                        {department}
+                      </option>
+                    ))}
+                  </select>
+                </label>
+              </div>
+
               <label>
-                Register Number
+                Room Number
                 <input
-                  name="registerNumber"
+                  name="roomNumber"
                   type="text"
-                  value={form.registerNumber}
+                  value={form.roomNumber}
                   onChange={handleChange}
-                  placeholder="Enter your register number"
+                  placeholder="Room / bed number"
                   required
                 />
               </label>
+            </fieldset>
 
-              <label>
-                Department
-                <select name="department" value={form.department} onChange={handleChange} required>
-                  {DEPARTMENTS.map((department) => (
-                    <option key={department} value={department}>
-                      {department}
-                    </option>
-                  ))}
-                </select>
-              </label>
-            </div>
+            <fieldset className="auth-fieldset">
+              <legend>Security</legend>
+              <div className="auth-note">
+                <strong>For first-time student users</strong>
+                <span>Create a separate H.O.M.S password. Do not use or share your Gmail password.</span>
+              </div>
 
-            <label>
-              Room Number
-              <input
-                name="roomNumber"
-                type="text"
-                value={form.roomNumber}
-                onChange={handleChange}
-                placeholder="Room / bed number"
-                required
-              />
-            </label>
+              <div className="auth-form-grid">
+                <PasswordField
+                  label="Create Password"
+                  name="password"
+                  value={form.password}
+                  onChange={handleChange}
+                  placeholder="At least 8 characters"
+                  autoComplete="new-password"
+                  minLength={8}
+                />
 
-            <div className="auth-form-grid">
-              <label>
-                Create Password
-                <div className="password-field">
-                  <input
-                    name="password"
-                    type={showPassword ? 'text' : 'password'}
-                    value={form.password}
-                    onChange={handleChange}
-                    placeholder="At least 8 characters"
-                    autoComplete="new-password"
-                    required
-                    minLength={8}
-                  />
-                  <button
-                    className="password-toggle"
-                    type="button"
-                    onClick={() => setShowPassword((v) => !v)}
-                    aria-label={showPassword ? 'Hide password' : 'Show password'}
-                    aria-pressed={showPassword}
-                  >
-                    {showPassword ? (
-                      <svg width="20" height="20" viewBox="0 0 24 24" fill="none" stroke="currentColor" strokeWidth="2" strokeLinecap="round" strokeLinejoin="round"><path d="M17.94 17.94A10.07 10.07 0 0 1 12 20c-7 0-11-8-11-8a18.45 18.45 0 0 1 5.06-5.94M9.9 4.24A9.12 9.12 0 0 1 12 4c7 0 11 8 11 8a18.5 18.5 0 0 1-2.16 3.19m-6.72-1.07a3 3 0 1 1-4.24-4.24"></path><line x1="1" y1="1" x2="23" y2="23"></line></svg>
-                    ) : (
-                      <svg width="20" height="20" viewBox="0 0 24 24" fill="none" stroke="currentColor" strokeWidth="2" strokeLinecap="round" strokeLinejoin="round"><path d="M1 12s4-8 11-8 11 8 11 8-4 8-11 8-11-8-11-8z"></path><circle cx="12" cy="12" r="3"></circle></svg>
-                    )}
-                  </button>
-                </div>
-              </label>
-
-              <label>
-                Confirm Password
-                <div className="password-field">
-                  <input
-                    name="confirmPassword"
-                    type={showPassword ? 'text' : 'password'}
-                    value={form.confirmPassword}
-                    onChange={handleChange}
-                    placeholder="Re-enter your password"
-                    autoComplete="new-password"
-                    required
-                    minLength={8}
-                  />
-                </div>
-              </label>
-            </div>
+                <PasswordField
+                  label="Confirm Password"
+                  name="confirmPassword"
+                  value={form.confirmPassword}
+                  onChange={handleChange}
+                  placeholder="Re-enter your password"
+                  autoComplete="new-password"
+                  minLength={8}
+                />
+              </div>
+            </fieldset>
 
             <div className="auth-info-strip">
               <span>Notice:</span>
@@ -266,8 +233,8 @@ export default function RegisterPage() {
       </div>
 
       <footer className="auth-footer">
-        <h4 style={{ margin: '0 0 0.5rem 0', color: 'var(--text)' }}>H.O.M.S — Hostel Outpass Management System</h4>
-        <p>St. Joseph's University</p>
+        <h4>H.O.M.S — Hostel Outpass Management System</h4>
+        <p>St. Joseph&apos;s University</p>
         <p>Making hostel management simple and accessible.</p>
       </footer>
     </main>
