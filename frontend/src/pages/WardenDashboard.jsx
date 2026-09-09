@@ -2,7 +2,7 @@ import { useEffect, useMemo, useState } from 'react';
 import api from '../services/api';
 import { useAuth } from '../context/AuthContext';
 import WardenLayout from '../components/WardenLayout';
-import AlertBanner from '../components/AlertBanner';
+import WardenApprovals from '../components/WardenApprovals';
 import LoadingState from '../components/LoadingState';
 import RequestReviewCard from '../components/RequestReviewCard';
 import '../styles/dashboard.css';
@@ -18,6 +18,7 @@ export default function WardenDashboard() {
   const [loadingId, setLoadingId] = useState('');
   const [activeRejectId, setActiveRejectId] = useState('');
   const [reasonById, setReasonById] = useState({});
+  const [typeFilter, setTypeFilter] = useState('All');
 
   const firstName = useMemo(() => (user?.name || 'Warden').split(' ')[0], [user]);
   const outingCount = useMemo(() => items.filter((item) => item.requestType === 'Outing').length, [items]);
@@ -83,7 +84,7 @@ export default function WardenDashboard() {
         {loading ? (
           <LoadingState label="Loading statistics..." />
         ) : error ? (
-          <AlertBanner type="error" message={error} />
+          <div className="empty-state">Queue statistics are unavailable right now.</div>
         ) : (
           <div className="warden-stats">
             <div className="warden-stat">
@@ -124,35 +125,21 @@ export default function WardenDashboard() {
           {showStats ? <span className="mini-summary">{items.length} total</span> : null}
         </div>
 
-        <AlertBanner type="error" message={error} />
-        <AlertBanner type="success" message={success} />
-
-        {loading ? (
-          <LoadingState label="Loading pending requests..." />
-        ) : items.length ? (
-          <div className="request-review-grid">
-            {items.map((item) => (
-              <RequestReviewCard
-                key={item._id}
-                item={item}
-                variant="slip"
-                approveLabel="Approve Outpass"
-                rejectLabel="Reject"
-                activeRejectId={activeRejectId}
-                setActiveRejectId={setActiveRejectId}
-                reasonById={reasonById}
-                setReasonById={setReasonById}
-                loadingId={loadingId}
-                onApprove={(id) => review(id, 'approve')}
-                onReject={(id) => review(id, 'reject')}
-              />
-            ))}
-          </div>
-        ) : (
-          <div className="empty-state">
-            No pending requests for Warden review. New requests will appear here when they are ready.
-          </div>
-        )}
+        <WardenApprovals
+          items={items}
+          loading={loading}
+          error={error}
+          success={success}
+          typeFilter={typeFilter}
+          onTypeFilterChange={setTypeFilter}
+          loadingId={loadingId}
+          activeRejectId={activeRejectId}
+          setActiveRejectId={setActiveRejectId}
+          reasonById={reasonById}
+          setReasonById={setReasonById}
+          onApprove={(id) => review(id, 'approve')}
+          onReject={(id) => review(id, 'reject')}
+        />
       </section>
 
       {items[0] ? (

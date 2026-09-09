@@ -96,6 +96,62 @@
   line-height: 1.45;
 }
 
+/* Warden approvals — cards on mobile/tablet, structured table on desktop. */
+
+.warden-approvals {
+  display: grid;
+  gap: 1rem;
+}
+
+.warden-approvals-cards {
+  display: grid;
+  grid-template-columns: 1fr;
+  gap: 1rem;
+}
+
+.warden-table-wrap {
+  display: none;
+}
+
+.warden-table {
+  min-width: 860px;
+}
+
+.warden-table td {
+  vertical-align: middle;
+}
+
+.warden-table td small {
+  display: block;
+  color: var(--muted);
+  font-size: var(--text-xs);
+}
+
+.warden-reason-cell {
+  max-width: 260px;
+  overflow-wrap: anywhere;
+}
+
+.warden-review-btn {
+  min-height: 44px;
+}
+
+@media (min-width: 980px) {
+  .warden-approvals-cards {
+    display: none;
+  }
+
+  .warden-table-wrap {
+    display: block;
+  }
+}
+
+@media (max-width: 979px) {
+  .warden-table-wrap {
+    display: none;
+  }
+}
+
 @media (max-width: 640px) {
   .warden-hero {
     padding: 1rem;
