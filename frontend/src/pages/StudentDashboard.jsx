@@ -3,12 +3,15 @@ import api from '../services/api';
 import StudentLayout from '../components/StudentLayout';
 import ApplyOutpassForm from '../components/ApplyOutpassForm';
 import MyRequestsList from '../components/MyRequestsList';
+import OutpassHistory from '../components/OutpassHistory';
+import StudentProfile from '../components/StudentProfile';
 import { MyRequestsTable, RequestDetailsModal } from '../components/RequestDetails';
 import LoadingState from '../components/LoadingState';
 import StatusTracker from '../components/StatusTracker';
 import '../styles/dashboard.css';
 import '../styles/student.css';
 import '../styles/apply-requests.css';
+import '../styles/history-profile.css';
 import { useAuth } from '../context/AuthContext';
 
 const emptyForm = {
@@ -39,6 +42,8 @@ export default function StudentDashboard() {
   const [saving, setSaving] = useState(false);
   const [statusFilter, setStatusFilter] = useState('All');
   const [search, setSearch] = useState('');
+  const [historyTypeFilter, setHistoryTypeFilter] = useState('All');
+  const [historySearch, setHistorySearch] = useState('');
   const [detailId, setDetailId] = useState(null);
 
   const selectedRequest = useMemo(() => requests.find((item) => item._id === selectedId), [requests, selectedId]);
@@ -48,6 +53,15 @@ export default function StudentDashboard() {
   const approvedCount = useMemo(() => requests.filter((item) => item.status === 'Approved').length, [requests]);
   const rejectedCount = useMemo(() => requests.filter((item) => item.status === 'Rejected').length, [requests]);
   const historyRequests = useMemo(() => requests.filter((item) => item.status === 'Approved' || item.status === 'Expired'), [requests]);
+  const visibleHistoryRequests = useMemo(() => {
+    const term = historySearch.trim().toLowerCase();
+    return historyRequests.filter((item) => {
+      if (historyTypeFilter !== 'All' && item.requestType !== historyTypeFilter) return false;
+      if (!term) return true;
+      const haystack = `${item.requestType || ''} ${item.reason || ''} ${item.status || ''} ${item.date || ''}`.toLowerCase();
+      return haystack.includes(term);
+    });
+  }, [historyRequests, historyTypeFilter, historySearch]);
   const filteredRequests = useMemo(() => {
     const term = search.trim().toLowerCase();
     return requests.filter((item) => {
@@ -260,37 +274,20 @@ export default function StudentDashboard() {
             <p className="eyebrow">Outpass history</p>
             <h2>Approved and expired outpasses</h2>
           </div>
+          <span className="mini-summary">{visibleHistoryRequests.length} shown</span>
         </div>
 
-        {loading ? (
-          <LoadingState label="Loading outpass history..." />
-        ) : historyRequests.length ? (
-          <div className="request-history-grid">
-            {historyRequests.map((request) => (
-              <article key={request._id} className="history-card">
-                <div className="history-card__top">
-                  <div>
-                    <strong>{request.requestType}</strong>
-                    <p className="muted">{new Date(request.date).toLocaleDateString()}</p>
-                  </div>
-                  <span className={`status-badge status-${request.status.toLowerCase()}`}>{request.status}</span>
-                </div>
-
-                <p className="history-card__reason">{request.reason}</p>
-
-                <div className="history-card__actions">
-                  {request.status === 'Approved' ? (
-                    <button className="link-button" type="button" onClick={() => handleDownload(request._id)}>
-                      Download Outpass
-                    </button>
-                  ) : null}
-                </div>
-              </article>
-            ))}
-          </div>
-        ) : (
-          <div className="empty-state">No approved outpasses yet.</div>
-        )}
+        <OutpassHistory
+          requests={visibleHistoryRequests}
+          loading={loading}
+          error={error}
+          typeFilter={historyTypeFilter}
+          onTypeFilterChange={setHistoryTypeFilter}
+          search={historySearch}
+          onSearchChange={setHistorySearch}
+          onViewDetails={setDetailId}
+          onDownload={handleDownload}
+        />
       </section>
 
       <section id="request-tracker" className="panel">
@@ -318,32 +315,7 @@ export default function StudentDashboard() {
           </div>
         </div>
 
-        <div className="student-profile-grid">
-          <div>
-            <span>Name</span>
-            <strong>{user?.name || '—'}</strong>
-          </div>
-          <div>
-            <span>Role</span>
-            <strong>{user?.role || 'Student'}</strong>
-          </div>
-          <div>
-            <span>Department</span>
-            <strong>{user?.department || '—'}</strong>
-          </div>
-          <div>
-            <span>Year</span>
-            <strong>{user?.year || '—'}</strong>
-          </div>
-          <div>
-            <span>Email</span>
-            <strong>{user?.email || '—'}</strong>
-          </div>
-          <div>
-            <span>Register number</span>
-            <strong>{user?.registerNumber || '—'}</strong>
-          </div>
-        </div>
+        <StudentProfile user={user} />
       </section>
     </StudentLayout>
   );
