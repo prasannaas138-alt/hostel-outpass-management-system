@@ -1,13 +1,16 @@
-import { useEffect, useState } from 'react';
+import { useEffect, useMemo, useState } from 'react';
 import api from '../services/api';
+import { useAuth } from '../context/AuthContext';
 import WardenLayout from '../components/WardenLayout';
 import AlertBanner from '../components/AlertBanner';
 import LoadingState from '../components/LoadingState';
 import RequestReviewCard from '../components/RequestReviewCard';
 import '../styles/dashboard.css';
 import '../styles/student.css';
+import '../styles/warden.css';
 
 export default function WardenDashboard() {
+  const { user } = useAuth();
   const [items, setItems] = useState([]);
   const [error, setError] = useState('');
   const [success, setSuccess] = useState('');
@@ -15,6 +18,10 @@ export default function WardenDashboard() {
   const [loadingId, setLoadingId] = useState('');
   const [activeRejectId, setActiveRejectId] = useState('');
   const [reasonById, setReasonById] = useState({});
+
+  const firstName = useMemo(() => (user?.name || 'Warden').split(' ')[0], [user]);
+  const outingCount = useMemo(() => items.filter((item) => item.requestType === 'Outing').length, [items]);
+  const homeCount = useMemo(() => items.filter((item) => item.requestType === 'Home').length, [items]);
 
   const loadItems = async () => {
     setLoading(true);
@@ -51,17 +58,70 @@ export default function WardenDashboard() {
     }
   };
 
+  const showStats = !loading && !error;
+
   return (
     <WardenLayout
       title="Warden Dashboard"
       subtitle="Final review for all weekend outing requests and fully approved home requests."
     >
+      <section className="warden-hero" aria-label="Welcome">
+        <p className="eyebrow">St. Joseph&apos;s University · Hostel Office</p>
+        <h2>Hello, {firstName}!</h2>
+        <p>Welcome back. Review the latest outpass requests waiting for your final approval.</p>
+      </section>
+
+      <section className="panel" aria-label="Warden statistics">
+        <div className="panel-heading">
+          <div>
+            <p className="eyebrow">Real-time overview</p>
+            <h2>Warden queue</h2>
+          </div>
+          {showStats ? <span className="mini-summary">{items.length} awaiting review</span> : null}
+        </div>
+
+        {loading ? (
+          <LoadingState label="Loading statistics..." />
+        ) : error ? (
+          <AlertBanner type="error" message={error} />
+        ) : (
+          <div className="warden-stats">
+            <div className="warden-stat">
+              <strong>{items.length}</strong>
+              <span>Awaiting review</span>
+            </div>
+            <div className="warden-stat">
+              <strong>{outingCount}</strong>
+              <span>Outing requests</span>
+            </div>
+            <div className="warden-stat">
+              <strong>{homeCount}</strong>
+              <span>Home requests</span>
+            </div>
+          </div>
+        )}
+      </section>
+
+      <section className="warden-quick" aria-label="Quick actions">
+        <a className="warden-quick-card" href="#warden-requests">
+          <span className="warden-quick-icon" aria-hidden="true">📥</span>
+          <strong>Review Queue</strong>
+          <span>Approve or reject pending requests.</span>
+        </a>
+        <a className="warden-quick-card" href="#physical-slip">
+          <span className="warden-quick-icon" aria-hidden="true">📄</span>
+          <strong>Outpass Slip</strong>
+          <span>View the physical slip preview.</span>
+        </a>
+      </section>
+
       <section id="warden-requests" className="panel">
         <div className="panel-heading">
           <div>
             <p className="eyebrow">Final approval</p>
             <h2>Pending warden requests</h2>
           </div>
+          {showStats ? <span className="mini-summary">{items.length} total</span> : null}
         </div>
 
         <AlertBanner type="error" message={error} />
@@ -89,7 +149,9 @@ export default function WardenDashboard() {
             ))}
           </div>
         ) : (
-          <div className="empty-state">No pending requests for Warden review.</div>
+          <div className="empty-state">
+            No pending requests for Warden review. New requests will appear here when they are ready.
+          </div>
         )}
       </section>
 
