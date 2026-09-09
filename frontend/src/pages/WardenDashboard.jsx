@@ -1,10 +1,11 @@
 import { useEffect, useState } from 'react';
 import api from '../services/api';
-import DashboardLayout from '../components/DashboardLayout';
+import WardenLayout from '../components/WardenLayout';
 import AlertBanner from '../components/AlertBanner';
 import LoadingState from '../components/LoadingState';
 import RequestReviewCard from '../components/RequestReviewCard';
 import '../styles/dashboard.css';
+import '../styles/student.css';
 
 export default function WardenDashboard() {
   const [items, setItems] = useState([]);
@@ -51,13 +52,9 @@ export default function WardenDashboard() {
   };
 
   return (
-    <DashboardLayout
+    <WardenLayout
       title="Warden Dashboard"
       subtitle="Final review for all weekend outing requests and fully approved home requests."
-      navItems={[
-        { id: 'warden-requests', label: 'Review Queue', description: 'Final approval' },
-        { id: 'physical-slip', label: 'Outpass Slip', description: 'Detailed view' },
-      ]}
     >
       <section id="warden-requests" className="panel">
         <div className="panel-heading">
@@ -119,6 +116,6 @@ export default function WardenDashboard() {
           />
         </section>
       ) : null}
-    </DashboardLayout>
+    </WardenLayout>
   );
 }
