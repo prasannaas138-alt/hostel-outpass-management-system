@@ -1,11 +1,14 @@
 import { useEffect, useMemo, useState } from 'react';
 import api from '../services/api';
 import StudentLayout from '../components/StudentLayout';
-import AlertBanner from '../components/AlertBanner';
+import ApplyOutpassForm from '../components/ApplyOutpassForm';
+import MyRequestsList from '../components/MyRequestsList';
+import { MyRequestsTable, RequestDetailsModal } from '../components/RequestDetails';
 import LoadingState from '../components/LoadingState';
 import StatusTracker from '../components/StatusTracker';
 import '../styles/dashboard.css';
 import '../styles/student.css';
+import '../styles/apply-requests.css';
 import { useAuth } from '../context/AuthContext';
 
 const emptyForm = {
@@ -34,6 +37,9 @@ export default function StudentDashboard() {
   const [error, setError] = useState('');
   const [loading, setLoading] = useState(true);
   const [saving, setSaving] = useState(false);
+  const [statusFilter, setStatusFilter] = useState('All');
+  const [search, setSearch] = useState('');
+  const [detailId, setDetailId] = useState(null);
 
   const selectedRequest = useMemo(() => requests.find((item) => item._id === selectedId), [requests, selectedId]);
   const isOutgoingWeekendValid = form.requestType !== 'Outing' || !form.date || isWeekend(form.date);
@@ -41,8 +47,17 @@ export default function StudentDashboard() {
   const pendingCount = useMemo(() => requests.filter((item) => item.status === 'Pending').length, [requests]);
   const approvedCount = useMemo(() => requests.filter((item) => item.status === 'Approved').length, [requests]);
   const rejectedCount = useMemo(() => requests.filter((item) => item.status === 'Rejected').length, [requests]);
-  const recentRequests = useMemo(() => requests.slice(0, 3), [requests]);
   const historyRequests = useMemo(() => requests.filter((item) => item.status === 'Approved' || item.status === 'Expired'), [requests]);
+  const filteredRequests = useMemo(() => {
+    const term = search.trim().toLowerCase();
+    return requests.filter((item) => {
+      if (statusFilter !== 'All' && item.status !== statusFilter) return false;
+      if (!term) return true;
+      const haystack = `${item.requestType || ''} ${item.reason || ''} ${item.status || ''} ${item.date || ''}`.toLowerCase();
+      return haystack.includes(term);
+    });
+  }, [requests, statusFilter, search]);
+  const detailRequest = useMemo(() => requests.find((item) => item._id === detailId) || null, [requests, detailId]);
 
   const loadRequests = async () => {
     setLoading(true);
@@ -190,72 +205,18 @@ export default function StudentDashboard() {
           <span className="mini-summary">{user?.name}</span>
         </div>
 
-        <form className="stack-form" onSubmit={handleSubmit}>
-          <div className="two-column">
-            <label>
-              Name
-              <input value={user?.name || ''} readOnly />
-            </label>
-            <label>
-              Department
-              <input value={user?.department || ''} readOnly />
-            </label>
-          </div>
-
-          <div className="two-column">
-            <label>
-              Year
-              <input value={user?.year || ''} readOnly />
-            </label>
-            <label>
-              Request Type
-              <select name="requestType" value={form.requestType} onChange={handleChange} required>
-                <option value="Outing">Outing</option>
-                <option value="Home">Home</option>
-              </select>
-            </label>
-          </div>
-
-          <div className="two-column">
-            <label>
-              Date
-              <input name="date" type="date" value={form.date} onChange={handleChange} required />
-            </label>
-            <label>
-              Out Time
-              <input name="outTime" type="time" value={form.outTime} onChange={handleChange} required />
-            </label>
-          </div>
-
-          <div className="two-column">
-            <label>
-              Return Time
-              <input name="returnTime" type="time" value={form.returnTime} onChange={handleChange} required />
-            </label>
-            <label>
-              Reason
-              <input name="reason" value={form.reason} onChange={handleChange} placeholder="Reason for outpass" required />
-            </label>
-          </div>
-
-          <AlertBanner type="error" message={error} />
-          <AlertBanner type="success" message={success} />
-
-          {form.requestType === 'Outing' && form.date && !isOutgoingWeekendValid ? (
-            <div className="inline-note inline-note--warning">Outing requests are allowed only on weekends.</div>
-          ) : null}
-
-          <div className="button-row">
-            <button className="primary-button" type="submit" disabled={saving || !isOutgoingWeekendValid}>
-              {saving ? 'Submitting...' : selectedRequest ? 'Reapply Request' : 'Submit Request'}
-            </button>
-            {selectedRequest ? (
-              <button className="secondary-button" type="button" onClick={() => setSelectedId(null)}>
-                Cancel Edit
-              </button>
-            ) : null}
-          </div>
-        </form>
+        <ApplyOutpassForm
+          user={user}
+          form={form}
+          onChange={handleChange}
+          onSubmit={handleSubmit}
+          saving={saving}
+          error={error}
+          success={success}
+          isOutgoingWeekendValid={isOutgoingWeekendValid}
+          selectedRequest={selectedRequest}
+          onCancelEdit={() => setSelectedId(null)}
+        />
       </section>
 
       <section id="request-history" className="panel">
@@ -264,47 +225,33 @@ export default function StudentDashboard() {
             <p className="eyebrow">My requests</p>
             <h2>Recent requests</h2>
           </div>
-          <span className="mini-summary">{requests.length} total</span>
+          <span className="mini-summary">{filteredRequests.length} shown</span>
         </div>
 
-        <AlertBanner type="error" message={error} />
-
-        {loading ? (
-          <LoadingState label="Loading request history..." />
-        ) : recentRequests.length ? (
-          <div className="request-history-grid">
-            {recentRequests.map((request) => (
-              <article key={request._id} className="history-card">
-                <div className="history-card__top">
-                  <div>
-                    <strong>{request.requestType}</strong>
-                    <p className="muted">{new Date(request.date).toLocaleDateString()}</p>
-                  </div>
-                  <span className={`status-badge status-${request.status.toLowerCase()}`}>{request.status}</span>
-                </div>
-
-                <p className="history-card__reason">{request.reason}</p>
-
-                <div className="history-card__actions">
-                  {request.status === 'Rejected' ? (
-                    <button className="link-button" type="button" onClick={() => setSelectedId(request._id)}>
-                      Edit and reapply
-                    </button>
-                  ) : null}
-                  {request.status === 'Approved' ? (
-                    <button className="link-button" type="button" onClick={() => handleDownload(request._id)}>
-                      Download Outpass
-                    </button>
-                  ) : null}
-                </div>
-
-                {request.rejectionReason ? <AlertBanner type="error" message={request.rejectionReason} /> : null}
-              </article>
-            ))}
-          </div>
-        ) : (
-          <div className="empty-state">No requests submitted yet. Use Apply for Outpass above to create your first request.</div>
-        )}
+        <MyRequestsList
+          requests={filteredRequests}
+          loading={loading}
+          error={error}
+          statusFilter={statusFilter}
+          onStatusFilterChange={setStatusFilter}
+          search={search}
+          onSearchChange={setSearch}
+          onViewDetails={setDetailId}
+          onEdit={(id) => { setSelectedId(id); setDetailId(null); document.getElementById('apply-new-outpass')?.scrollIntoView({ behavior: 'smooth' }); }}
+          onDownload={handleDownload}
+        />
+        <MyRequestsTable
+          requests={filteredRequests}
+          onViewDetails={setDetailId}
+          onEdit={(id) => { setSelectedId(id); setDetailId(null); document.getElementById('apply-new-outpass')?.scrollIntoView({ behavior: 'smooth' }); }}
+          onDownload={handleDownload}
+        />
+        <RequestDetailsModal
+          detailRequest={detailRequest}
+          onCloseDetails={() => setDetailId(null)}
+          onEdit={(id) => { setSelectedId(id); setDetailId(null); document.getElementById('apply-new-outpass')?.scrollIntoView({ behavior: 'smooth' }); }}
+          onDownload={handleDownload}
+        />
       </section>
 
       <section id="outpass-history" className="panel">
