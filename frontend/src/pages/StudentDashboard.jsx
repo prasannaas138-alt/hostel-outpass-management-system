@@ -1,10 +1,11 @@
 import { useEffect, useMemo, useState } from 'react';
 import api from '../services/api';
-import DashboardLayout from '../components/DashboardLayout';
+import StudentLayout from '../components/StudentLayout';
 import AlertBanner from '../components/AlertBanner';
 import LoadingState from '../components/LoadingState';
 import StatusTracker from '../components/StatusTracker';
 import '../styles/dashboard.css';
+import '../styles/student.css';
 import { useAuth } from '../context/AuthContext';
 
 const emptyForm = {
@@ -36,6 +37,12 @@ export default function StudentDashboard() {
 
   const selectedRequest = useMemo(() => requests.find((item) => item._id === selectedId), [requests, selectedId]);
   const isOutgoingWeekendValid = form.requestType !== 'Outing' || !form.date || isWeekend(form.date);
+  const firstName = (user?.name || 'Student').split(' ')[0];
+  const pendingCount = useMemo(() => requests.filter((item) => item.status === 'Pending').length, [requests]);
+  const approvedCount = useMemo(() => requests.filter((item) => item.status === 'Approved').length, [requests]);
+  const rejectedCount = useMemo(() => requests.filter((item) => item.status === 'Rejected').length, [requests]);
+  const recentRequests = useMemo(() => requests.slice(0, 3), [requests]);
+  const historyRequests = useMemo(() => requests.filter((item) => item.status === 'Approved' || item.status === 'Expired'), [requests]);
 
   const loadRequests = async () => {
     setLoading(true);
@@ -113,15 +120,67 @@ export default function StudentDashboard() {
   };
 
   return (
-    <DashboardLayout
+    <StudentLayout
       title="Student Dashboard"
       subtitle="Apply for outpass, track approvals, edit rejected requests, and download approved PDFs."
-      navItems={[
-        { id: 'apply-new-outpass', label: 'Apply New Outpass', description: 'Submit a new request' },
-        { id: 'request-history', label: 'Request History', description: 'Browse past requests' },
-        { id: 'request-tracker', label: 'Status Tracker', description: 'Track approvals' },
-      ]}
     >
+      <section id="dashboard" className="student-hero">
+        <p className="eyebrow">St. Joseph&apos;s University · H.O.M.S</p>
+        <h2>Hello, {firstName}!</h2>
+        <p>Welcome back. Apply for a new outpass or check the latest status of your requests.</p>
+      </section>
+
+      <section className="student-quick-grid" aria-label="Quick actions">
+        <a className="student-quick-card" href="#apply-new-outpass">
+          <span className="student-quick-icon" aria-hidden="true">📝</span>
+          <strong>Apply for Outpass</strong>
+          <span>Start a new Home or Outing request.</span>
+        </a>
+        <a className="student-quick-card" href="#request-history">
+          <span className="student-quick-icon" aria-hidden="true">📋</span>
+          <strong>My Requests</strong>
+          <span>View pending, approved and rejected items.</span>
+        </a>
+        <a className="student-quick-card" href="#outpass-history">
+          <span className="student-quick-icon" aria-hidden="true">🕘</span>
+          <strong>Outpass History</strong>
+          <span>Approved and expired outpasses.</span>
+        </a>
+        <a className="student-quick-card" href="#profile">
+          <span className="student-quick-icon" aria-hidden="true">👤</span>
+          <strong>Profile</strong>
+          <span>Your hostel and department details.</span>
+        </a>
+      </section>
+
+      <section className="panel" aria-label="Request statistics">
+        <div className="panel-heading">
+          <div>
+            <p className="eyebrow">Overview</p>
+            <h2>Request statistics</h2>
+          </div>
+        </div>
+
+        {loading ? (
+          <LoadingState label="Loading statistics..." />
+        ) : (
+          <div className="student-stats-grid">
+            <div className="student-stat student-stat--pending">
+              <strong>{pendingCount}</strong>
+              <span>Pending</span>
+            </div>
+            <div className="student-stat student-stat--approved">
+              <strong>{approvedCount}</strong>
+              <span>Approved</span>
+            </div>
+            <div className="student-stat student-stat--rejected">
+              <strong>{rejectedCount}</strong>
+              <span>Rejected</span>
+            </div>
+          </div>
+        )}
+      </section>
+
       <section id="apply-new-outpass" className="panel panel--hero">
         <div className="panel-heading">
           <div>
@@ -202,16 +261,19 @@ export default function StudentDashboard() {
       <section id="request-history" className="panel">
         <div className="panel-heading">
           <div>
-            <p className="eyebrow">Request history</p>
-            <h2>All submitted outpasses</h2>
+            <p className="eyebrow">My requests</p>
+            <h2>Recent requests</h2>
           </div>
+          <span className="mini-summary">{requests.length} total</span>
         </div>
+
+        <AlertBanner type="error" message={error} />
 
         {loading ? (
           <LoadingState label="Loading request history..." />
-        ) : requests.length ? (
+        ) : recentRequests.length ? (
           <div className="request-history-grid">
-            {requests.map((request) => (
+            {recentRequests.map((request) => (
               <article key={request._id} className="history-card">
                 <div className="history-card__top">
                   <div>
@@ -241,7 +303,46 @@ export default function StudentDashboard() {
             ))}
           </div>
         ) : (
-          <div className="empty-state">No requests submitted yet.</div>
+          <div className="empty-state">No requests submitted yet. Use Apply for Outpass above to create your first request.</div>
+        )}
+      </section>
+
+      <section id="outpass-history" className="panel">
+        <div className="panel-heading">
+          <div>
+            <p className="eyebrow">Outpass history</p>
+            <h2>Approved and expired outpasses</h2>
+          </div>
+        </div>
+
+        {loading ? (
+          <LoadingState label="Loading outpass history..." />
+        ) : historyRequests.length ? (
+          <div className="request-history-grid">
+            {historyRequests.map((request) => (
+              <article key={request._id} className="history-card">
+                <div className="history-card__top">
+                  <div>
+                    <strong>{request.requestType}</strong>
+                    <p className="muted">{new Date(request.date).toLocaleDateString()}</p>
+                  </div>
+                  <span className={`status-badge status-${request.status.toLowerCase()}`}>{request.status}</span>
+                </div>
+
+                <p className="history-card__reason">{request.reason}</p>
+
+                <div className="history-card__actions">
+                  {request.status === 'Approved' ? (
+                    <button className="link-button" type="button" onClick={() => handleDownload(request._id)}>
+                      Download Outpass
+                    </button>
+                  ) : null}
+                </div>
+              </article>
+            ))}
+          </div>
+        ) : (
+          <div className="empty-state">No approved outpasses yet.</div>
         )}
       </section>
 
@@ -261,6 +362,42 @@ export default function StudentDashboard() {
           <div className="empty-state">Track your newest request here once you submit it.</div>
         )}
       </section>
-    </DashboardLayout>
+
+      <section id="profile" className="panel">
+        <div className="panel-heading">
+          <div>
+            <p className="eyebrow">Profile</p>
+            <h2>Student profile</h2>
+          </div>
+        </div>
+
+        <div className="student-profile-grid">
+          <div>
+            <span>Name</span>
+            <strong>{user?.name || '—'}</strong>
+          </div>
+          <div>
+            <span>Role</span>
+            <strong>{user?.role || 'Student'}</strong>
+          </div>
+          <div>
+            <span>Department</span>
+            <strong>{user?.department || '—'}</strong>
+          </div>
+          <div>
+            <span>Year</span>
+            <strong>{user?.year || '—'}</strong>
+          </div>
+          <div>
+            <span>Email</span>
+            <strong>{user?.email || '—'}</strong>
+          </div>
+          <div>
+            <span>Register number</span>
+            <strong>{user?.registerNumber || '—'}</strong>
+          </div>
+        </div>
+      </section>
+    </StudentLayout>
   );
 }
