@@ -152,6 +152,123 @@
   }
 }
 
+/* Warden student-details modal — reuses .requests-modal structure. */
+
+.warden-student-modal {
+  width: min(520px, 100%);
+  padding: 1.25rem;
+}
+
+.warden-student-head {
+  display: grid;
+  grid-template-columns: 58px 1fr auto;
+  gap: 0.9rem;
+  align-items: center;
+  padding: 1rem;
+  border-radius: var(--radius-md);
+  background: var(--navy-50);
+  border: 1px solid var(--border);
+}
+
+.warden-student-head h3 {
+  margin: 0.15rem 0;
+  font-size: var(--text-lg);
+}
+
+.warden-student-head .muted {
+  margin: 0;
+  font-size: var(--text-sm);
+}
+
+.warden-student-avatar {
+  width: 58px;
+  height: 58px;
+  display: grid;
+  place-items: center;
+  border-radius: 50%;
+  background: var(--navy-900);
+  color: #fff;
+  font-size: var(--text-xl);
+  font-weight: 800;
+}
+
+.warden-student-section {
+  background: #fff;
+  border: 1px solid var(--border);
+  border-radius: var(--radius-md);
+  padding: 0.9rem;
+  display: grid;
+  gap: 0.7rem;
+}
+
+.warden-student-section h4 {
+  margin: 0;
+  font-size: var(--text-xs);
+  text-transform: uppercase;
+  letter-spacing: 0.08em;
+  color: var(--navy-800);
+}
+
+.warden-student-section dl {
+  margin: 0;
+  display: grid;
+  grid-template-columns: repeat(2, minmax(0, 1fr));
+  gap: 0.6rem;
+}
+
+.warden-student-section dl div {
+  padding: 0.6rem 0.75rem;
+  background: var(--surface-soft);
+  border: 1px solid var(--border);
+  border-radius: var(--radius-sm);
+  display: grid;
+  gap: 0.15rem;
+}
+
+.warden-student-section dt {
+  font-size: var(--text-xs);
+  color: var(--muted);
+  font-weight: 700;
+}
+
+.warden-student-section dd {
+  margin: 0;
+  font-size: var(--text-sm);
+  font-weight: 700;
+  overflow-wrap: anywhere;
+}
+
+.warden-approvals-card {
+  display: grid;
+  gap: 0.6rem;
+}
+
+.warden-student-info-btn {
+  justify-self: start;
+  min-height: 44px;
+}
+
+@media (max-width: 640px) {
+  .warden-student-head {
+    grid-template-columns: 50px 1fr;
+  }
+
+  .warden-student-avatar {
+    width: 50px;
+    height: 50px;
+    font-size: var(--text-lg);
+  }
+
+  .warden-student-head .status-badge {
+    grid-column: 1 / -1;
+    justify-self: start;
+  }
+
+  .warden-student-section dl {
+    grid-template-columns: 1fr;
+  }
+}
+
 @media (max-width: 640px) {
   .warden-hero {
     padding: 1rem;

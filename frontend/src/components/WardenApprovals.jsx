@@ -2,6 +2,7 @@ import { useState } from 'react';
 import AlertBanner from './AlertBanner';
 import LoadingState from './LoadingState';
 import RequestReviewCard from './RequestReviewCard';
+import WardenStudentDetails from './WardenStudentDetails';
 
 const formatDate = (value) => {
   if (!value) return '—';
@@ -28,14 +29,27 @@ export default function WardenApprovals({
   onReject,
 }) {
   const [detailId, setDetailId] = useState(null);
+  const [studentDetailId, setStudentDetailId] = useState(null);
   const detailItem = items.find((item) => item._id === detailId) || null;
+  const studentDetail = items.find((item) => item._id === studentDetailId) || null;
 
   const visibleItems = typeFilter === 'All'
     ? items
     : items.filter((item) => item.requestType === typeFilter);
 
+  const openReview = (id) => {
+    setStudentDetailId(null);
+    setDetailId(id);
+  };
+
+  const openStudent = (id) => {
+    setDetailId(null);
+    setStudentDetailId(id);
+  };
+
   const closeDetails = () => {
     setDetailId(null);
+    setStudentDetailId(null);
     setActiveRejectId('');
   };
 
@@ -64,20 +78,24 @@ export default function WardenApprovals({
         <>
           <div className="warden-approvals-cards">
             {visibleItems.map((item) => (
-              <RequestReviewCard
-                key={item._id}
-                item={item}
-                variant="slip"
-                approveLabel="Approve Outpass"
-                rejectLabel="Reject"
-                activeRejectId={activeRejectId}
-                setActiveRejectId={setActiveRejectId}
-                reasonById={reasonById}
-                setReasonById={setReasonById}
-                loadingId={loadingId}
-                onApprove={onApprove}
-                onReject={onReject}
-              />
+              <div key={item._id} className="warden-approvals-card">
+                <RequestReviewCard
+                  item={item}
+                  variant="slip"
+                  approveLabel="Approve Outpass"
+                  rejectLabel="Reject"
+                  activeRejectId={activeRejectId}
+                  setActiveRejectId={setActiveRejectId}
+                  reasonById={reasonById}
+                  setReasonById={setReasonById}
+                  loadingId={loadingId}
+                  onApprove={onApprove}
+                  onReject={onReject}
+                />
+                <button className="secondary-button warden-student-info-btn" type="button" onClick={() => openStudent(item._id)}>
+                  Student info
+                </button>
+              </div>
             ))}
           </div>
 
@@ -100,6 +118,9 @@ export default function WardenApprovals({
                     <td>
                       <strong>{item.studentName}</strong>
                       <small>{item.department} · Year {item.year}</small>
+                      <button className="link-button" type="button" onClick={() => openStudent(item._id)}>
+                        Student info
+                      </button>
                     </td>
                     <td>{item.requestType}</td>
                     <td>{formatDate(item.date)}</td>
@@ -109,7 +130,7 @@ export default function WardenApprovals({
                       <span className={`status-badge status-${String(item.status).toLowerCase()}`}>{item.status}</span>
                     </td>
                     <td>
-                      <button className="secondary-button warden-review-btn" type="button" onClick={() => setDetailId(item._id)}>
+                      <button className="secondary-button warden-review-btn" type="button" onClick={() => openReview(item._id)}>
                         Review
                       </button>
                     </td>
