@@ -287,6 +287,53 @@ label {
   }
 }
 
+/* Logout confirmation modal */
+.logout-confirm-overlay {
+  position: fixed;
+  inset: 0;
+  z-index: 100;
+  display: flex;
+  align-items: center;
+  justify-content: center;
+  padding: 1rem;
+  background: rgba(15, 23, 42, 0.55);
+  backdrop-filter: blur(2px);
+}
+
+.logout-confirm-card {
+  width: 100%;
+  max-width: 380px;
+  background: var(--surface);
+  border: 1px solid var(--border);
+  border-radius: var(--radius-lg);
+  box-shadow: var(--shadow-md);
+  padding: 1.5rem;
+  text-align: center;
+}
+
+.logout-confirm-card h3 {
+  margin: 0 0 0.5rem;
+  font-size: var(--text-lg);
+  color: var(--text);
+}
+
+.logout-confirm-card p {
+  margin: 0 0 1.25rem;
+  color: var(--muted);
+  font-size: var(--text-sm);
+}
+
+.logout-confirm-actions {
+  display: flex;
+  gap: 0.75rem;
+  justify-content: center;
+}
+
+.logout-confirm-actions button {
+  flex: 1;
+  max-width: 140px;
+}
+
 /* Load-failure state — consistent across Student, Warden, Sister, HOD */
 .error-state {
   display: grid;

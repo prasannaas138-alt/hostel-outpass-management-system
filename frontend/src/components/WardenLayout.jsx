@@ -1,3 +1,4 @@
+import { useState } from 'react';
 import { useNavigate } from 'react-router-dom';
 import { useAuth } from '../context/AuthContext';
 import NotificationBell from './NotificationBell';
@@ -18,8 +19,9 @@ const wardenActiveId = () => {
 export default function WardenLayout({ title, subtitle, actions, children }) {
   const { user, logout } = useAuth();
   const navigate = useNavigate();
+  const [logoutOpen, setLogoutOpen] = useState(false);
 
-  const handleLogout = () => {
+  const confirmLogout = () => {
     logout();
     navigate('/login');
   };
@@ -63,7 +65,7 @@ export default function WardenLayout({ title, subtitle, actions, children }) {
           </a>
         </nav>
 
-        <button className="secondary-button warden-logout" type="button" onClick={handleLogout}>
+        <button className="secondary-button warden-logout" type="button" onClick={() => setLogoutOpen(true)}>
           Logout
         </button>
       </aside>
@@ -81,11 +83,24 @@ export default function WardenLayout({ title, subtitle, actions, children }) {
             <NotificationBell />
             <span aria-hidden="true">👋</span>
             <strong>Hello, {firstName}!</strong>
-            <button className="secondary-button" type="button" onClick={handleLogout}>
+            <button className="secondary-button" type="button" onClick={() => setLogoutOpen(true)}>
               Logout
             </button>
           </div>
         </header>
+
+        {logoutOpen ? (
+          <div className="logout-confirm-overlay" role="dialog" aria-modal="true" aria-label="Confirm logout">
+            <div className="logout-confirm-card">
+              <h3>Are you sure?</h3>
+              <p>You will be signed out of your account.</p>
+              <div className="logout-confirm-actions">
+                <button className="primary-button" type="button" onClick={confirmLogout}>Yes, logout</button>
+                <button className="secondary-button" type="button" onClick={() => setLogoutOpen(false)}>Cancel</button>
+              </div>
+            </div>
+          </div>
+        ) : null}
 
         <main className="warden-main" id="warden-main">
           <header className="dashboard-topbar">
