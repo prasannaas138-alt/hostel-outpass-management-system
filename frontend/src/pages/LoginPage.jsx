@@ -52,17 +52,18 @@ export default function LoginPage() {
 
   return (
     <main className="auth-page">
+      <button
+        className="auth-hamburger"
+        type="button"
+        onClick={() => setBrandPanelOpen((open) => !open)}
+        aria-label={brandPanelOpen ? 'Close brand panel' : 'Open brand panel'}
+        aria-expanded={brandPanelOpen}
+      >
+        ☰
+      </button>
+
       <header className="auth-header">
         <div className="auth-header-left">
-          <button
-            className="auth-hamburger"
-            type="button"
-            onClick={() => setBrandPanelOpen((open) => !open)}
-            aria-label={brandPanelOpen ? 'Close brand panel' : 'Open brand panel'}
-            aria-expanded={brandPanelOpen}
-          >
-            ☰
-          </button>
         </div>
         <div className="auth-header-center">
           <img src="/st-joseph-logo.png" alt="St. Joseph's University" className="auth-header-logo" onError={(e) => {e.target.style.display='none';}} />
@@ -85,12 +86,15 @@ export default function LoginPage() {
         >
           ✕
         </button>
-        <AuthBrandPanel subtitle="Hostel Outpass Management System" />
+        <div className="auth-mobile-brand-content">
+          <img src="/homs-logo.png" alt="H.O.M.S" className="auth-mobile-brand-logo" onError={(e) => {e.target.style.display='none';}} />
+          <h2>H.O.M.S — Hostel Outpass Management System</h2>
+          <p>St. Joseph&apos;s University · Hostel Portal</p>
+        </div>
       </div>
 
       <div className="auth-main">
         <div className="auth-brand-row">
-          <img src="/st-joseph-logo.png" alt="St. Joseph's University" onError={(e) => {e.target.style.display='none';}} />
           <div>
             <strong>H.O.M.S — Hostel Outpass Management System</strong>
             <span>St. Joseph&apos;s University · Hostel Portal</span>
