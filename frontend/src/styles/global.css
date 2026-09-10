@@ -287,6 +287,31 @@ label {
   }
 }
 
+/* Load-failure state — consistent across Student, Warden, Sister, HOD */
+.error-state {
+  display: grid;
+  justify-items: center;
+  gap: 0.35rem;
+  padding: 2rem 1.5rem;
+  text-align: center;
+}
+
+.error-state-icon {
+  font-size: 1.75rem;
+  line-height: 1;
+}
+
+.error-state strong {
+  color: var(--red-700);
+}
+
+.error-state p {
+  margin: 0;
+  color: var(--muted);
+  max-width: 46ch;
+  overflow-wrap: anywhere;
+}
+
 /* ---- Shared state styles (canonical) ----
    Consolidated here so every page (auth, dashboards) renders
    identical loading, empty, alert, and close controls. */

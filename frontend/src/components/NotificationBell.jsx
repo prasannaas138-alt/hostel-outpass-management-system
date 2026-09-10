@@ -1,6 +1,7 @@
 import { useEffect, useRef, useState } from 'react';
 import { useNavigate } from 'react-router-dom';
 import api from '../services/api';
+import { useAuth } from '../context/AuthContext';
 
 // In-app notification bell for Sister/Warden. Fetches real notifications from
 // /notifications and marks a notification read when it is opened.
@@ -11,6 +12,7 @@ export default function NotificationBell() {
   const [loading, setLoading] = useState(false);
   const wrapRef = useRef(null);
   const navigate = useNavigate();
+  const { user } = useAuth();
 
   const load = async () => {
     setLoading(true);
@@ -59,7 +61,13 @@ export default function NotificationBell() {
   const openNotification = async (notification) => {
     await markRead(notification);
     setOpen(false);
-    navigate('/warden-dashboard#warden-requests');
+    // Navigate to the reviewer's own dashboard — the bell is shared by
+    // Sister and Warden, and each route is role-protected.
+    navigate(
+      user?.role === 'Sister'
+        ? '/sister-dashboard#hod-approved-requests'
+        : '/warden-dashboard#warden-requests',
+    );
   };
 
   const markAllRead = async () => {

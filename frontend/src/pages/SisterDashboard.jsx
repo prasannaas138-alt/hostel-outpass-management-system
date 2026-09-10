@@ -4,6 +4,7 @@ import { useAuth } from '../context/AuthContext';
 import DashboardLayout from '../components/DashboardLayout';
 import AlertBanner from '../components/AlertBanner';
 import LoadingState from '../components/LoadingState';
+import ErrorState from '../components/ErrorState';
 import RequestReviewCard from '../components/RequestReviewCard';
 import '../styles/dashboard.css';
 import '../styles/student.css';
@@ -15,24 +16,30 @@ export default function SisterDashboard() {
   const [error, setError] = useState('');
   const [success, setSuccess] = useState('');
   const [loading, setLoading] = useState(true);
+  const [loadError, setLoadError] = useState('');
   const [loadingId, setLoadingId] = useState('');
   const [activeRejectId, setActiveRejectId] = useState('');
   const [reasonById, setReasonById] = useState({});
 
   const firstName = (user?.name || 'Sister').split(' ')[0];
 
+  // Self-contained loader: owns its loading/error lifecycle so a failed
+  // initial load shows a retry state instead of an unhandled rejection.
   const loadItems = async () => {
     setLoading(true);
-    const { data } = await api.get('/outpasses/pending/sister');
-    setItems(data);
-    setLoading(false);
+    setLoadError('');
+    try {
+      const { data } = await api.get('/outpasses/pending/sister');
+      setItems(data);
+    } catch (loadError) {
+      setLoadError(loadError.response?.data?.message || 'Failed to load requests');
+    } finally {
+      setLoading(false);
+    }
   };
 
   useEffect(() => {
-    loadItems().catch((loadError) => {
-      setLoading(false);
-      setError(loadError.response?.data?.message || 'Failed to load requests');
-    });
+    loadItems();
   }, []);
 
   const review = async (id, action) => {
@@ -74,7 +81,7 @@ export default function SisterDashboard() {
             <p className="eyebrow">Pending review</p>
             <h2>HOD-approved home requests</h2>
           </div>
-          {!loading && !error ? <span className="mini-summary">{items.length} awaiting review</span> : null}
+          {!loading && !error && !loadError ? <span className="mini-summary">{items.length} awaiting review</span> : null}
         </div>
 
         <AlertBanner type="error" message={error} />
@@ -82,6 +89,12 @@ export default function SisterDashboard() {
 
         {loading ? (
           <LoadingState label="Loading HOD-approved requests..." />
+        ) : loadError ? (
+          <ErrorState
+            message={loadError}
+            onRetry={() => loadItems()}
+            retryLabel="Reload queue"
+          />
         ) : items.length ? (
           <>
             <div className="warden-approvals-cards">

@@ -4,6 +4,7 @@ import { useAuth } from '../context/AuthContext';
 import WardenLayout from '../components/WardenLayout';
 import WardenApprovals from '../components/WardenApprovals';
 import LoadingState from '../components/LoadingState';
+import ErrorState from '../components/ErrorState';
 import RequestReviewCard from '../components/RequestReviewCard';
 import '../styles/dashboard.css';
 import '../styles/student.css';
@@ -15,6 +16,7 @@ export default function WardenDashboard() {
   const [error, setError] = useState('');
   const [success, setSuccess] = useState('');
   const [loading, setLoading] = useState(true);
+  const [loadError, setLoadError] = useState('');
   const [loadingId, setLoadingId] = useState('');
   const [activeRejectId, setActiveRejectId] = useState('');
   const [reasonById, setReasonById] = useState({});
@@ -24,18 +26,23 @@ export default function WardenDashboard() {
   const outingCount = useMemo(() => items.filter((item) => item.requestType === 'Outing').length, [items]);
   const homeCount = useMemo(() => items.filter((item) => item.requestType === 'Home').length, [items]);
 
+  // Self-contained loader: owns its loading/error lifecycle so a failed
+  // initial load shows a retry state instead of an unhandled rejection.
   const loadItems = async () => {
     setLoading(true);
-    const { data } = await api.get('/outpasses/pending/warden');
-    setItems(data);
-    setLoading(false);
+    setLoadError('');
+    try {
+      const { data } = await api.get('/outpasses/pending/warden');
+      setItems(data);
+    } catch (loadError) {
+      setLoadError(loadError.response?.data?.message || 'Failed to load requests');
+    } finally {
+      setLoading(false);
+    }
   };
 
   useEffect(() => {
-    loadItems().catch((loadError) => {
-      setLoading(false);
-      setError(loadError.response?.data?.message || 'Failed to load requests');
-    });
+    loadItems();
   }, []);
 
   const review = async (id, action) => {
@@ -125,10 +132,19 @@ export default function WardenDashboard() {
           {showStats ? <span className="mini-summary">{items.length} total</span> : null}
         </div>
 
-        <WardenApprovals
-          items={items}
-          loading={loading}
-          error={error}
+        {loading ? (
+          <LoadingState label="Loading pending requests..." />
+        ) : loadError ? (
+          <ErrorState
+            message={loadError}
+            onRetry={() => loadItems()}
+            retryLabel="Reload queue"
+          />
+        ) : (
+          <WardenApprovals
+            items={items}
+            loading={loading}
+            error={error}
           success={success}
           typeFilter={typeFilter}
           onTypeFilterChange={setTypeFilter}
@@ -139,7 +155,8 @@ export default function WardenDashboard() {
           setReasonById={setReasonById}
           onApprove={(id) => review(id, 'approve')}
           onReject={(id) => review(id, 'reject')}
-        />
+          />
+        )}
       </section>
 
       {items[0] ? (

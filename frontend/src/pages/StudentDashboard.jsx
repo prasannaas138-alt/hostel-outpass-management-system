@@ -7,6 +7,7 @@ import OutpassHistory from '../components/OutpassHistory';
 import StudentProfile from '../components/StudentProfile';
 import { MyRequestsTable, RequestDetailsModal } from '../components/RequestDetails';
 import LoadingState from '../components/LoadingState';
+import ErrorState from '../components/ErrorState';
 import StatusTracker from '../components/StatusTracker';
 import '../styles/dashboard.css';
 import '../styles/student.css';
@@ -39,6 +40,7 @@ export default function StudentDashboard() {
   const [success, setSuccess] = useState('');
   const [error, setError] = useState('');
   const [loading, setLoading] = useState(true);
+  const [loadError, setLoadError] = useState('');
   const [saving, setSaving] = useState(false);
   const [statusFilter, setStatusFilter] = useState('All');
   const [search, setSearch] = useState('');
@@ -73,18 +75,23 @@ export default function StudentDashboard() {
   }, [requests, statusFilter, search]);
   const detailRequest = useMemo(() => requests.find((item) => item._id === detailId) || null, [requests, detailId]);
 
+  // Self-contained loader: owns its loading/error lifecycle so a failed
+  // initial load shows a retry state instead of an unhandled rejection.
   const loadRequests = async () => {
     setLoading(true);
-    const { data } = await api.get('/outpasses/me');
-    setRequests(data);
-    setLoading(false);
+    setLoadError('');
+    try {
+      const { data } = await api.get('/outpasses/me');
+      setRequests(data);
+    } catch (loadError) {
+      setLoadError(loadError.response?.data?.message || 'Failed to load requests');
+    } finally {
+      setLoading(false);
+    }
   };
 
   useEffect(() => {
-    loadRequests().catch((loadError) => {
-      setLoading(false);
-      setError(loadError.response?.data?.message || 'Failed to load requests');
-    });
+    loadRequests();
   }, []);
 
   useEffect(() => {
@@ -137,15 +144,19 @@ export default function StudentDashboard() {
   };
 
   const handleDownload = async (requestId) => {
-    const response = await api.get(`/outpasses/${requestId}/pdf`, { responseType: 'blob' });
-    const fileUrl = window.URL.createObjectURL(new Blob([response.data], { type: 'application/pdf' }));
-    const link = document.createElement('a');
-    link.href = fileUrl;
-    link.download = `outpass-${requestId}.pdf`;
-    document.body.appendChild(link);
-    link.click();
-    link.remove();
-    window.URL.revokeObjectURL(fileUrl);
+    try {
+      const response = await api.get(`/outpasses/${requestId}/pdf`, { responseType: 'blob' });
+      const fileUrl = window.URL.createObjectURL(new Blob([response.data], { type: 'application/pdf' }));
+      const link = document.createElement('a');
+      link.href = fileUrl;
+      link.download = `outpass-${requestId}.pdf`;
+      document.body.appendChild(link);
+      link.click();
+      link.remove();
+      window.URL.revokeObjectURL(fileUrl);
+    } catch (downloadError) {
+      setError(downloadError.response?.data?.message || 'Failed to download outpass PDF');
+    }
   };
 
   return (
@@ -181,6 +192,16 @@ export default function StudentDashboard() {
           <span>Your hostel and department details.</span>
         </a>
       </section>
+
+      {loadError ? (
+        <section className="panel" aria-label="Data unavailable">
+          <ErrorState
+            message={loadError}
+            onRetry={() => loadRequests()}
+            retryLabel="Reload requests"
+          />
+        </section>
+      ) : null}
 
       <section className="panel" aria-label="Request statistics">
         <div className="panel-heading">
@@ -245,7 +266,7 @@ export default function StudentDashboard() {
         <MyRequestsList
           requests={filteredRequests}
           loading={loading}
-          error={error}
+          error={error || loadError}
           statusFilter={statusFilter}
           onStatusFilterChange={setStatusFilter}
           search={search}
@@ -280,7 +301,7 @@ export default function StudentDashboard() {
         <OutpassHistory
           requests={visibleHistoryRequests}
           loading={loading}
-          error={error}
+          error={error || loadError}
           typeFilter={historyTypeFilter}
           onTypeFilterChange={setHistoryTypeFilter}
           search={historySearch}
