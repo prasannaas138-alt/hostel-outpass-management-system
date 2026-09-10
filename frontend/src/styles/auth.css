@@ -567,3 +567,95 @@
     display: none;
   }
 }
+
+/* Mobile Sign In: hamburger + slide-in brand panel */
+.auth-hamburger {
+  display: none;
+}
+
+.auth-mobile-overlay {
+  display: none;
+}
+
+.auth-mobile-brand-panel {
+  display: none;
+}
+
+@media (max-width: 900px) {
+  .auth-hamburger {
+    display: inline-flex;
+    align-items: center;
+    justify-content: center;
+    width: 44px;
+    height: 44px;
+    border-radius: 10px;
+    background: rgba(255, 255, 255, 0.12);
+    border: 1px solid rgba(255, 255, 255, 0.18);
+    color: #fff;
+    font-size: 1.4rem;
+    cursor: pointer;
+    touch-action: manipulation;
+  }
+
+  .auth-hamburger:hover {
+    background: rgba(255, 255, 255, 0.2);
+  }
+
+  /* Hide the original brand panel inside the card on mobile */
+  .auth-card--modern > .auth-copy--brand {
+    display: none;
+  }
+
+  /* Slide-in brand panel */
+  .auth-mobile-brand-panel {
+    display: block;
+    position: fixed;
+    top: 0;
+    left: 0;
+    bottom: 0;
+    width: 300px;
+    max-width: 85vw;
+    background: var(--navy-900);
+    z-index: 60;
+    overflow-y: auto;
+    transform: translateX(-100%);
+    transition: transform 0.4s ease;
+    box-shadow: 4px 0 24px rgba(0, 0, 0, 0.3);
+  }
+
+  .auth-mobile-brand-panel.open {
+    transform: translateX(0);
+  }
+
+  .auth-mobile-brand-close {
+    position: absolute;
+    top: 0.75rem;
+    right: 0.75rem;
+    z-index: 5;
+    width: 36px;
+    height: 36px;
+    border-radius: 8px;
+    background: rgba(255, 255, 255, 0.12);
+    border: 1px solid rgba(255, 255, 255, 0.18);
+    color: #fff;
+    font-size: 1.1rem;
+    cursor: pointer;
+    display: flex;
+    align-items: center;
+    justify-content: center;
+  }
+
+  .auth-mobile-brand-close:hover {
+    background: rgba(255, 255, 255, 0.2);
+  }
+
+  /* Overlay */
+  .auth-mobile-overlay {
+    display: block;
+    position: fixed;
+    inset: 0;
+    background: rgba(15, 23, 42, 0.45);
+    z-index: 50;
+    backdrop-filter: blur(2px);
+  }
+}

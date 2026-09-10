@@ -18,6 +18,7 @@ export default function LoginPage() {
   const navigate = useNavigate();
   const location = useLocation();
   const { login } = useAuth();
+  const [brandPanelOpen, setBrandPanelOpen] = useState(false);
   const [form, setForm] = useState({ email: '', password: '', role: 'Student' });
   const [error, setError] = useState('');
   const [loading, setLoading] = useState(false);
@@ -52,7 +53,17 @@ export default function LoginPage() {
   return (
     <main className="auth-page">
       <header className="auth-header">
-        <div className="auth-header-left"></div>
+        <div className="auth-header-left">
+          <button
+            className="auth-hamburger"
+            type="button"
+            onClick={() => setBrandPanelOpen((open) => !open)}
+            aria-label={brandPanelOpen ? 'Close brand panel' : 'Open brand panel'}
+            aria-expanded={brandPanelOpen}
+          >
+            ☰
+          </button>
+        </div>
         <div className="auth-header-center">
           <img src="/st-joseph-logo.png" alt="St. Joseph's University" className="auth-header-logo" onError={(e) => {e.target.style.display='none';}} />
         </div>
@@ -60,6 +71,22 @@ export default function LoginPage() {
           <img src="/homs-logo.png" alt="H.O.M.S Logo" className="auth-header-brand" onError={(e) => {e.target.style.display='none';}} />
         </div>
       </header>
+
+      {brandPanelOpen ? (
+        <div className="auth-mobile-overlay" onClick={() => setBrandPanelOpen(false)} aria-hidden="true" />
+      ) : null}
+
+      <div className={`auth-mobile-brand-panel ${brandPanelOpen ? 'open' : ''}`}>
+        <button
+          className="auth-mobile-brand-close"
+          type="button"
+          onClick={() => setBrandPanelOpen(false)}
+          aria-label="Close brand panel"
+        >
+          ✕
+        </button>
+        <AuthBrandPanel subtitle="Hostel Outpass Management System" />
+      </div>
 
       <div className="auth-main">
         <div className="auth-brand-row">
