@@ -1,29 +1,21 @@
-import { createContext, useContext, useEffect, useState } from 'react';
-import { clearAuth, getStoredAuth, setStoredAuth } from '../utils/auth';
+import { createContext, useContext, useState } from 'react';
+import { clearAuth, getInitialAuth, setStoredAuth } from '../utils/auth';
 
 const AuthContext = createContext(null);
 
 export const AuthProvider = ({ children }) => {
-  const [token, setToken] = useState(null);
-  const [user, setUser] = useState(null);
-
-  useEffect(() => {
-    const auth = getStoredAuth();
-    if (auth.token && auth.user) {
-      setToken(auth.token);
-      setUser(auth.user);
-    }
-  }, []);
+  // Initialize synchronously from localStorage so a page refresh restores the
+  // session on the very first render — ProtectedRoute never sees an empty
+  // auth state for a still-valid token (prevents the redirect-to-login race).
+  const [{ token, user }, setAuthState] = useState(() => getInitialAuth());
 
   const login = (auth) => {
-    setToken(auth.token);
-    setUser(auth.user);
+    setAuthState({ token: auth.token, user: auth.user });
     setStoredAuth(auth);
   };
 
   const logout = () => {
-    setToken(null);
-    setUser(null);
+    setAuthState({ token: null, user: null });
     clearAuth();
   };
 
