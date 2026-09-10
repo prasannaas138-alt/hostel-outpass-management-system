@@ -2,11 +2,14 @@ import { useNavigate } from 'react-router-dom';
 import { useAuth } from '../context/AuthContext';
 import Sidebar from './Sidebar';
 import MobileBottomNav from './MobileBottomNav';
+import NotificationBell from './NotificationBell';
 import '../styles/layout.css';
+import '../styles/notifications.css';
 
 export default function DashboardLayout({ title, subtitle, navItems, children, actions }) {
   const { user, logout } = useAuth();
   const navigate = useNavigate();
+  const showBell = user?.role === 'Sister' || user?.role === 'Warden';
 
   const handleLogout = () => {
     logout();
@@ -32,6 +35,7 @@ export default function DashboardLayout({ title, subtitle, navItems, children, a
             <p className="muted">{subtitle}</p>
           </div>
           {actions ? <div className="dashboard-actions">{actions}</div> : null}
+          {showBell ? <NotificationBell /> : null}
         </header>
 
         {children}

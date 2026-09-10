@@ -1,6 +1,8 @@
 import { useNavigate } from 'react-router-dom';
 import { useAuth } from '../context/AuthContext';
+import NotificationBell from './NotificationBell';
 import '../styles/student.css';
+import '../styles/notifications.css';
 
 const WARDEN_NAV = [
   { id: 'warden-requests', label: 'Review Queue', icon: '📥', href: '#warden-requests' },
@@ -76,6 +78,7 @@ export default function WardenLayout({ title, subtitle, actions, children }) {
             </div>
           </div>
           <div className="warden-topbar-user">
+            <NotificationBell />
             <span aria-hidden="true">👋</span>
             <strong>Hello, {firstName}!</strong>
             <button className="secondary-button" type="button" onClick={handleLogout}>

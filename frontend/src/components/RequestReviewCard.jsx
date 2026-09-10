@@ -78,7 +78,7 @@ export default function RequestReviewCard({
 
       <div className="button-row">
         <button className="primary-button" type="button" onClick={() => onApprove(item._id)} disabled={isBusy}>
-          {isBusy ? 'Processing...' : approveLabel}
+          {isBusy ? 'Recording approval...' : approveLabel}
         </button>
 
         {isRejecting ? (
@@ -96,6 +96,12 @@ export default function RequestReviewCard({
           </button>
         )}
       </div>
+
+      <p className="approve-note" role="note">
+        {isBusy
+          ? '⏳ Your approval is being recorded. Do not close this page.'
+          : 'ℹ️ Approving records your approval for this request. Rejection still requires a reason.'}
+      </p>
     </article>
   );
 }

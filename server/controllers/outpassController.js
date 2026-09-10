@@ -1,6 +1,7 @@
 import Outpass from '../models/Outpass.js';
 import { isWeekend } from '../utils/date.js';
 import { createOutpassPdf } from '../utils/pdf.js';
+import { notifyNewOutpass, markOutpassNotificationsRead } from '../services/notificationService.js';
 
 const ACTIVE_STATUSES = ['Pending', 'Approved'];
 
@@ -92,6 +93,9 @@ export const createOutpass = async (req, res, next) => {
       wardenStatus: 'Pending',
       expiresAt: buildExpiresAt(date, returnTime),
     });
+
+    // In-app notifications for Sister/Warden (non-blocking, never fails the request).
+    await notifyNewOutpass(outpass);
 
     res.status(201).json(outpass);
   } catch (error) {
@@ -257,6 +261,7 @@ export const hodReviewOutpass = async (req, res, next) => {
     outpass.wardenStatus = 'NotRequired';
     outpass.rejectionReason = rejectionReason || 'Rejected by HOD';
     await outpass.save();
+    await markOutpassNotificationsRead(outpass._id);
     return res.json(outpass);
   } catch (error) {
     next(error);
@@ -278,6 +283,7 @@ export const sisterReviewOutpass = async (req, res, next) => {
       outpass.wardenStatus = 'Pending';
       outpass.approvedBy.push(buildApprovedByEntry('Sister', req.user._id));
       await outpass.save();
+      await markOutpassNotificationsRead(outpass._id, 'Sister');
       return res.json(outpass);
     }
 
@@ -286,6 +292,7 @@ export const sisterReviewOutpass = async (req, res, next) => {
     outpass.wardenStatus = 'NotRequired';
     outpass.rejectionReason = rejectionReason || 'Rejected by Sister';
     await outpass.save();
+    await markOutpassNotificationsRead(outpass._id);
     return res.json(outpass);
   } catch (error) {
     next(error);
@@ -314,6 +321,7 @@ export const wardenReviewOutpass = async (req, res, next) => {
       outpass.expiresAt = buildExpiresAt(outpass.date, outpass.returnTime);
       outpass.approvedBy.push(buildApprovedByEntry('Warden', req.user._id));
       await outpass.save();
+      await markOutpassNotificationsRead(outpass._id);
       return res.json(outpass);
     }
 
@@ -321,6 +329,7 @@ export const wardenReviewOutpass = async (req, res, next) => {
     outpass.status = 'Rejected';
     outpass.rejectionReason = rejectionReason || 'Rejected by Warden';
     await outpass.save();
+    await markOutpassNotificationsRead(outpass._id);
     return res.json(outpass);
   } catch (error) {
     next(error);

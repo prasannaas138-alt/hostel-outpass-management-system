@@ -5,6 +5,7 @@ import path from 'path';
 import { fileURLToPath } from 'url';
 import authRoutes from './routes/authRoutes.js';
 import outpassRoutes from './routes/outpassRoutes.js';
+import notificationRoutes from './routes/notificationRoutes.js';
 import { notFound, errorHandler } from './middleware/errorHandler.js';
 
 const app = express();
@@ -42,6 +43,7 @@ app.get('/', (req, res) => {
 
 app.use('/api/auth', authRoutes);
 app.use('/api/outpasses', outpassRoutes);
+app.use('/api/notifications', notificationRoutes);
 
 app.get(/^\/(?!api).*/, (req, res, next) => {
   if (fs.existsSync(indexHtmlPath)) {
