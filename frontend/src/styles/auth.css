@@ -663,7 +663,7 @@
     flex-direction: column;
     align-items: flex-start;
     gap: 1rem;
-    padding: 4rem 1.5rem 2rem;
+    padding: 4rem 1.5rem 1.5rem;
     color: #fff;
   }
 
@@ -684,6 +684,36 @@
     margin: 0;
     color: rgba(255, 255, 255, 0.78);
     font-size: var(--text-sm);
+  }
+
+  /* Mobile brand body — desktop content reused */
+  .auth-mobile-brand-body {
+    padding: 0 1.5rem 2rem;
+  }
+
+  .auth-mobile-brand-body .auth-copy--brand {
+    padding: 0;
+    background: transparent;
+    border-radius: 0;
+    box-shadow: none;
+  }
+
+  .auth-mobile-brand-body .auth-role-list {
+    grid-template-columns: 1fr;
+    gap: 0.75rem;
+  }
+
+  .auth-mobile-brand-body .auth-role-list li {
+    padding: 0.75rem;
+  }
+
+  .auth-mobile-brand-body .auth-trust-row {
+    flex-wrap: wrap;
+    gap: 0.5rem;
+  }
+
+  .auth-mobile-brand-body .auth-trust-row span {
+    font-size: var(--text-xs);
   }
 
   /* Overlay */

@@ -91,6 +91,9 @@ export default function LoginPage() {
           <h2>H.O.M.S — Hostel Outpass Management System</h2>
           <p>St. Joseph&apos;s University · Hostel Portal</p>
         </div>
+        <div className="auth-mobile-brand-body">
+          <AuthBrandPanel hideTop subtitle="Hostel Outpass Management System" />
+        </div>
       </div>
 
       <div className="auth-main">

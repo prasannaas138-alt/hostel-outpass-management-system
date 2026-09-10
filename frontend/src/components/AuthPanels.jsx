@@ -38,16 +38,20 @@ export function PasswordField({ name, value, onChange, label, placeholder, autoC
   );
 }
 
-export function AuthBrandPanel({ title, subtitle, showSignInLink = false }) {
+export function AuthBrandPanel({ title, subtitle, showSignInLink = false, hideTop = false }) {
   return (
     <div className="auth-copy auth-copy--brand">
-      <span className="auth-brand-badge">
-        <i aria-hidden="true" />
-        University Hostel Portal
-      </span>
-      <p className="eyebrow">St. Joseph&apos;s University</p>
-      <h1>H.O.M.S</h1>
-      <p className="auth-subtitle">{subtitle || title}</p>
+      {!hideTop ? (
+        <>
+          <span className="auth-brand-badge">
+            <i aria-hidden="true" />
+            University Hostel Portal
+          </span>
+          <p className="eyebrow">St. Joseph&apos;s University</p>
+          <h1>H.O.M.S</h1>
+          <p className="auth-subtitle">{subtitle || title}</p>
+        </>
+      ) : null}
       <p>Apply for hostel permissions, track requests, and manage approvals with ease.</p>
 
       <ul className="auth-role-list">
