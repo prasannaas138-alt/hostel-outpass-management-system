@@ -1,7 +1,7 @@
 import { useState } from 'react';
 import { Link } from 'react-router-dom';
 
-export function PasswordField({ name, value, onChange, label, placeholder, autoComplete, required = true, minLength }) {
+export function PasswordField({ name, value, onChange, label, placeholder, autoComplete, required = true, minLength, disabled }) {
   const [visible, setVisible] = useState(false);
 
   return (
@@ -17,10 +17,12 @@ export function PasswordField({ name, value, onChange, label, placeholder, autoC
           placeholder={placeholder}
           required={required}
           minLength={minLength}
+          disabled={disabled}
         />
         <button
           className="password-toggle"
           type="button"
+          disabled={disabled}
           onClick={() => setVisible((current) => !current)}
           aria-label={visible ? `Hide ${label}` : `Show ${label}`}
           aria-pressed={visible}

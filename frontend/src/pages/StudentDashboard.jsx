@@ -33,7 +33,7 @@ const isWeekend = (value) => {
 };
 
 export default function StudentDashboard() {
-  const { user } = useAuth();
+  const { user, updateUser } = useAuth();
   const [requests, setRequests] = useState([]);
   const [form, setForm] = useState(emptyForm);
   const [selectedId, setSelectedId] = useState(null);
@@ -141,6 +141,14 @@ export default function StudentDashboard() {
     } finally {
       setSaving(false);
     }
+  };
+
+  // StudentProfile calls this after a successful PUT /auth/me so the
+  // header/sidebar greeting uses the new name right away.
+  const handleProfileUpdated = (updatedUser) => {
+    updateUser(updatedUser);
+    setSuccess('Profile updated successfully.');
+    document.getElementById('profile')?.scrollIntoView({ behavior: 'smooth' });
   };
 
   const handleDownload = async (requestId) => {
@@ -336,7 +344,7 @@ export default function StudentDashboard() {
           </div>
         </div>
 
-        <StudentProfile user={user} />
+        <StudentProfile user={user} onProfileUpdated={handleProfileUpdated} />
       </section>
     </StudentLayout>
   );

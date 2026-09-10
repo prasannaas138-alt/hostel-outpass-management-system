@@ -19,7 +19,17 @@ export const AuthProvider = ({ children }) => {
     clearAuth();
   };
 
-  return <AuthContext.Provider value={{ token, user, login, logout }}>{children}</AuthContext.Provider>;
+  // Refresh the persisted user after a profile update so the header/sidebar
+  // name updates immediately AND survives a page refresh (same storage key).
+  const updateUser = (updatedUser) => {
+    setAuthState((prev) => {
+      const next = { token: prev.token, user: { ...prev.user, ...updatedUser } };
+      setStoredAuth(next);
+      return next;
+    });
+  };
+
+  return <AuthContext.Provider value={{ token, user, login, logout, updateUser }}>{children}</AuthContext.Provider>;
 };
 
 export const useAuth = () => {

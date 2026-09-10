@@ -129,3 +129,90 @@ export const loginUser = async (req, res, next) => {
 export const getCurrentUser = async (req, res) => {
   res.json({ user: sanitizeUser(req.user) });
 };
+
+// Editable fields for a student's own profile. Deliberately excludes
+// email/registerNumber (identity), role (system-controlled) and password
+// (handled by the separate password endpoint below).
+export const updateCurrentUser = async (req, res, next) => {
+  try {
+    const { name, department, year, hostelBlock } = req.body;
+
+    if (!name || !name.trim()) {
+      return res.status(400).json({ message: 'Name is required.' });
+    }
+    if (!department || !String(department).trim()) {
+      return res.status(400).json({ message: 'Department is required.' });
+    }
+
+    // Editable fields only. System-controlled fields are never taken from the
+    // request body: role (system), registerNumber (identity), email (identity),
+    // and roomNumber are not editable through this profile-update endpoint.
+    const user = await User.findById(req.user._id);
+
+    if (!user) {
+      return res.status(404).json({ message: 'User not found.' });
+    }
+
+    user.name = String(name).trim();
+    user.department = String(department).trim();
+    if (typeof year === 'string') {
+      user.year = String(year).trim();
+    }
+    if (typeof hostelBlock === 'string') {
+      user.hostelBlock = String(hostelBlock).trim();
+    }
+
+    await user.save();
+
+    res.json({ message: 'Profile updated successfully.', user: sanitizeUser(user) });
+  } catch (error) {
+    next(error);
+  }
+};
+
+// Separate password-change flow. Never part of the profile-update API.
+// The JWT is unchanged — it contains no password data, so the session
+// stays valid after a successful password change.
+export const changeMyPassword = async (req, res, next) => {
+  try {
+    const { currentPassword, newPassword, confirmPassword } = req.body;
+
+    if (!currentPassword || !newPassword || !confirmPassword) {
+      return res.status(400).json({ message: 'Current, new, and confirm passwords are required.' });
+    }
+
+    if (newPassword.length < 8) {
+      return res.status(400).json({ message: 'New password must contain at least 8 characters.' });
+    }
+
+    if (newPassword !== confirmPassword) {
+      return res.status(400).json({ message: 'New passwords do not match.' });
+    }
+
+    if (newPassword === currentPassword) {
+      return res.status(400).json({ message: 'New password must be different from the current password.' });
+    }
+
+    // protect loads the user with .select('+password') so req.user.password
+    // is populated for the comparison.
+    const matches = await req.user.matchPassword(currentPassword);
+
+    if (!matches) {
+      return res.status(401).json({ message: 'Current password is incorrect.' });
+    }
+
+    // Update only the authenticated user's own record.
+    const user = await User.findById(req.user._id).select('+password');
+
+    if (!user) {
+      return res.status(404).json({ message: 'User not found.' });
+    }
+
+    user.password = newPassword;
+    await user.save(); // existing pre('save') hook hashes with bcrypt
+
+    res.json({ message: 'Password changed successfully.', user: sanitizeUser(user) });
+  } catch (error) {
+    next(error);
+  }
+};
