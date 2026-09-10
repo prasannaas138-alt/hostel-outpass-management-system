@@ -36,7 +36,7 @@ export default function StatusTracker({ request }) {
       <div className="tracker-card">
         <div className="tracker-card__header">
           <h3>Outing flow</h3>
-          <span className={`status-badge status-${request.status.toLowerCase()}`}>{request.status}</span>
+          <span className={`status-badge status-${String(request.status).toLowerCase()}`}>{request.status}</span>
         </div>
         <div className="tracker-line tracker-line--single">
           <div className={`tracker-dot tracker-dot--${statusClass(request.wardenStatus)}`} />
@@ -61,7 +61,7 @@ export default function StatusTracker({ request }) {
     <div className="tracker-card">
       <div className="tracker-card__header">
         <h3>Home request tracker</h3>
-        <span className={`status-badge status-${request.status.toLowerCase()}`}>{request.status}</span>
+        <span className={`status-badge status-${String(request.status).toLowerCase()}`}>{request.status}</span>
       </div>
 
       <div className="tracker-line">

@@ -66,7 +66,7 @@ export default function WardenDashboard() {
     }
   };
 
-  const showStats = !loading && !error;
+  const showStats = !loading && !loadError;
 
   return (
     <WardenLayout
@@ -90,7 +90,7 @@ export default function WardenDashboard() {
 
         {loading ? (
           <LoadingState label="Loading statistics..." />
-        ) : error ? (
+        ) : loadError ? (
           <div className="empty-state">Queue statistics are unavailable right now.</div>
         ) : (
           <div className="warden-stats">

@@ -39,7 +39,7 @@ export default function RequestReviewCard({
             {item.department} · Year {item.year} · {item.requestType}
           </p>
         </div>
-        <span className={`status-badge status-${item.status.toLowerCase()}`}>{item.status}</span>
+        <span className={`status-badge status-${String(item.status).toLowerCase()}`}>{item.status}</span>
       </div>
 
       {variant === 'slip' ? (
