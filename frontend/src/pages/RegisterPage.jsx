@@ -141,7 +141,7 @@ export default function RegisterPage() {
             <fieldset className="auth-fieldset">
               <legend>Hostel details</legend>
               <div className="auth-form-grid">
-                <label>
+                <label className="auth-full-width">
                   Register Number
                   <input
                     name="registerNumber"

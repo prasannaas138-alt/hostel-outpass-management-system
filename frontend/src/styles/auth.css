@@ -167,6 +167,10 @@
   gap: 1rem;
 }
 
+.auth-full-width {
+  grid-column: 1 / -1;
+}
+
 .auth-note,
 .auth-info-strip {
   display: grid;
