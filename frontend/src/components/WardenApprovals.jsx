@@ -140,6 +140,10 @@ export default function WardenApprovals({
             </table>
           </div>
 
+          {studentDetail ? (
+            <WardenStudentDetails request={studentDetail} onClose={closeDetails} />
+          ) : null}
+
           {detailItem ? (
             <div className="requests-modal" role="dialog" aria-modal="true" aria-label="Request review details">
               <div className="requests-modal-card">
