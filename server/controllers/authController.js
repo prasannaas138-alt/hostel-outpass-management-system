@@ -32,17 +32,15 @@ export const registerUser = async (req, res, next) => {
       roomNumber,
       password,
       confirmPassword,
-      role = 'Student',
     } = req.body;
 
-    if (!name || !email || !registerNumber || !department || !hostelBlock || !roomNumber || !password || !confirmPassword) {
+    if (!name || !email || !registerNumber || !department || !roomNumber || !password || !confirmPassword) {
       return res.status(400).json({ message: 'All fields are required.' });
     }
 
-    const validRoles = ['Student', 'HOD', 'Sister', 'Warden'];
-    if (!validRoles.includes(role)) {
-      return res.status(400).json({ message: 'Invalid role.' });
-    }
+    // Public endpoint: registrations are always Students.
+    // Staff (HOD/Sister/Warden) accounts are provisioned separately by the administrator.
+    const role = 'Student';
 
     const normalizedEmail = email.toLowerCase().trim();
     if (!emailPattern.test(normalizedEmail)) {
@@ -68,11 +66,10 @@ export const registerUser = async (req, res, next) => {
       email: normalizedEmail,
       registerNumber,
       department,
-      hostelBlock,
       roomNumber,
       password,
       role,
-      year: role === 'Student' ? '1' : 'NA',
+      year: '1',
     });
 
     res.status(201).json({
