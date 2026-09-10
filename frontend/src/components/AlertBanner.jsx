@@ -1,10 +1,10 @@
-export default function AlertBanner({ type = 'info', title, message, onClose }) {
+﻿export default function AlertBanner({ type = 'info', title, message, onClose }) {
   if (!message) {
     return null;
   }
 
   return (
-    <div className={`alert-banner alert-banner--${type}`} role="status">
+    <div className={`alert-banner alert-banner--${type}`} role={type === 'error' ? 'alert' : 'status'}>
       <div>
         {title ? <strong>{title}</strong> : null}
         <p>{message}</p>

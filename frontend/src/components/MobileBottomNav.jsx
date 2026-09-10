@@ -1,4 +1,6 @@
-export default function MobileBottomNav({ navItems }) {
+﻿export default function MobileBottomNav({ navItems }) {
+  const activeId = window.location.hash.replace('#', '');
+
   if (!navItems?.length) {
     return null;
   }
@@ -8,7 +10,11 @@ export default function MobileBottomNav({ navItems }) {
   return (
     <nav className="mobile-bottom-nav" aria-label="Primary mobile">
       {visible.map((item) => (
-        <a key={item.id} href={`#${item.id}`}>
+        <a
+          key={item.id}
+          href={`#${item.id}`}
+          aria-current={activeId === item.id ? 'true' : undefined}
+        >
           {item.label}
         </a>
       ))}

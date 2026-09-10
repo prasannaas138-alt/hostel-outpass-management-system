@@ -1,3 +1,8 @@
+﻿
+.mobile-bottom-nav a[aria-current='true'] {
+  background: var(--navy-50);
+  color: var(--navy-900);
+}
 .dashboard-shell {
   width: min(1280px, calc(100% - 2rem));
   margin: 0 auto;
@@ -107,6 +112,12 @@
   background: rgba(255, 255, 255, 0.12);
 }
 
+.sidebar-link--active {
+  background: rgba(255, 255, 255, 0.18);
+  border-color: rgba(255, 255, 255, 0.4);
+  color: #fff;
+}
+
 .dashboard-main {
   padding: 1.2rem;
   display: grid;
@@ -136,6 +147,7 @@
   display: flex;
   align-items: center;
   gap: 0.8rem;
+  flex-wrap: wrap;
 }
 
 .panel {
@@ -207,6 +219,7 @@
 
 .table-wrap {
   overflow-x: auto;
+  -webkit-overflow-scrolling: touch;
 }
 
 .request-history-grid,
@@ -372,68 +385,7 @@
   font-weight: 700;
 }
 
-.loading-state {
-  display: inline-flex;
-  align-items: center;
-  gap: 0.7rem;
-  padding: 0.95rem 1rem;
-  color: var(--muted);
-}
 
-.loading-spinner {
-  width: 1rem;
-  height: 1rem;
-  border-radius: 999px;
-  border: 2px solid var(--border-strong);
-  border-top-color: var(--blue-600);
-  animation: spin 0.85s linear infinite;
-}
-
-@keyframes spin {
-  to {
-    transform: rotate(360deg);
-  }
-}
-
-.alert-banner {
-  display: flex;
-  align-items: flex-start;
-  justify-content: space-between;
-  gap: 1rem;
-  border-radius: var(--radius-md);
-  padding: 0.9rem 1rem;
-  border: 1px solid transparent;
-}
-
-.alert-banner p {
-  margin: 0.2rem 0 0;
-}
-
-.alert-banner--error {
-  background: var(--red-50);
-  color: var(--red-700);
-  border-color: #fecaca;
-}
-
-.alert-banner--success {
-  background: var(--green-50);
-  color: var(--green-700);
-  border-color: #bbf7d0;
-}
-
-.alert-banner--info {
-  background: var(--blue-50);
-  color: var(--navy-800);
-  border-color: #bfdbfe;
-}
-
-.alert-close {
-  border: 0;
-  background: transparent;
-  color: inherit;
-  font-size: 1.1rem;
-  line-height: 1;
-}
 
 .request-card--slip {
   background: var(--surface);
@@ -469,6 +421,7 @@ th {
 .table-actions {
   display: flex;
   gap: 0.8rem;
+  flex-wrap: wrap;
 }
 
 .table-copy {
@@ -513,10 +466,6 @@ th {
   resize: vertical;
 }
 
-.empty-state {
-  padding: 2rem;
-  color: var(--muted);
-}
 
 /* Responsive foundation: desktop sidebar, mobile bottom-nav spacing.
    Breakpoints: 640px mobile, 900px tablet, 1100px desktop. */
@@ -576,7 +525,7 @@ th {
   .button-row .primary-button,
   .button-row .danger-button,
   .button-row .secondary-button {
-    flex: 1 1 100%;
+
   }
 
   .slip-grid {

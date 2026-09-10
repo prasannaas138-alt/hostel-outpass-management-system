@@ -1,4 +1,6 @@
-export default function Sidebar({ title, subtitle, navItems, userName, userRole, onLogout }) {
+﻿export default function Sidebar({ title, subtitle, navItems, userName, userRole, onLogout }) {
+  const activeId = window.location.hash.replace('#', '');
+
   return (
     <aside className="sidebar" aria-label="Primary">
       <div className="sidebar-brand">
@@ -16,7 +18,12 @@ export default function Sidebar({ title, subtitle, navItems, userName, userRole,
       {navItems?.length ? (
         <nav className="sidebar-nav" aria-label="Dashboard sections">
           {navItems.map((item) => (
-            <a key={item.id} className="sidebar-link" href={`#${item.id}`}>
+            <a
+              key={item.id}
+              className={`sidebar-link${activeId === item.id ? ' sidebar-link--active' : ''}`}
+              href={`#${item.id}`}
+              aria-current={activeId === item.id ? 'true' : undefined}
+            >
               <span>{item.label}</span>
               {item.description ? <small>{item.description}</small> : null}
             </a>

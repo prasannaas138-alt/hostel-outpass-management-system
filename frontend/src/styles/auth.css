@@ -1,4 +1,4 @@
-.auth-page {
+﻿.auth-page {
   min-height: 100vh;
   display: flex;
   flex-direction: column;
@@ -153,46 +153,6 @@
 
 .auth-copy .eyebrow {
   color: var(--navy-100);
-}
-
-.alert-banner {
-  display: flex;
-  align-items: flex-start;
-  justify-content: space-between;
-  gap: 1rem;
-  border-radius: var(--radius-md);
-  padding: 0.9rem 1rem;
-  border: 1px solid transparent;
-}
-
-.alert-banner p {
-  margin: 0.2rem 0 0;
-}
-
-.alert-banner--error {
-  background: var(--red-50);
-  color: var(--red-700);
-  border-color: #fecaca;
-}
-
-.alert-banner--success {
-  background: var(--green-50);
-  color: var(--green-700);
-  border-color: #bbf7d0;
-}
-
-.alert-banner--info {
-  background: var(--blue-50);
-  color: var(--navy-800);
-  border-color: #bfdbfe;
-}
-
-.alert-close {
-  border: 0;
-  background: transparent;
-  color: inherit;
-  font-size: 1.1rem;
-  line-height: 1;
 }
 
 .auth-secondary-cta {

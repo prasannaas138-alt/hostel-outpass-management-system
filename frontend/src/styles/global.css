@@ -286,3 +286,98 @@ label {
     animation-duration: 0.01ms !important;
   }
 }
+
+/* ---- Shared state styles (canonical) ----
+   Consolidated here so every page (auth, dashboards) renders
+   identical loading, empty, alert, and close controls. */
+
+.loading-state {
+  display: flex;
+  align-items: center;
+  gap: 0.7rem;
+  width: 100%;
+  padding: 1.1rem 1.2rem;
+  background: var(--surface);
+  border: 1px solid var(--border);
+  border-radius: var(--radius-lg);
+  color: var(--muted);
+  font-weight: 600;
+}
+
+.loading-spinner {
+  width: 1.1rem;
+  height: 1.1rem;
+  flex-shrink: 0;
+  border-radius: 999px;
+  border: 2px solid var(--border-strong);
+  border-top-color: var(--blue-600);
+  animation: spin 0.85s linear infinite;
+}
+
+@keyframes spin {
+  to {
+    transform: rotate(360deg);
+  }
+}
+
+.empty-state {
+  width: 100%;
+  padding: 2.2rem 1.5rem;
+  text-align: center;
+  color: var(--muted);
+  font-weight: 600;
+}
+
+.alert-banner {
+  display: flex;
+  align-items: flex-start;
+  justify-content: space-between;
+  gap: 1rem;
+  width: 100%;
+  border-radius: var(--radius-md);
+  padding: 0.9rem 1rem;
+  border: 1px solid transparent;
+  font-weight: 600;
+}
+
+.alert-banner p {
+  margin: 0.2rem 0 0;
+  font-weight: 500;
+}
+
+.alert-banner--error {
+  background: var(--red-50);
+  color: var(--red-700);
+  border-color: #fecaca;
+}
+
+.alert-banner--success {
+  background: var(--green-50);
+  color: var(--green-700);
+  border-color: #bbf7d0;
+}
+
+.alert-banner--info {
+  background: var(--blue-50);
+  color: var(--navy-800);
+  border-color: #bfdbfe;
+}
+
+.alert-close {
+  display: inline-flex;
+  align-items: center;
+  justify-content: center;
+  min-width: 44px;
+  min-height: 44px;
+  margin: -0.5rem -0.5rem -0.5rem 0;
+  border: 0;
+  background: transparent;
+  color: inherit;
+  font-size: 1.25rem;
+  line-height: 1;
+  border-radius: var(--radius-sm);
+}
+
+.alert-close:hover {
+  background: rgba(15, 23, 42, 0.06);
+}
