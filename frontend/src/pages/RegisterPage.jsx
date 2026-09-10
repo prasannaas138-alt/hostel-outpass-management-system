@@ -130,7 +130,7 @@ export default function RegisterPage() {
                     type="email"
                     value={form.email}
                     onChange={handleChange}
-                    placeholder="your.name@college.edu"
+                    placeholder="Enter your college email address"
                     autoComplete="email"
                     required
                   />
@@ -148,7 +148,7 @@ export default function RegisterPage() {
                     type="text"
                     value={form.registerNumber}
                     onChange={handleChange}
-                    placeholder="Enter your register number"
+                    placeholder="Enter your correct register number (cannot be changed later)"
                     required
                   />
                 </label>
@@ -172,7 +172,7 @@ export default function RegisterPage() {
                   type="text"
                   value={form.roomNumber}
                   onChange={handleChange}
-                  placeholder="Room / bed number"
+                  placeholder="Room number"
                   required
                 />
               </label>
