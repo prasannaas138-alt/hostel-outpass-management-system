@@ -1,6 +1,7 @@
 import AlertBanner from './AlertBanner';
+import { canDownloadPdf } from '../utils/outpassStatus';
+import StatusBadge from './StatusBadge';
 import { formatDate, formatTime } from './MyRequestsList';
-import { getDisplayStatus, getStatusClass, canDownloadPdf } from '../utils/outpassStatus';
 
 /* Small inline SVG icons — this project uses no icon library, so the
    reference-image card keeps its own tiny SVG set. */
@@ -60,8 +61,6 @@ const TypeIcon = ({ requestType }) => (
  * the existing status-badge classes + canDownloadPdf expiry rule.
  */
 export default function StudentRequestCard({ request, variant = '', onViewDetails, onEdit, onDownload }) {
-  const displayStatus = getDisplayStatus(request);
-  const statusClass = getStatusClass(request);
   const downloadAllowed = canDownloadPdf(request);
 
   return (
@@ -84,7 +83,7 @@ export default function StudentRequestCard({ request, variant = '', onViewDetail
         </div>
 
         <span className="ref-card__right">
-          <span className={`status-badge status-${statusClass}`}>{displayStatus}</span>
+          <StatusBadge request={request} />
           <span className="ref-card__chevron" aria-hidden="true">
             <ChevronIcon />
           </span>

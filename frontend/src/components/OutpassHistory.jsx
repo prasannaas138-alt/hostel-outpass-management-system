@@ -1,8 +1,9 @@
 import AlertBanner from './AlertBanner';
 import LoadingState from './LoadingState';
 import StudentRequestCard from './StudentRequestCard';
+import StatusBadge from './StatusBadge';
 import { formatDate, formatTime } from './MyRequestsList';
-import { getDisplayStatus, getStatusClass, canDownloadPdf } from '../utils/outpassStatus';
+import { canDownloadPdf } from '../utils/outpassStatus';
 
 export default function OutpassHistory(props) {
   const {
@@ -83,7 +84,7 @@ export default function OutpassHistory(props) {
                     <td>{formatDate(request.date)}</td>
                     <td>{formatTime(request.outTime)}-{formatTime(request.returnTime)}</td>
                     <td className="requests-reason-cell">{request.reason}</td>
-                    <td><span className={`status-badge status-${getStatusClass(request)}`}>{getDisplayStatus(request)}</span></td>
+                    <td><StatusBadge request={request} /></td>
                     <td>
                       <div className="table-actions">
                         <button className="link-button" type="button" onClick={() => onViewDetails(request._id)}>Details</button>

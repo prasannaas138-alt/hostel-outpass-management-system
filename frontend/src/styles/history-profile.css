@@ -394,6 +394,22 @@
     max-width: 112px;
   }
 
+  /* Smaller symbol circle + a touch more room for the icon inside
+     compact mobile badges (APPROVED - EXPIRED still wraps cleanly). */
+  .ref-card .status-badge--icon {
+    max-width: 128px;
+  }
+
+  .ref-card .status-badge__symbol {
+    width: 14px;
+    height: 14px;
+  }
+
+  .ref-card .status-badge__symbol svg {
+    width: 8px;
+    height: 8px;
+  }
+
   /* --- Counted filter pills ("All 4", "Pending 1", ...) --- */
   .chip-count {
     display: inline-grid;

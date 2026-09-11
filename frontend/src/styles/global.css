@@ -280,6 +280,33 @@ label {
   border-color: var(--border);
 }
 
+/* Leading status symbol (✓ tick / 🕐 clock / ✕ cross / ⧗ hourglass)
+   inside student status badges — reference-image style. The circle
+   fills with the badge's own status color via currentColor, so every
+   state keeps its existing design token automatically. */
+.status-badge--icon {
+  gap: 0.4rem;
+  justify-content: flex-start;
+}
+
+.status-badge__symbol {
+  display: inline-flex;
+  align-items: center;
+  justify-content: center;
+  flex-shrink: 0;
+  width: 16px;
+  height: 16px;
+  border-radius: 50%;
+  background: currentColor;
+  box-shadow: inset 0 0 0 1px rgba(255, 255, 255, 0.5);
+}
+
+.status-badge__symbol svg {
+  width: 9px;
+  height: 9px;
+  stroke: #fff;
+}
+
 .panel,
 .request-card,
 .tracker-card,
