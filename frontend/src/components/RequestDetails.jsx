@@ -1,5 +1,6 @@
 import StatusTracker from './StatusTracker';
 import { formatDate, formatTime } from './MyRequestsList';
+import { getDisplayStatus, getStatusClass, canDownloadPdf } from '../utils/outpassStatus';
 
 export function MyRequestsTable({ requests, onViewDetails, onEdit, onDownload }) {
   if (!requests.length) return null;
@@ -16,12 +17,12 @@ export function MyRequestsTable({ requests, onViewDetails, onEdit, onDownload })
               <td>{formatDate(request.date)}</td>
               <td>{formatTime(request.outTime)}-{formatTime(request.returnTime)}</td>
               <td className="requests-reason-cell">{request.reason}</td>
-              <td><span className={`status-badge status-${String(request.status).toLowerCase()}`}>{request.status}</span></td>
+              <td><span className={`status-badge status-${getStatusClass(request)}`}>{getDisplayStatus(request)}</span></td>
               <td>
                 <div className="table-actions">
                   <button className="link-button" type="button" onClick={() => onViewDetails(request._id)}>Details</button>
                   {request.status === 'Rejected' ? (<button className="link-button" type="button" onClick={() => onEdit(request._id)}>Edit</button>) : null}
-                  {request.status === 'Approved' ? (<button className="link-button" type="button" onClick={() => onDownload(request._id)}>PDF</button>) : null}
+                  {canDownloadPdf(request) ? (<button className="link-button" type="button" onClick={() => onDownload(request._id)}>PDF</button>) : null}
                 </div>
               </td>
             </tr>
@@ -39,7 +40,7 @@ export function RequestDetailsModal({ detailRequest, onCloseDetails, onEdit, onD
       <div className="requests-modal-card">
         <div className="requests-modal-head">
           <div><p className="eyebrow">Request details</p><h3>{detailRequest.requestType} request</h3></div>
-          <span className={`status-badge status-${String(detailRequest.status).toLowerCase()}`}>{detailRequest.status}</span>
+          <span className={`status-badge status-${getStatusClass(detailRequest)}`}>{getDisplayStatus(detailRequest)}</span>
         </div>
         <dl className="requests-detail-grid">
           <div><dt>Date</dt><dd>{formatDate(detailRequest.date)}</dd></div>
@@ -54,7 +55,7 @@ export function RequestDetailsModal({ detailRequest, onCloseDetails, onEdit, onD
         <div className="button-row">
           <button className="secondary-button" type="button" onClick={onCloseDetails}>Close</button>
           {detailRequest.status === 'Rejected' ? (<button className="primary-button" type="button" onClick={() => onEdit(detailRequest._id)}>Edit and reapply</button>) : null}
-          {detailRequest.status === 'Approved' ? (<button className="primary-button" type="button" onClick={() => onDownload(detailRequest._id)}>Download Outpass</button>) : null}
+          {canDownloadPdf(detailRequest) ? (<button className="primary-button" type="button" onClick={() => onDownload(detailRequest._id)}>Download Outpass</button>) : null}
         </div>
       </div>
     </div>

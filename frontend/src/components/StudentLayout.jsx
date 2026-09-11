@@ -1,20 +1,23 @@
-import { useState } from 'react';
+import { useState, useEffect, useRef } from 'react';
 import { useNavigate } from 'react-router-dom';
 import { useAuth } from '../context/AuthContext';
 import '../styles/layout.css';
 
 const STUDENT_NAV = [
   { id: 'dashboard', label: 'Dashboard', icon: '🏠', href: '#dashboard' },
-  { id: 'apply-new-outpass', label: 'Apply', icon: '📝', href: '#apply-new-outpass' },
-  { id: 'request-history', label: 'Requests', icon: '📋', href: '#request-history' },
-  { id: 'outpass-history', label: 'History', icon: '🕘', href: '#outpass-history' },
+  { id: 'apply-new-outpass', label: 'Apply for Outpass', icon: '📝', href: '#apply-new-outpass' },
+  { id: 'request-history', label: 'My Requests', icon: '📋', href: '#request-history' },
+  { id: 'outpass-history', label: 'Outpass History', icon: '🕘', href: '#outpass-history' },
   { id: 'profile', label: 'Profile', icon: '👤', href: '#profile' },
 ];
 
-export default function StudentLayout({ title, subtitle, actions, children }) {
+export default function StudentLayout({ title, subtitle, actions, children, onNavSelected }) {
   const { user, logout } = useAuth();
   const navigate = useNavigate();
   const [logoutOpen, setLogoutOpen] = useState(false);
+  const [mobileNavOpen, setMobileNavOpen] = useState(false);
+  const [activeSection, setActiveSection] = useState('dashboard');
+  const mainRef = useRef(null);
 
   const confirmLogout = () => {
     logout();
@@ -23,15 +26,58 @@ export default function StudentLayout({ title, subtitle, actions, children }) {
 
   const firstName = (user?.name || 'Student').split(' ')[0];
 
+  useEffect(() => {
+    const hash = window.location.hash?.replace('#', '') || 'dashboard';
+    setActiveSection(hash);
+    const onHashChange = () => {
+      const h = window.location.hash?.replace('#', '') || 'dashboard';
+      setActiveSection(h);
+    };
+    window.addEventListener('hashchange', onHashChange);
+    return () => window.removeEventListener('hashchange', onHashChange);
+  }, []);
+
+  const handleNavClick = (event, id) => {
+    event.preventDefault();
+    setActiveSection(id);
+    setMobileNavOpen(false);
+    onNavSelected?.(id);
+    // Profile is a modal overlay managed by the dashboard — it is not a
+    // scroll section, so skip fragment lookup / URL hash fallback.
+    if (id === 'profile') {
+      return;
+    }
+    const target = document.getElementById(id);
+    if (target) {
+      target.scrollIntoView({ behavior: 'smooth', block: 'start' });
+    } else {
+      window.location.hash = id;
+    }
+  };
+
   return (
     <div className="student-shell">
       <a className="homs-skip-link" href="#student-main">
         Skip to main content
       </a>
 
-      <aside className="student-sidebar" aria-label="Student primary">
+      <button
+        className="student-hamburger"
+        type="button"
+        onClick={() => setMobileNavOpen((open) => !open)}
+        aria-label={mobileNavOpen ? 'Close navigation' : 'Open navigation'}
+        aria-expanded={mobileNavOpen}
+      >
+        ☰
+      </button>
+
+      {mobileNavOpen ? (
+        <div className="student-mobile-overlay" onClick={() => setMobileNavOpen(false)} aria-hidden="true" />
+      ) : null}
+
+      <aside className={`student-sidebar ${mobileNavOpen ? 'open' : ''}`} aria-label="Student primary">
         <div className="student-brand">
-          <img src="/homs-logo.png" alt="H.O.M.S" onError={(e) => { e.target.style.display = 'none'; }} />
+          <img src="/st-joseph-logo.png" alt="St. Joseph's University" onError={(e) => { e.target.style.display = 'none'; }} />
           <div>
             <strong>H.O.M.S</strong>
             <span>St. Joseph&apos;s University</span>
@@ -49,26 +95,17 @@ export default function StudentLayout({ title, subtitle, actions, children }) {
         </div>
 
         <nav className="student-nav" aria-label="Student sections">
-          <a className="student-link student-link--active" href="#dashboard">
-            <span aria-hidden="true">🏠</span>
-            <span>Dashboard</span>
-          </a>
-          <a className="student-link" href="#apply-new-outpass">
-            <span aria-hidden="true">📝</span>
-            <span>Apply for Outpass</span>
-          </a>
-          <a className="student-link" href="#request-history">
-            <span aria-hidden="true">📋</span>
-            <span>My Requests</span>
-          </a>
-          <a className="student-link" href="#outpass-history">
-            <span aria-hidden="true">🕘</span>
-            <span>Outpass History</span>
-          </a>
-          <a className="student-link" href="#profile">
-            <span aria-hidden="true">👤</span>
-            <span>Profile</span>
-          </a>
+          {STUDENT_NAV.map((item) => (
+            <a
+              key={item.id}
+              className={`student-link ${activeSection === item.id ? 'student-link--active' : ''}`}
+              href={item.href}
+              onClick={(e) => handleNavClick(e, item.id)}
+            >
+              <span aria-hidden="true">{item.icon}</span>
+              <span>{item.label}</span>
+            </a>
+          ))}
         </nav>
 
         <button className="secondary-button student-logout" type="button" onClick={() => setLogoutOpen(true)}>
@@ -79,7 +116,7 @@ export default function StudentLayout({ title, subtitle, actions, children }) {
       <div className="student-content">
         <header className="student-topbar">
           <div className="student-topbar-brand">
-            <img src="/homs-logo.png" alt="H.O.M.S" onError={(e) => { e.target.style.display = 'none'; }} />
+            <img src="/st-joseph-logo.png" alt="St. Joseph's University" onError={(e) => { e.target.style.display = 'none'; }} />
             <div>
               <strong>H.O.M.S</strong>
               <span>St. Joseph&apos;s University</span>
@@ -94,7 +131,7 @@ export default function StudentLayout({ title, subtitle, actions, children }) {
           </div>
         </header>
 
-        <main className="dashboard-main student-main" id="student-main">
+        <main className="dashboard-main student-main" id="student-main" ref={mainRef}>
           <header className="dashboard-topbar">
             <div>
               <p className="eyebrow">Student portal</p>
@@ -108,8 +145,13 @@ export default function StudentLayout({ title, subtitle, actions, children }) {
         </main>
 
         <nav className="student-bottomnav" aria-label="Student mobile">
-          {STUDENT_NAV.map((item) => (
-            <a key={item.id} href={item.href}>
+          {STUDENT_NAV.slice(0, 4).map((item) => (
+            <a
+              key={item.id}
+              href={item.href}
+              className={activeSection === item.id ? 'student-bottomnav-active' : ''}
+              onClick={(e) => handleNavClick(e, item.id)}
+            >
               <span aria-hidden="true">{item.icon}</span>
               <span>{item.label}</span>
             </a>

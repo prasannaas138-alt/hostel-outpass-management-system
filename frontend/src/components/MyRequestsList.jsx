@@ -1,5 +1,6 @@
 import AlertBanner from './AlertBanner';
 import LoadingState from './LoadingState';
+import { getDisplayStatus, getStatusClass, canDownloadPdf } from '../utils/outpassStatus';
 
 const formatDate = (value) => {
   if (!value) return '—';
@@ -12,17 +13,26 @@ const formatTime = (value) => value || '—';
 
 export { formatDate, formatTime };
 
+const STATUS_FILTERS = ['All', 'Pending', 'Approved', 'Rejected'];
+
 export default function MyRequestsList(props) {
   const {
-    requests, loading, error, statusFilter, onStatusFilterChange,
-    search, onSearchChange, onViewDetails, onEdit, onDownload,
+    requests,
+    loading,
+    error,
+    statusFilter,
+    onStatusFilterChange,
+    showSearch = false,
+    onViewDetails,
+    onEdit,
+    onDownload,
   } = props;
 
   return (
     <div className="requests-wrap">
       <div className="requests-toolbar">
         <div className="requests-filters" role="group" aria-label="Filter by status">
-          {['All', 'Pending', 'Approved', 'Rejected', 'Expired'].map((status) => (
+          {STATUS_FILTERS.map((status) => (
             <button
               key={status}
               type="button"
@@ -34,15 +44,17 @@ export default function MyRequestsList(props) {
             </button>
           ))}
         </div>
-        <label className="requests-search">
-          <span className="sr-only">Search requests</span>
-          <input
-            type="search"
-            value={search}
-            onChange={(event) => onSearchChange(event.target.value)}
-            placeholder="Search reason, type, or date"
-          />
-        </label>
+        {showSearch ? (
+          <label className="requests-search">
+            <span className="sr-only">Search requests</span>
+            <input
+              type="search"
+              value={props.search || ''}
+              onChange={(event) => props.onSearchChange?.(event.target.value)}
+              placeholder="Search reason, type, or date"
+            />
+          </label>
+        ) : null}
       </div>
 
       <AlertBanner type="error" message={error} />
@@ -58,13 +70,13 @@ export default function MyRequestsList(props) {
                   <strong>{request.requestType}</strong>
                   <p className="muted">{formatDate(request.date)} · {formatTime(request.outTime)}-{formatTime(request.returnTime)}</p>
                 </div>
-                <span className={`status-badge status-${String(request.status).toLowerCase()}`}>{request.status}</span>
+                <span className={`status-badge status-${getStatusClass(request)}`}>{getDisplayStatus(request)}</span>
               </div>
               <p className="history-card__reason">{request.reason}</p>
               <div className="history-card__actions">
                 <button className="secondary-button requests-details-btn" type="button" onClick={() => onViewDetails(request._id)}>View details</button>
                 {request.status === 'Rejected' ? (<button className="link-button" type="button" onClick={() => onEdit(request._id)}>Edit and reapply</button>) : null}
-                {request.status === 'Approved' ? (<button className="link-button" type="button" onClick={() => onDownload(request._id)}>Download Outpass</button>) : null}
+                {canDownloadPdf(request) ? (<button className="link-button" type="button" onClick={() => onDownload(request._id)}>Download Outpass</button>) : null}
               </div>
               {request.rejectionReason ? <AlertBanner type="error" message={request.rejectionReason} /> : null}
             </article>

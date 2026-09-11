@@ -8,7 +8,11 @@ import StudentProfile from '../components/StudentProfile';
 import { MyRequestsTable, RequestDetailsModal } from '../components/RequestDetails';
 import LoadingState from '../components/LoadingState';
 import ErrorState from '../components/ErrorState';
-import StatusTracker from '../components/StatusTracker';
+import {
+  getDisplayStatus,
+  isExpiredRequest,
+  matchesStatusFilter,
+} from '../utils/outpassStatus';
 import '../styles/dashboard.css';
 import '../styles/student.css';
 import '../styles/apply-requests.css';
@@ -43,36 +47,42 @@ export default function StudentDashboard() {
   const [loadError, setLoadError] = useState('');
   const [saving, setSaving] = useState(false);
   const [statusFilter, setStatusFilter] = useState('All');
-  const [search, setSearch] = useState('');
   const [historyTypeFilter, setHistoryTypeFilter] = useState('All');
   const [historySearch, setHistorySearch] = useState('');
   const [detailId, setDetailId] = useState(null);
+  const [profileViewActive, setProfileViewActive] = useState(false);
 
-  const selectedRequest = useMemo(() => requests.find((item) => item._id === selectedId), [requests, selectedId]);
+  const selectedRequest = useMemo(() => requests.find((item) => item._id === selectedId) || null, [requests, selectedId]);
   const isOutgoingWeekendValid = form.requestType !== 'Outing' || !form.date || isWeekend(form.date);
   const firstName = (user?.name || 'Student').split(' ')[0];
-  const pendingCount = useMemo(() => requests.filter((item) => item.status === 'Pending').length, [requests]);
-  const approvedCount = useMemo(() => requests.filter((item) => item.status === 'Approved').length, [requests]);
-  const rejectedCount = useMemo(() => requests.filter((item) => item.status === 'Rejected').length, [requests]);
-  const historyRequests = useMemo(() => requests.filter((item) => item.status === 'Approved' || item.status === 'Expired'), [requests]);
+
+  // My Requests: everything that is not expired (expired records move to Outpass History).
+  const visibleRequests = useMemo(
+    () => requests.filter((item) => !isExpiredRequest(item)),
+    [requests],
+  );
+
+  // History: approved, previously approved and now expired, or expired.
+  const historyRequests = useMemo(
+    () => requests.filter((item) => ['Approved', 'Approved - Expired', 'Expired'].includes(getDisplayStatus(item))),
+    [requests],
+  );
+
   const visibleHistoryRequests = useMemo(() => {
     const term = historySearch.trim().toLowerCase();
     return historyRequests.filter((item) => {
       if (historyTypeFilter !== 'All' && item.requestType !== historyTypeFilter) return false;
       if (!term) return true;
-      const haystack = `${item.requestType || ''} ${item.reason || ''} ${item.status || ''} ${item.date || ''}`.toLowerCase();
+      const haystack = `${item.requestType || ''} ${item.reason || ''} ${getDisplayStatus(item)} ${item.date || ''}`.toLowerCase();
       return haystack.includes(term);
     });
   }, [historyRequests, historyTypeFilter, historySearch]);
-  const filteredRequests = useMemo(() => {
-    const term = search.trim().toLowerCase();
-    return requests.filter((item) => {
-      if (statusFilter !== 'All' && item.status !== statusFilter) return false;
-      if (!term) return true;
-      const haystack = `${item.requestType || ''} ${item.reason || ''} ${item.status || ''} ${item.date || ''}`.toLowerCase();
-      return haystack.includes(term);
-    });
-  }, [requests, statusFilter, search]);
+
+  const filteredRequests = useMemo(
+    () => visibleRequests.filter((item) => matchesStatusFilter(item, statusFilter)),
+    [visibleRequests, statusFilter],
+  );
+
   const detailRequest = useMemo(() => requests.find((item) => item._id === detailId) || null, [requests, detailId]);
 
   // Self-contained loader: owns its loading/error lifecycle so a failed
@@ -94,6 +104,12 @@ export default function StudentDashboard() {
     loadRequests();
   }, []);
 
+  // Poll every 30s so Sister/Warden changes appear without a manual refresh.
+  useEffect(() => {
+    const interval = setInterval(loadRequests, 30000);
+    return () => clearInterval(interval);
+  }, []);
+
   useEffect(() => {
     if (selectedRequest) {
       setForm({
@@ -107,6 +123,21 @@ export default function StudentDashboard() {
       setForm(emptyForm);
     }
   }, [selectedRequest]);
+
+  // Sidebar navigation. Profile opens as a modal card; every other
+  // section closes the modal and smooth-scrolls to the section.
+  const handleNavSelected = (sectionId) => {
+    if (sectionId === 'profile') {
+      setProfileViewActive(true);
+      return;
+    }
+
+    setProfileViewActive(false);
+
+    setTimeout(() => {
+      document.getElementById(sectionId)?.scrollIntoView({ behavior: 'smooth', block: 'start' });
+    }, 60);
+  };
 
   const handleChange = (event) => {
     setForm((current) => ({ ...current, [event.target.name]: event.target.value }));
@@ -143,15 +174,9 @@ export default function StudentDashboard() {
     }
   };
 
-  // StudentProfile calls this after a successful PUT /auth/me so the
-  // header/sidebar greeting uses the new name right away.
-  const handleProfileUpdated = (updatedUser) => {
-    updateUser(updatedUser);
-    setSuccess('Profile updated successfully.');
-    document.getElementById('profile')?.scrollIntoView({ behavior: 'smooth' });
-  };
-
   const handleDownload = async (requestId) => {
+    setError('');
+    setSuccess('');
     try {
       const response = await api.get(`/outpasses/${requestId}/pdf`, { responseType: 'blob' });
       const fileUrl = window.URL.createObjectURL(new Blob([response.data], { type: 'application/pdf' }));
@@ -162,190 +187,144 @@ export default function StudentDashboard() {
       link.click();
       link.remove();
       window.URL.revokeObjectURL(fileUrl);
-    } catch (downloadError) {
-      setError(downloadError.response?.data?.message || 'Failed to download outpass PDF');
+    } catch {
+      setError('This outpass is no longer available for download.');
     }
+  };
+
+  // StudentProfile calls this after a successful PUT /auth/me so the
+  // header/sidebar greeting uses the new name right away.
+  const handleProfileUpdated = (updatedUser) => {
+    updateUser(updatedUser);
+    setSuccess('Profile updated successfully.');
+    document.getElementById('student-main')?.scrollIntoView({ behavior: 'smooth', block: 'start' });
+  };
+
+  const scrollToEdit = (id) => {
+    setSelectedId(id);
+    setDetailId(null);
+    setProfileViewActive(false);
+    setTimeout(() => {
+      document.getElementById('apply-new-outpass')?.scrollIntoView({ behavior: 'smooth', block: 'start' });
+    }, 60);
   };
 
   return (
     <StudentLayout
       title="Student Dashboard"
       subtitle="Apply for outpass, track approvals, edit rejected requests, and download approved PDFs."
+      onNavSelected={handleNavSelected}
     >
       <section id="dashboard" className="student-hero">
         <p className="eyebrow">St. Joseph&apos;s University · H.O.M.S</p>
         <h2>Hello, {firstName}!</h2>
-        <p>Welcome back. Apply for a new outpass or check the latest status of your requests.</p>
-      </section>
-
-      <section className="student-quick-grid" aria-label="Quick actions">
-        <a className="student-quick-card" href="#apply-new-outpass">
-          <span className="student-quick-icon" aria-hidden="true">📝</span>
-          <strong>Apply for Outpass</strong>
-          <span>Start a new Home or Outing request.</span>
-        </a>
-        <a className="student-quick-card" href="#request-history">
-          <span className="student-quick-icon" aria-hidden="true">📋</span>
-          <strong>My Requests</strong>
-          <span>View pending, approved and rejected items.</span>
-        </a>
-        <a className="student-quick-card" href="#outpass-history">
-          <span className="student-quick-icon" aria-hidden="true">🕘</span>
-          <strong>Outpass History</strong>
-          <span>Approved and expired outpasses.</span>
-        </a>
-        <a className="student-quick-card" href="#profile">
-          <span className="student-quick-icon" aria-hidden="true">👤</span>
-          <strong>Profile</strong>
-          <span>Your hostel and department details.</span>
-        </a>
+        <p>Welcome back. Use the sidebar to apply for a new outpass or check the latest status of your requests.</p>
       </section>
 
       {loadError ? (
-        <section className="panel" aria-label="Data unavailable">
-          <ErrorState
-            message={loadError}
-            onRetry={() => loadRequests()}
-            retryLabel="Reload requests"
-          />
-        </section>
+            <section className="panel" aria-label="Data unavailable">
+              <ErrorState
+                message={loadError}
+                onRetry={() => loadRequests()}
+                retryLabel="Reload requests"
+              />
+            </section>
+          ) : null}
+
+          <section id="apply-new-outpass" className="panel panel--hero">
+            <div className="panel-heading">
+              <div>
+                <p className="eyebrow">Apply new outpass</p>
+                <h2>{selectedRequest ? 'Edit rejected request' : 'New outpass application'}</h2>
+              </div>
+              <span className="mini-summary">{user?.name}</span>
+            </div>
+
+            <ApplyOutpassForm
+              user={user}
+              form={form}
+              onChange={handleChange}
+              onSubmit={handleSubmit}
+              saving={saving}
+              error={error}
+              success={success}
+              isOutgoingWeekendValid={isOutgoingWeekendValid}
+              selectedRequest={selectedRequest}
+              onCancelEdit={() => setSelectedId(null)}
+            />
+          </section>
+
+          <section id="request-history" className="panel">
+            <div className="panel-heading">
+              <div>
+                <p className="eyebrow">My requests</p>
+                <h2>Recent requests</h2>
+              </div>
+              <span className="mini-summary">{filteredRequests.length} shown</span>
+            </div>
+
+            <MyRequestsList
+              requests={filteredRequests}
+              loading={loading}
+              error={error || loadError}
+              statusFilter={statusFilter}
+              onStatusFilterChange={setStatusFilter}
+              onViewDetails={setDetailId}
+              onEdit={scrollToEdit}
+              onDownload={handleDownload}
+            />
+            <MyRequestsTable
+              requests={filteredRequests}
+              onViewDetails={setDetailId}
+              onEdit={scrollToEdit}
+              onDownload={handleDownload}
+            />
+            <RequestDetailsModal
+              detailRequest={detailRequest}
+              onCloseDetails={() => setDetailId(null)}
+              onEdit={scrollToEdit}
+              onDownload={handleDownload}
+            />
+          </section>
+
+          <section id="outpass-history" className="panel">
+            <div className="panel-heading">
+              <div>
+                <p className="eyebrow">Outpass history</p>
+                <h2>Approved and expired outpasses</h2>
+              </div>
+              <span className="mini-summary">{visibleHistoryRequests.length} shown</span>
+            </div>
+
+            <OutpassHistory
+              requests={visibleHistoryRequests}
+              loading={loading}
+              error={error || loadError}
+              typeFilter={historyTypeFilter}
+              onTypeFilterChange={setHistoryTypeFilter}
+              search={historySearch}
+              onSearchChange={setHistorySearch}
+              onViewDetails={setDetailId}
+              onDownload={handleDownload}
+            />
+          </section>
+
+      {profileViewActive ? (
+        <div
+          className="profile-modal-overlay"
+          role="dialog"
+          aria-modal="true"
+          aria-label="Student profile"
+          onClick={() => setProfileViewActive(false)}
+        >
+          <div className="profile-modal-card" onClick={(event) => event.stopPropagation()}>
+            <button className="profile-modal-close" type="button" onClick={() => setProfileViewActive(false)} aria-label="Close profile">
+              &times;
+            </button>
+            <StudentProfile user={user} onProfileUpdated={handleProfileUpdated} />
+          </div>
+        </div>
       ) : null}
-
-      <section className="panel" aria-label="Request statistics">
-        <div className="panel-heading">
-          <div>
-            <p className="eyebrow">Overview</p>
-            <h2>Request statistics</h2>
-          </div>
-        </div>
-
-        {loading ? (
-          <LoadingState label="Loading statistics..." />
-        ) : (
-          <div className="student-stats-grid">
-            <div className="student-stat student-stat--pending">
-              <strong>{pendingCount}</strong>
-              <span>Pending</span>
-            </div>
-            <div className="student-stat student-stat--approved">
-              <strong>{approvedCount}</strong>
-              <span>Approved</span>
-            </div>
-            <div className="student-stat student-stat--rejected">
-              <strong>{rejectedCount}</strong>
-              <span>Rejected</span>
-            </div>
-          </div>
-        )}
-      </section>
-
-      <section id="apply-new-outpass" className="panel panel--hero">
-        <div className="panel-heading">
-          <div>
-            <p className="eyebrow">Apply new outpass</p>
-            <h2>{selectedRequest ? 'Edit rejected request' : 'New outpass application'}</h2>
-          </div>
-          <span className="mini-summary">{user?.name}</span>
-        </div>
-
-        <ApplyOutpassForm
-          user={user}
-          form={form}
-          onChange={handleChange}
-          onSubmit={handleSubmit}
-          saving={saving}
-          error={error}
-          success={success}
-          isOutgoingWeekendValid={isOutgoingWeekendValid}
-          selectedRequest={selectedRequest}
-          onCancelEdit={() => setSelectedId(null)}
-        />
-      </section>
-
-      <section id="request-history" className="panel">
-        <div className="panel-heading">
-          <div>
-            <p className="eyebrow">My requests</p>
-            <h2>Recent requests</h2>
-          </div>
-          <span className="mini-summary">{filteredRequests.length} shown</span>
-        </div>
-
-        <MyRequestsList
-          requests={filteredRequests}
-          loading={loading}
-          error={error || loadError}
-          statusFilter={statusFilter}
-          onStatusFilterChange={setStatusFilter}
-          search={search}
-          onSearchChange={setSearch}
-          onViewDetails={setDetailId}
-          onEdit={(id) => { setSelectedId(id); setDetailId(null); document.getElementById('apply-new-outpass')?.scrollIntoView({ behavior: 'smooth' }); }}
-          onDownload={handleDownload}
-        />
-        <MyRequestsTable
-          requests={filteredRequests}
-          onViewDetails={setDetailId}
-          onEdit={(id) => { setSelectedId(id); setDetailId(null); document.getElementById('apply-new-outpass')?.scrollIntoView({ behavior: 'smooth' }); }}
-          onDownload={handleDownload}
-        />
-        <RequestDetailsModal
-          detailRequest={detailRequest}
-          onCloseDetails={() => setDetailId(null)}
-          onEdit={(id) => { setSelectedId(id); setDetailId(null); document.getElementById('apply-new-outpass')?.scrollIntoView({ behavior: 'smooth' }); }}
-          onDownload={handleDownload}
-        />
-      </section>
-
-      <section id="outpass-history" className="panel">
-        <div className="panel-heading">
-          <div>
-            <p className="eyebrow">Outpass history</p>
-            <h2>Approved and expired outpasses</h2>
-          </div>
-          <span className="mini-summary">{visibleHistoryRequests.length} shown</span>
-        </div>
-
-        <OutpassHistory
-          requests={visibleHistoryRequests}
-          loading={loading}
-          error={error || loadError}
-          typeFilter={historyTypeFilter}
-          onTypeFilterChange={setHistoryTypeFilter}
-          search={historySearch}
-          onSearchChange={setHistorySearch}
-          onViewDetails={setDetailId}
-          onDownload={handleDownload}
-        />
-      </section>
-
-      <section id="request-tracker" className="panel">
-        <div className="panel-heading">
-          <div>
-            <p className="eyebrow">Status tracker</p>
-            <h2>Latest request progress</h2>
-          </div>
-        </div>
-
-        {selectedRequest ? (
-          <StatusTracker request={selectedRequest} />
-        ) : requests[0] ? (
-          <StatusTracker request={requests[0]} />
-        ) : (
-          <div className="empty-state">Track your newest request here once you submit it.</div>
-        )}
-      </section>
-
-      <section id="profile" className="panel">
-        <div className="panel-heading">
-          <div>
-            <p className="eyebrow">Profile</p>
-            <h2>Student profile</h2>
-          </div>
-        </div>
-
-        <StudentProfile user={user} onProfileUpdated={handleProfileUpdated} />
-      </section>
     </StudentLayout>
   );
 }

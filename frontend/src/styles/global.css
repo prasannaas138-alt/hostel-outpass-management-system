@@ -261,6 +261,25 @@ label {
   border-color: var(--border);
 }
 
+/* Student-facing work-in-progress states */
+.status-waiting-sister {
+  background: var(--amber-100);
+  color: var(--amber-700);
+  border-color: #fde68a;
+}
+
+.status-waiting-warden {
+  background: var(--blue-50);
+  color: var(--navy-800);
+  border-color: #bfdbfe;
+}
+
+.status-approved-expired {
+  background: #f1f5f9;
+  color: var(--muted-strong);
+  border-color: var(--border);
+}
+
 .panel,
 .request-card,
 .tracker-card,

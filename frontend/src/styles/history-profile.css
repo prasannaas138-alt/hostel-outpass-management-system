@@ -171,3 +171,48 @@
     justify-self: start;
   }
 }
+
+/* === Student Profile modal card (opens from the sidebar Profile button) === */
+
+.profile-modal-overlay {
+  position: fixed;
+  inset: 0;
+  z-index: 60;
+  background: rgba(15, 23, 42, 0.5);
+  display: flex;
+  justify-content: center;
+  overflow-y: auto;
+  padding: 1.25rem 1rem;
+}
+
+.profile-modal-card {
+  width: min(640px, 100%);
+  margin: auto;
+  max-height: calc(100vh - 2rem);
+  overflow-y: auto;
+  background: var(--surface);
+  border: 1px solid var(--border);
+  border-radius: var(--radius-lg);
+  box-shadow: var(--shadow-md);
+  padding: 1.25rem 1.5rem 1.5rem;
+  position: relative;
+}
+
+.profile-modal-close {
+  position: absolute;
+  top: 0.75rem;
+  right: 0.75rem;
+  z-index: 1;
+  width: 44px;
+  height: 44px;
+  min-height: 44px;
+  display: grid;
+  place-items: center;
+  border: 1px solid var(--border-strong);
+  background: #fff;
+  color: var(--navy-900);
+  border-radius: var(--radius-md);
+  font-size: 1.35rem;
+  line-height: 1;
+  cursor: pointer;
+}

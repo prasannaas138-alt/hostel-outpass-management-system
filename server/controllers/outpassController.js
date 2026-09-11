@@ -352,8 +352,8 @@ export const downloadOutpassPdf = async (req, res, next) => {
       return res.status(403).json({ message: 'Not allowed' });
     }
 
-    if (!['Approved', 'Expired'].includes(outpass.status)) {
-      return res.status(400).json({ message: 'PDF is available only after approval' });
+    if (outpass.status !== 'Approved') {
+      return res.status(400).json({ message: 'PDF is available only for approved outpasses that have not expired' });
     }
 
     const pdf = createOutpassPdf(outpass);
