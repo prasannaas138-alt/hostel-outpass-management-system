@@ -1,6 +1,6 @@
 import AlertBanner from './AlertBanner';
 import LoadingState from './LoadingState';
-import { getDisplayStatus, getStatusClass, canDownloadPdf } from '../utils/outpassStatus';
+import StudentRequestCard from './StudentRequestCard';
 
 const formatDate = (value) => {
   if (!value) return '—';
@@ -20,6 +20,7 @@ export default function MyRequestsList(props) {
     requests,
     loading,
     error,
+    counts,
     statusFilter,
     onStatusFilterChange,
     showSearch = false,
@@ -41,6 +42,7 @@ export default function MyRequestsList(props) {
               aria-pressed={statusFilter === status}
             >
               {status}
+              {counts ? <span className="chip-count">{counts[status] ?? 0}</span> : null}
             </button>
           ))}
         </div>
@@ -64,22 +66,14 @@ export default function MyRequestsList(props) {
       ) : requests.length ? (
         <div className="requests-cards">
           {requests.map((request) => (
-            <article key={request._id} className="history-card requests-card">
-              <div className="history-card__top">
-                <div>
-                  <strong>{request.requestType}</strong>
-                  <p className="muted">{formatDate(request.date)} · {formatTime(request.outTime)}-{formatTime(request.returnTime)}</p>
-                </div>
-                <span className={`status-badge status-${getStatusClass(request)}`}>{getDisplayStatus(request)}</span>
-              </div>
-              <p className="history-card__reason">{request.reason}</p>
-              <div className="history-card__actions">
-                <button className="secondary-button requests-details-btn" type="button" onClick={() => onViewDetails(request._id)}>View details</button>
-                {request.status === 'Rejected' ? (<button className="link-button" type="button" onClick={() => onEdit(request._id)}>Edit and reapply</button>) : null}
-                {canDownloadPdf(request) ? (<button className="link-button" type="button" onClick={() => onDownload(request._id)}>Download Outpass</button>) : null}
-              </div>
-              {request.rejectionReason ? <AlertBanner type="error" message={request.rejectionReason} /> : null}
-            </article>
+            <StudentRequestCard
+              key={request._id}
+              request={request}
+              variant="requests-card"
+              onViewDetails={onViewDetails}
+              onEdit={onEdit}
+              onDownload={onDownload}
+            />
           ))}
         </div>
       ) : (

@@ -1,5 +1,6 @@
 import AlertBanner from './AlertBanner';
 import LoadingState from './LoadingState';
+import StudentRequestCard from './StudentRequestCard';
 import { formatDate, formatTime } from './MyRequestsList';
 import { getDisplayStatus, getStatusClass, canDownloadPdf } from '../utils/outpassStatus';
 
@@ -8,6 +9,7 @@ export default function OutpassHistory(props) {
     requests,
     loading,
     error,
+    counts,
     typeFilter,
     onTypeFilterChange,
     search,
@@ -29,6 +31,7 @@ export default function OutpassHistory(props) {
               aria-pressed={typeFilter === type}
             >
               {type}
+              {counts ? <span className="chip-count">{counts[type] ?? 0}</span> : null}
             </button>
           ))}
         </div>
@@ -51,26 +54,13 @@ export default function OutpassHistory(props) {
         <>
           <div className="history-cards">
             {requests.map((request) => (
-              <article key={request._id} className="history-card history-compact">
-                <div className="history-card__top">
-                  <div>
-                    <strong>{request.requestType}</strong>
-                    <p className="muted">{formatDate(request.date)} · {formatTime(request.outTime)}-{formatTime(request.returnTime)}</p>
-                  </div>
-                  <span className={`status-badge status-${getStatusClass(request)}`}>{getDisplayStatus(request)}</span>
-                </div>
-                <p className="history-card__reason">{request.reason}</p>
-                <div className="history-card__actions">
-                  <button className="secondary-button requests-details-btn" type="button" onClick={() => onViewDetails(request._id)}>
-                    View details
-                  </button>
-                  {canDownloadPdf(request) ? (
-                    <button className="link-button" type="button" onClick={() => onDownload(request._id)}>
-                      Download Outpass
-                    </button>
-                  ) : null}
-                </div>
-              </article>
+              <StudentRequestCard
+                key={request._id}
+                request={request}
+                variant="history-compact"
+                onViewDetails={onViewDetails}
+                onDownload={onDownload}
+              />
             ))}
           </div>
 

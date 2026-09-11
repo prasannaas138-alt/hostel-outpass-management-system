@@ -217,6 +217,78 @@
   cursor: pointer;
 }
 
+/* === Reference-image request card (Student Portal) ===
+   Cards render only below 980px (desktop shows the request tables), so
+   these structural rules cannot affect the desktop/laptop layout. */
+.ref-card__head {
+  flex-direction: row;
+  align-items: flex-start;
+  gap: 0.6rem;
+}
+
+.ref-card__icon {
+  width: 42px;
+  height: 42px;
+  flex: 0 0 auto;
+  display: grid;
+  place-items: center;
+  border-radius: 12px;
+  background: var(--blue-50);
+  color: var(--navy-800);
+  border: 1px solid #bfdbfe;
+}
+
+.ref-card__info {
+  flex: 1 1 auto;
+  min-width: 0;
+  display: grid;
+  gap: 0.2rem;
+}
+
+.ref-card__meta,
+.ref-card__category {
+  display: flex;
+  align-items: center;
+  gap: 0.4rem;
+  margin: 0;
+  font-size: 0.8rem;
+  color: var(--muted-strong);
+  overflow-wrap: anywhere;
+}
+
+.ref-card__meta svg,
+.ref-card__category svg {
+  flex: 0 0 auto;
+}
+
+.ref-card__right {
+  flex: 0 0 auto;
+  display: grid;
+  justify-items: end;
+  align-content: start;
+  gap: 0.4rem;
+}
+
+.ref-card__chevron {
+  display: inline-flex;
+  color: var(--muted);
+}
+
+.ref-card__actions {
+  flex-direction: row;
+  justify-content: flex-start;
+  flex-wrap: wrap;
+  margin-top: 0.4rem;
+  padding-top: 0.65rem;
+  border-top: 1px solid var(--border);
+}
+
+/* Counted filter pills live inside the existing chips — counts stay
+   hidden above 640px so desktop/laptop chips look exactly as before. */
+.chip-count {
+  display: none;
+}
+
 /* ============================================================
    MOBILE-ONLY polish (max-width: 640px) — Student Portal cards.
    Desktop/tablet rules above are untouched.
@@ -289,5 +361,62 @@
     border: 1px solid var(--border-strong);
     border-radius: var(--control-radius);
     padding: 0.45rem 0.8rem;
+  }
+
+  /* --- Reference-image card polish at phone widths --- */
+  .ref-card {
+    gap: 0.5rem;
+    padding: 0.85rem 0.9rem;
+    border: 1px solid var(--border-strong);
+    border-radius: 14px;
+  }
+
+  .ref-card__icon {
+    width: 40px;
+    height: 40px;
+    border-radius: 11px;
+  }
+
+  .ref-card__meta,
+  .ref-card__category {
+    font-size: 0.78rem;
+  }
+
+  /* Long statuses (Waiting for Sister Approval, Approved - Expired)
+     wrap inside the badge instead of pushing the card wider. */
+  .ref-card .status-badge {
+    min-width: 0;
+    min-height: 24px;
+    padding: 0.2rem 0.5rem;
+    font-size: 0.65rem;
+    white-space: normal;
+    text-align: center;
+    max-width: 112px;
+  }
+
+  /* --- Counted filter pills ("All 4", "Pending 1", ...) --- */
+  .chip-count {
+    display: inline-grid;
+    place-items: center;
+    min-width: 20px;
+    height: 20px;
+    padding: 0 6px;
+    margin-left: 0.4rem;
+    border-radius: 999px;
+    background: #e2e8f0;
+    color: var(--navy-800);
+    font-size: 0.7rem;
+    font-weight: 800;
+    line-height: 1;
+  }
+
+  .requests-chip--active .chip-count {
+    background: rgba(255, 255, 255, 0.24);
+    color: #fff;
+  }
+
+  /* One clean column of request cards at phone widths */
+  .requests-cards {
+    grid-template-columns: 1fr;
   }
 }

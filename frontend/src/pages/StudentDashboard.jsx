@@ -83,6 +83,27 @@ export default function StudentDashboard() {
     [visibleRequests, statusFilter],
   );
 
+  // Counted filter pills (reference-image design) — counts over the FULL
+  // unfiltered lists so pills stay stable while a filter is active.
+  const requestCounts = useMemo(() => {
+    const counts = { All: visibleRequests.length, Pending: 0, Approved: 0, Rejected: 0 };
+    visibleRequests.forEach((item) => {
+      if (matchesStatusFilter(item, 'Pending')) counts.Pending += 1;
+      if (matchesStatusFilter(item, 'Approved')) counts.Approved += 1;
+      if (matchesStatusFilter(item, 'Rejected')) counts.Rejected += 1;
+    });
+    return counts;
+  }, [visibleRequests]);
+
+  const historyCounts = useMemo(() => {
+    const counts = { All: historyRequests.length, Home: 0, Outing: 0 };
+    historyRequests.forEach((item) => {
+      if (item.requestType === 'Home') counts.Home += 1;
+      else if (item.requestType === 'Outing') counts.Outing += 1;
+    });
+    return counts;
+  }, [historyRequests]);
+
   const detailRequest = useMemo(() => requests.find((item) => item._id === detailId) || null, [requests, detailId]);
 
   // Self-contained loader: owns its loading/error lifecycle so a failed
@@ -265,6 +286,7 @@ export default function StudentDashboard() {
               requests={filteredRequests}
               loading={loading}
               error={error || loadError}
+              counts={requestCounts}
               statusFilter={statusFilter}
               onStatusFilterChange={setStatusFilter}
               onViewDetails={setDetailId}
@@ -297,6 +319,7 @@ export default function StudentDashboard() {
               requests={visibleHistoryRequests}
               loading={loading}
               error={error || loadError}
+              counts={historyCounts}
               typeFilter={historyTypeFilter}
               onTypeFilterChange={setHistoryTypeFilter}
               search={historySearch}
