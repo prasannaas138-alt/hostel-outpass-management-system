@@ -125,33 +125,6 @@
   min-width: 0;
 }
 
-.student-topbar {
-  display: none;
-  align-items: center;
-  justify-content: space-between;
-  gap: 0.75rem;
-  padding: 0.7rem 0.9rem;
-  background: var(--navy-900);
-  color: #fff;
-  border-radius: var(--radius-lg);
-  border: 1px solid var(--navy-900);
-}
-
-.student-topbar-brand {
-  display: flex;
-  align-items: center;
-  gap: 0.6rem;
-}
-
-.student-topbar-brand img {
-  width: 38px;
-  height: 38px;
-  object-fit: contain;
-  background: #fff;
-  border-radius: 10px;
-  padding: 0.2rem;
-}
-
 .student-hero {
   background: var(--navy-900);
   border: 1px solid var(--navy-900);
@@ -296,13 +269,6 @@
     display: none;
   }
 
-  .student-topbar {
-    display: flex;
-    position: sticky;
-    top: 0.5rem;
-    z-index: 20;
-  }
-
   .student-quick-grid {
     grid-template-columns: repeat(2, minmax(0, 1fr));
   }
@@ -378,38 +344,9 @@
   .student-stat strong {
     font-size: var(--text-xl);
   }
-
-  .student-topbar-user strong {
-    display: none;
-  }
 }
 
 
-
-.student-topbar-brand strong {
-  display: block;
-  font-size: var(--text-sm);
-}
-
-.student-topbar-brand span {
-  display: block;
-  font-size: var(--text-xs);
-  color: rgba(255, 255, 255, 0.72);
-}
-
-.student-topbar-user {
-  display: flex;
-  align-items: center;
-  gap: 0.5rem;
-  font-size: var(--text-sm);
-}
-
-.student-topbar-user .secondary-button {
-  min-height: 40px;
-  padding: 0.45rem 0.8rem;
-  background: #fff;
-  border-color: #fff;
-}
 
 .student-main {
   margin: 0;
@@ -696,12 +633,6 @@
   background: rgba(15, 23, 42, 0.45);
 }
 
-/* Mobile-only centered logo element. Hidden on desktop — the topbar-brand
-   already shows the St. Joseph's logo there. */
-.student-topbar-mobile-logo {
-  display: none;
-}
-
 @media (max-width: 980px) {
   .student-hamburger {
     display: inline-flex;
@@ -741,66 +672,9 @@
     transform: translateX(0);
   }
 
-  /* Clean mobile top bar: fixed hamburger (left) | centered logo | Logout (right).
-     No background box behind the logo; H.O.M.S/university text removed to avoid overlap. */
-  .student-topbar {
-    justify-content: center;
-  }
-
-  .student-topbar-brand {
-    display: none;
-  }
-
-  .student-topbar-mobile-logo {
-    display: flex;
-    flex: 1;
-    align-items: center;
-    justify-content: center;
-    min-width: 0;
-  }
-
-  .student-topbar-mobile-logo img {
-    width: 44px;
-    height: 44px;
-    object-fit: contain;
-    background: transparent;
-    border-radius: 0;
-    padding: 0;
-  }
-
-  .student-topbar-user {
-    flex: 1;
-    justify-content: flex-end;
-  }
-
-  .student-topbar-user span,
-  .student-topbar-user strong {
-    display: none;
-  }
-}
-
-/* ============================================================
-   MOBILE-ONLY (max-width: 640px) — Apply New Outpass heading.
-   Shrinks the student-name pill and keeps it in the top-right
-   of the section heading. Desktop unchanged.
-   ============================================================ */
-@media (max-width: 640px) {
-  .panel--hero .panel-heading {
-    display: flex;
-    align-items: flex-start;
-    justify-content: space-between;
-    gap: 0.5rem;
-  }
-
-  .panel--hero .mini-summary {
-    padding: 0.2rem 0.55rem;
-    font-size: 0.7rem;
-    min-height: 0;
-    line-height: 1.4;
-    white-space: nowrap;
-    max-width: 40vw;
-    overflow: hidden;
-    text-overflow: ellipsis;
-    flex-shrink: 0;
+  /* No mobile top bar. The fixed hamburger button floats over the page, so
+     the shell gets top clearance so the ☰ button never overlaps content. */
+  .student-shell {
+    padding-top: 3.8rem;
   }
 }

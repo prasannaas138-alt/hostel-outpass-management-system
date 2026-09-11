@@ -237,7 +237,6 @@ export default function StudentDashboard() {
                 <p className="eyebrow">Apply new outpass</p>
                 <h2>{selectedRequest ? 'Edit rejected request' : 'New outpass application'}</h2>
               </div>
-              <span className="mini-summary">{user?.name}</span>
             </div>
 
             <ApplyOutpassForm
@@ -260,7 +259,6 @@ export default function StudentDashboard() {
                 <p className="eyebrow">My requests</p>
                 <h2>Recent requests</h2>
               </div>
-              <span className="mini-summary">{filteredRequests.length} shown</span>
             </div>
 
             <MyRequestsList
@@ -293,7 +291,6 @@ export default function StudentDashboard() {
                 <p className="eyebrow">Outpass history</p>
                 <h2>Approved and expired outpasses</h2>
               </div>
-              <span className="mini-summary">{visibleHistoryRequests.length} shown</span>
             </div>
 
             <OutpassHistory

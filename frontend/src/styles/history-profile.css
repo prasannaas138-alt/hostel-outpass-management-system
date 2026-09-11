@@ -222,17 +222,6 @@
    Desktop/tablet rules above are untouched.
    ============================================================ */
 @media (max-width: 640px) {
-  /* Compact "N shown" count pill — small badge at the top-right
-     of the section heading instead of a full-width row. */
-  .panel-heading .mini-summary {
-    padding: 0.2rem 0.55rem;
-    font-size: 0.7rem;
-    min-height: 0;
-    line-height: 1.4;
-    white-space: nowrap;
-    flex-shrink: 0;
-  }
-
   /* Compact, clearly bordered request cards. My Requests and
      Outpass History both render `history-card` items on mobile
      (`.requests-card` / `.history-compact` variants). */
@@ -274,11 +263,17 @@
     overflow-wrap: anywhere;
   }
 
+  .history-card__reason {
+    color: var(--muted-strong);
+  }
+
   .history-card__actions {
     display: flex;
     flex-wrap: wrap;
     gap: 0.5rem;
-    margin-top: 0.15rem;
+    margin-top: 0.4rem;
+    padding-top: 0.6rem;
+    border-top: 1px solid var(--border);
   }
 
   .history-card__actions .secondary-button,

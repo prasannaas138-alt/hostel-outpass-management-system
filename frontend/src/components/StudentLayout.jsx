@@ -24,8 +24,6 @@ export default function StudentLayout({ title, subtitle, actions, children, onNa
     navigate('/login');
   };
 
-  const firstName = (user?.name || 'Student').split(' ')[0];
-
   useEffect(() => {
     const hash = window.location.hash?.replace('#', '') || 'dashboard';
     setActiveSection(hash);
@@ -114,26 +112,6 @@ export default function StudentLayout({ title, subtitle, actions, children, onNa
       </aside>
 
       <div className="student-content">
-        <header className="student-topbar">
-          <div className="student-topbar-brand">
-            <img src="/st-joseph-logo.png" alt="St. Joseph's University" onError={(e) => { e.target.style.display = 'none'; }} />
-            <div>
-              <strong>H.O.M.S</strong>
-              <span>St. Joseph&apos;s University</span>
-            </div>
-          </div>
-          <div className="student-topbar-mobile-logo" aria-hidden="true">
-            <img src="/st-joseph-logo.png" alt="" onError={(e) => { e.target.style.display = 'none'; }} />
-          </div>
-          <div className="student-topbar-user">
-            <span aria-hidden="true">👋</span>
-            <strong>Hello, {firstName}!</strong>
-            <button className="secondary-button" type="button" onClick={() => setLogoutOpen(true)}>
-              Logout
-            </button>
-          </div>
-        </header>
-
         <main className="dashboard-main student-main" id="student-main" ref={mainRef}>
           <header className="dashboard-topbar">
             <div>
