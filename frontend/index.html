@@ -5,6 +5,15 @@
     <link rel="icon" type="image/png" href="/homs-logo.png" />
     <meta name="viewport" content="width=device-width, initial-scale=1.0" />
     <title>H.O.M.S</title>
+    <!-- PWA: stable start_url/scope so the installed app launches at the
+         same origin where the login session is stored. -->
+    <link rel="manifest" href="/manifest.webmanifest" />
+    <meta name="theme-color" content="#16386f" />
+    <meta name="mobile-web-app-capable" content="yes" />
+    <meta name="apple-mobile-web-app-capable" content="yes" />
+    <meta name="apple-mobile-web-app-status-bar-style" content="default" />
+    <meta name="apple-mobile-web-app-title" content="H.O.M.S" />
+    <link rel="apple-touch-icon" href="/homs-logo.png" />
     <script type="module" src="/src/main.jsx"></script>
   </head>
   <body>
