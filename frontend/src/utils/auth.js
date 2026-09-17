@@ -89,12 +89,33 @@ export const getStoredAuth = () => {
   }
 };
 
+// ---------------------------------------------------------------------------
+// MOBILE SESSION HEALING
+// Sessions created before the cookie mirror existed (and sessions restored
+// only from localStorage) may have no cookie yet. On every app open we make
+// sure a VALID session is also mirrored into the durable cookie, so that
+// closing and reopening the mobile browser — where localStorage is wiped —
+// still finds the session in the cookie jar. Idempotent: writes only when
+// the cookie is missing or stale. Logout/token-expiry never reach here.
+// ---------------------------------------------------------------------------
+const syncCookieMirror = (auth) => {
+  if (auth?.token && auth?.user) {
+    const raw = JSON.stringify(auth);
+    if (readCookie() !== raw) {
+      writeCookie(raw);
+    }
+  }
+};
+
 // Synchronous restore for app startup. Returns valid stored auth, or clears
 // both stores and returns empty auth when the token is missing/expired/malformed.
 export const getInitialAuth = () => {
   const { token, user } = getStoredAuth();
   if (token && user && !isTokenExpired(token)) {
-    return { token, user };
+    const auth = { token, user };
+    // Keep the durable cookie in sync on every app open (mobile persistence).
+    syncCookieMirror(auth);
+    return auth;
   }
   if (token || user) {
     clearAuth();

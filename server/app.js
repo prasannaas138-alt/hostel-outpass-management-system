@@ -24,7 +24,20 @@ app.use(
 app.use(express.json({ limit: '2mb' }));
 
 if (fs.existsSync(frontendDistPath)) {
-  app.use(express.static(frontendDistPath));
+  // index.html: never cached, so mobile browsers always load the CURRENT
+  // bundle on reopen (a stale cached shell used to re-run the old code —
+  // which broke mobile login persistence and other fixes).
+  app.use(express.static(frontendDistPath, {
+    index: false,
+    setHeaders: (res, filePath) => {
+      if (filePath.endsWith('index.html')) {
+        res.setHeader('Cache-Control', 'no-store');
+      } else if (filePath.includes(`${path.sep}assets${path.sep}`)) {
+        // Vite emits content-hashed filenames, safe to cache long-term.
+        res.setHeader('Cache-Control', 'public, max-age=31536000, immutable');
+      }
+    },
+  }));
 }
 
 app.get('/api/health', (req, res) => {
@@ -33,6 +46,7 @@ app.get('/api/health', (req, res) => {
 
 app.get('/', (req, res) => {
   if (fs.existsSync(indexHtmlPath)) {
+    res.setHeader('Cache-Control', 'no-store');
     return res.sendFile(indexHtmlPath);
   }
 
@@ -47,6 +61,7 @@ app.use('/api/notifications', notificationRoutes);
 
 app.get(/^\/(?!api).*/, (req, res, next) => {
   if (fs.existsSync(indexHtmlPath)) {
+    res.setHeader('Cache-Control', 'no-store');
     return res.sendFile(indexHtmlPath);
   }
 
