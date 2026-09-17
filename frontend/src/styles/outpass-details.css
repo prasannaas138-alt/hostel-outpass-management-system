@@ -59,39 +59,39 @@
 
 /* Large, prominent logo. Fluid width (never wider than the card) with the
    intrinsic aspect ratio preserved — height:auto + object-fit:contain
-   means it scales down cleanly at 320px without stretching or distortion. */
+   shows the FULL image with no cropping (the logo is a wide lockup, so
+   no border-radius circle crop here) and scales down cleanly at 320px. */
 .outpass-card__logo {
   display: block;
-  width: clamp(112px, 40vw, 148px);
+  width: clamp(170px, 62vw, 220px);
   height: auto;
   object-fit: contain;
-  border-radius: 50%;
 }
 
 .outpass-card__idpill {
   display: inline-grid;
   justify-items: center;
-  gap: 0.05rem;
-  padding: 0.4rem 0.95rem;
+  gap: 0.02rem;
+  padding: 0.3rem 0.7rem;
   border: 1px solid var(--border);
-  border-radius: 12px;
+  border-radius: 10px;
   background: var(--surface-soft);
   max-width: 100%;
 }
 
 .outpass-card__idpill strong {
-  font-size: 0.82rem;
+  font-size: 0.7rem;
   font-weight: 800;
-  letter-spacing: 0.05em;
+  letter-spacing: 0.04em;
   color: var(--navy-900);
   white-space: nowrap;
 }
 
 .outpass-card__idpill span {
-  font-size: 0.58rem;
+  font-size: 0.52rem;
   font-weight: 700;
   text-transform: uppercase;
-  letter-spacing: 0.1em;
+  letter-spacing: 0.09em;
   color: var(--muted);
 }
 
@@ -470,7 +470,7 @@
 
 @media (max-width: 400px) {
   .outpass-card__logo {
-    width: clamp(96px, 44vw, 120px);
+    width: clamp(150px, 68vw, 185px);
   }
 
   .outpass-card__title {
