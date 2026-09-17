@@ -56,6 +56,24 @@ const eraseCookie = () => {
   }
 };
 
+// Ask the browser to keep this origin's storage (localStorage/IndexedDB)
+// durable — when granted, Chrome will not evict it under storage pressure
+// or for long-idle sites (a real mobile logout-by-eviction cause).
+// Best-effort and a no-op where the API is unavailable.
+const requestDurableStorage = () => {
+  try {
+    if (typeof navigator !== 'undefined' && navigator.storage?.persist) {
+      navigator.storage.persist().catch(() => {});
+    }
+  } catch {
+    // Not supported — dual-store persistence below still applies.
+  }
+};
+
+// Where the last successful restore came from — surfaced once at startup
+// (see getInitialAuth) so a mobile device's behavior can be verified live.
+let lastRestoreSource = 'none';
+
 export const getStoredAuth = () => {
   let raw = null;
   try {
@@ -63,6 +81,7 @@ export const getStoredAuth = () => {
   } catch {
     raw = null; // storage blocked entirely (strict private modes)
   }
+  lastRestoreSource = raw ? 'localStorage' : 'none';
 
   if (!raw) {
     // localStorage was wiped (typical mobile in-app browser / ITP purge).
@@ -70,6 +89,7 @@ export const getStoredAuth = () => {
     // with it so the two stores stay in sync.
     raw = readCookie();
     if (raw) {
+      lastRestoreSource = 'cookie';
       try {
         localStorage.setItem(KEY, raw);
       } catch {
@@ -115,10 +135,22 @@ export const getInitialAuth = () => {
     const auth = { token, user };
     // Keep the durable cookie in sync on every app open (mobile persistence).
     syncCookieMirror(auth);
+    // One-line diagnostic — open the mobile browser console (or remote
+    // devtools) and this shows exactly which store restored the session.
+    try {
+      console.info(`[HOMS] session restored from: ${lastRestoreSource}`);
+    } catch {
+      // Console unavailable in some WebViews — ignore.
+    }
     return auth;
   }
   if (token || user) {
     clearAuth();
+  }
+  try {
+    console.info('[HOMS] no valid stored session — login required');
+  } catch {
+    // Console unavailable in some WebViews — ignore.
   }
   return emptyAuth();
 };
@@ -131,6 +163,8 @@ export const setStoredAuth = (auth) => {
     // localStorage blocked — the cookie mirror keeps the session alive.
   }
   writeCookie(raw);
+  // Mark this origin's storage as durable on login (mobile anti-eviction).
+  requestDurableStorage();
 };
 
 export const clearAuth = () => {
