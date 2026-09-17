@@ -6,7 +6,7 @@ import NotificationBell from './NotificationBell';
 import '../styles/layout.css';
 import '../styles/notifications.css';
 
-export default function DashboardLayout({ title, subtitle, navItems, children, actions }) {
+export default function DashboardLayout({ title, subtitle, navItems, children, actions, brandLogo }) {
   const { user, logout } = useAuth();
   const navigate = useNavigate();
   const showBell = user?.role === 'Sister' || user?.role === 'Warden';
@@ -25,6 +25,7 @@ export default function DashboardLayout({ title, subtitle, navItems, children, a
         userName={user?.name}
         userRole={user?.role}
         onLogout={handleLogout}
+        brandLogo={brandLogo}
       />
 
       <main className="dashboard-main" id="main-content">

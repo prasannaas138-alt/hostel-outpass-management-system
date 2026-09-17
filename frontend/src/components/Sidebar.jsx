@@ -1,9 +1,17 @@
-﻿export default function Sidebar({ title, subtitle, navItems, userName, userRole, onLogout }) {
+﻿export default function Sidebar({ title, subtitle, navItems, userName, userRole, onLogout, brandLogo }) {
   const activeId = window.location.hash.replace('#', '');
 
   return (
     <aside className="sidebar" aria-label="Primary">
       <div className="sidebar-brand">
+        {brandLogo ? (
+          <img
+            className="sidebar-brand__logo"
+            src={brandLogo}
+            alt="St. Joseph's University"
+            onError={(e) => { e.target.style.display = 'none'; }}
+          />
+        ) : null}
         <p className="eyebrow">H.O.M.S · Hostel Portal</p>
         <h2>{title}</h2>
         {subtitle ? <p className="muted sidebar-copy">{subtitle}</p> : null}

@@ -43,14 +43,10 @@ export default function WardenProfile() {
 
     setSavingName(true);
     try {
-      // PUT /auth/me validates name + department, so the existing department
-      // is passed through untouched — only the username actually changes.
-      const { data } = await api.put('/auth/me', {
+      // Username-only endpoint: no student/system field (department, year,
+      // room number, role…) can be changed from the Warden profile.
+      const { data } = await api.put('/auth/me/username', {
         name: username.trim(),
-        department: user?.department || 'Hostel',
-        year: user?.year,
-        hostelBlock: user?.hostelBlock,
-        phone: user?.phone,
       });
       updateUser(data.user);
       setNameSuccess('Username updated successfully.');

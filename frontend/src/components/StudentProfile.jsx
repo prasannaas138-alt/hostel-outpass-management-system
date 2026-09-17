@@ -7,7 +7,7 @@ const EDITABLE_FIELDS = {
   name: 'Full name',
   department: 'Department',
   year: 'Year',
-  hostelBlock: 'Hostel block',
+  phone: 'Phone number',
   roomNumber: 'Room number',
 };
 
@@ -32,7 +32,7 @@ export default function StudentProfile({ user, onProfileUpdated }) {
       name: user?.name || '',
       department: user?.department || '',
       year: user?.year || '',
-      hostelBlock: user?.hostelBlock || '',
+      phone: user?.phone || '',
       roomNumber: user?.roomNumber || '',
     });
     setEditError('');
@@ -53,6 +53,10 @@ export default function StudentProfile({ user, onProfileUpdated }) {
     if (!editForm.name?.trim()) return 'Full name is required.';
     if (!editForm.department?.trim()) return 'Department is required.';
     if (!editForm.roomNumber?.trim()) return 'Room number is required.';
+    const phone = (editForm.phone || '').trim();
+    if (phone && !/^[0-9+\-\s()]{6,15}$/.test(phone)) {
+      return 'Enter a valid phone number (6-15 digits).';
+    }
     return '';
   };
 
@@ -149,11 +153,13 @@ export default function StudentProfile({ user, onProfileUpdated }) {
                 <label key={field}>
                   {label}
                   <input
-                    type="text"
+                    type={field === 'phone' ? 'tel' : 'text'}
                     name={field}
                     value={editForm[field] || ''}
                     onChange={handleEditChange}
-                    maxLength={field === 'year' ? 10 : 60}
+                    inputMode={field === 'phone' ? 'tel' : undefined}
+                    placeholder={field === 'phone' ? '10-digit mobile number' : undefined}
+                    maxLength={field === 'year' ? 10 : field === 'phone' ? 15 : 60}
                     disabled={saving}
                   />
                 </label>
@@ -205,7 +211,7 @@ export default function StudentProfile({ user, onProfileUpdated }) {
           <section className="profile-card" aria-label="Hostel details">
             <h4>Hostel details</h4>
             <dl>
-              <div><dt>Hostel block</dt><dd>{user?.hostelBlock || '—'}</dd></div>
+              <div><dt>Phone number</dt><dd>{user?.phone || '—'}</dd></div>
               <div><dt>Room number</dt><dd>{user?.roomNumber || '—'}</dd></div>
             </dl>
           </section>

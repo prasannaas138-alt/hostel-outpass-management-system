@@ -68,6 +68,7 @@ export default function SisterDashboard() {
       title="Sister Dashboard"
       subtitle="Review only the requests approved by HOD."
       navItems={[{ id: 'hod-approved-requests', label: 'HOD Approved Requests', description: 'Move to Warden' }]}
+      brandLogo="/st-joseph-logo.png"
     >
       <section className="warden-hero" aria-label="Welcome">
         <p className="eyebrow">St. Joseph&apos;s University · Hostel Office</p>

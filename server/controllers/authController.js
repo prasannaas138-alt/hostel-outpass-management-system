@@ -136,7 +136,7 @@ export const getCurrentUser = async (req, res) => {
 // (handled by the separate password endpoint below).
 export const updateCurrentUser = async (req, res, next) => {
   try {
-    const { name, department, year, hostelBlock } = req.body;
+    const { name, department, year, hostelBlock, phone } = req.body;
 
     if (!name || !name.trim()) {
       return res.status(400).json({ message: 'Name is required.' });
@@ -216,6 +216,34 @@ export const changeMyPassword = async (req, res, next) => {
     await user.save(); // existing pre('save') hook hashes with bcrypt
 
     res.json({ message: 'Password changed successfully.', user: sanitizeUser(user) });
+  } catch (error) {
+    next(error);
+  }
+};
+
+// ---------------------------------------------------------------------------
+// Username-only profile update (Warden profile card). Deliberately separate
+// from updateCurrentUser so no student/system fields (department, year,
+// hostelBlock, phone, role, email, registerNumber) can change through here.
+// ---------------------------------------------------------------------------
+export const updateMyUsername = async (req, res, next) => {
+  try {
+    const { name } = req.body;
+
+    if (!name || !String(name).trim()) {
+      return res.status(400).json({ message: 'Username is required.' });
+    }
+
+    const user = await User.findById(req.user._id);
+
+    if (!user) {
+      return res.status(404).json({ message: 'User not found.' });
+    }
+
+    user.name = String(name).trim();
+    await user.save();
+
+    res.json({ message: 'Username updated successfully.', user: sanitizeUser(user) });
   } catch (error) {
     next(error);
   }
