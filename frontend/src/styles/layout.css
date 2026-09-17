@@ -78,7 +78,24 @@
   border-color: #fff;
 }
 
-/* Mobile bottom navigation — touch-first, rendered by DashboardLayout */
+/* Constrained sidebar-brand logo (shared by Student/Sister/Warden sidebars).
+   st-joseph-logo.png is a wide 4:1 lockup; without sizing it overflows the
+   sidebar. This keeps it a small square that stays inside its container on all
+   portals and all breakpoints. */
+.sidebar-brand__logo {
+  width: 42px;
+  height: 42px;
+  flex-shrink: 0;
+  max-width: 48px;
+  border-radius: 10px;
+  object-fit: contain;
+}
+
+.sidebar-brand .eyebrow {
+  font-size: 0.68rem;
+  white-space: nowrap;
+}
+
 .mobile-bottom-nav {
   display: none;
 }
