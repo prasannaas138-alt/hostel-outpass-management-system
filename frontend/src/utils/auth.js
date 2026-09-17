@@ -1,4 +1,12 @@
 const KEY = 'hostel_outpass_auth';
+const COOKIE_KEY = 'hostel_outpass_auth_ck';
+
+// Mirror lifetime. The JWT inside carries its own (7-day) expiry and is
+// re-validated on every app start and every API call, so a longer cookie
+// lifetime is harmless — an expired token is always cleared on startup.
+const COOKIE_MAX_AGE = 60 * 60 * 24 * 30; // 30 days
+
+const emptyAuth = () => ({ token: null, user: null });
 
 // Decode only the payload of a JWT to check expiry (no verification here —
 // the backend verifies the signature on every API call).
@@ -11,21 +19,78 @@ const isTokenExpired = (token) => {
   }
 };
 
+// ---------------------------------------------------------------------------
+// Why the cookie mirror exists: the session used to live ONLY in
+// localStorage, which desktop browsers keep indefinitely but many mobile
+// environments do not — in-app browsers opened from WhatsApp/Instagram/QR
+// run with ephemeral script storage (empty on every new open), and iOS
+// Safari's ITP purges script-writable storage after idle periods. Cookies
+// set with a real Max-Age live in the browser's durable cookie jar and
+// survive those scenarios, so they are written as a fallback mirror.
+// The cookie holds exactly what localStorage held (the same JWT + profile
+// the client already exposes to JS) — no passwords, no new auth mechanism.
+// ---------------------------------------------------------------------------
+
+const readCookie = () => {
+  try {
+    const match = document.cookie.match(new RegExp(`(?:^|;\\s*)${COOKIE_KEY}=([^;]*)`));
+    return match ? decodeURIComponent(match[1]) : null;
+  } catch {
+    return null;
+  }
+};
+
+const writeCookie = (raw) => {
+  try {
+    document.cookie = `${COOKIE_KEY}=${encodeURIComponent(raw)}; Max-Age=${COOKIE_MAX_AGE}; Path=/; SameSite=Lax`;
+  } catch {
+    // Cookie writes blocked — localStorage remains the primary store.
+  }
+};
+
+const eraseCookie = () => {
+  try {
+    document.cookie = `${COOKIE_KEY}=; Max-Age=0; Path=/; SameSite=Lax`;
+  } catch {
+    // Nothing to do — localStorage removal is handled separately.
+  }
+};
+
 export const getStoredAuth = () => {
-  const raw = localStorage.getItem(KEY);
+  let raw = null;
+  try {
+    raw = localStorage.getItem(KEY);
+  } catch {
+    raw = null; // storage blocked entirely (strict private modes)
+  }
+
   if (!raw) {
-    return { token: null, user: null };
+    // localStorage was wiped (typical mobile in-app browser / ITP purge).
+    // Restore the session from the durable cookie and heal localStorage
+    // with it so the two stores stay in sync.
+    raw = readCookie();
+    if (raw) {
+      try {
+        localStorage.setItem(KEY, raw);
+      } catch {
+        // localStorage unwritable — the cookie alone still restores the session.
+      }
+    }
+  }
+
+  if (!raw) {
+    return emptyAuth();
   }
 
   try {
     return JSON.parse(raw);
   } catch {
-    return { token: null, user: null };
+    return emptyAuth();
   }
 };
 
 // Synchronous restore for app startup. Returns valid stored auth, or clears
-// and returns empty auth when the token is missing/expired/malformed.
+// both stores and returns empty auth when the token is missing/expired/malformed.
 export const getInitialAuth = () => {
   const { token, user } = getStoredAuth();
   if (token && user && !isTokenExpired(token)) {
@@ -34,13 +99,24 @@ export const getInitialAuth = () => {
   if (token || user) {
     clearAuth();
   }
-  return { token: null, user: null };
+  return emptyAuth();
 };
 
 export const setStoredAuth = (auth) => {
-  localStorage.setItem(KEY, JSON.stringify(auth));
+  const raw = JSON.stringify(auth);
+  try {
+    localStorage.setItem(KEY, raw);
+  } catch {
+    // localStorage blocked — the cookie mirror keeps the session alive.
+  }
+  writeCookie(raw);
 };
 
 export const clearAuth = () => {
-  localStorage.removeItem(KEY);
+  try {
+    localStorage.removeItem(KEY);
+  } catch {
+    // Already inaccessible.
+  }
+  eraseCookie();
 };

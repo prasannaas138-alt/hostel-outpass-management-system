@@ -26,7 +26,6 @@ export default function MyRequestsList(props) {
     showSearch = false,
     onViewDetails,
     onEdit,
-    onDownload,
   } = props;
 
   return (
@@ -72,7 +71,6 @@ export default function MyRequestsList(props) {
               variant="requests-card"
               onViewDetails={onViewDetails}
               onEdit={onEdit}
-              onDownload={onDownload}
             />
           ))}
         </div>

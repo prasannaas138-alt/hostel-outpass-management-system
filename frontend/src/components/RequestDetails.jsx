@@ -1,8 +1,8 @@
 import StatusTracker from './StatusTracker';
 import { formatDate, formatTime } from './MyRequestsList';
-import { getDisplayStatus, getStatusClass, canDownloadPdf } from '../utils/outpassStatus';
+import { getDisplayStatus, getStatusClass } from '../utils/outpassStatus';
 
-export function MyRequestsTable({ requests, onViewDetails, onEdit, onDownload }) {
+export function MyRequestsTable({ requests, onViewDetails, onEdit }) {
   if (!requests.length) return null;
   return (
     <div className="table-wrap requests-table-wrap">
@@ -20,9 +20,8 @@ export function MyRequestsTable({ requests, onViewDetails, onEdit, onDownload })
               <td><span className={`status-badge status-${getStatusClass(request)}`}>{getDisplayStatus(request)}</span></td>
               <td>
                 <div className="table-actions">
-                  <button className="link-button" type="button" onClick={() => onViewDetails(request._id)}>Details</button>
+                  <button className="link-button" type="button" onClick={() => onViewDetails(request._id)}>Outpass</button>
                   {request.status === 'Rejected' ? (<button className="link-button" type="button" onClick={() => onEdit(request._id)}>Edit</button>) : null}
-                  {canDownloadPdf(request) ? (<button className="link-button" type="button" onClick={() => onDownload(request._id)}>PDF</button>) : null}
                 </div>
               </td>
             </tr>
@@ -33,7 +32,7 @@ export function MyRequestsTable({ requests, onViewDetails, onEdit, onDownload })
   );
 }
 
-export function RequestDetailsModal({ detailRequest, onCloseDetails, onEdit, onDownload }) {
+export function RequestDetailsModal({ detailRequest, onCloseDetails, onEdit }) {
   if (!detailRequest) return null;
   return (
     <div className="requests-modal" role="dialog" aria-modal="true" aria-label="Request details">
@@ -55,7 +54,6 @@ export function RequestDetailsModal({ detailRequest, onCloseDetails, onEdit, onD
         <div className="button-row">
           <button className="secondary-button" type="button" onClick={onCloseDetails}>Close</button>
           {detailRequest.status === 'Rejected' ? (<button className="primary-button" type="button" onClick={() => onEdit(detailRequest._id)}>Edit and reapply</button>) : null}
-          {canDownloadPdf(detailRequest) ? (<button className="primary-button" type="button" onClick={() => onDownload(detailRequest._id)}>Download Outpass</button>) : null}
         </div>
       </div>
     </div>

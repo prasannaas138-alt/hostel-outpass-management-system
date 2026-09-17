@@ -5,7 +5,8 @@ import ApplyOutpassForm from '../components/ApplyOutpassForm';
 import MyRequestsList from '../components/MyRequestsList';
 import OutpassHistory from '../components/OutpassHistory';
 import StudentProfile from '../components/StudentProfile';
-import { MyRequestsTable, RequestDetailsModal } from '../components/RequestDetails';
+import { MyRequestsTable } from '../components/RequestDetails';
+import OutpassDetails from '../components/OutpassDetails';
 import LoadingState from '../components/LoadingState';
 import ErrorState from '../components/ErrorState';
 import {
@@ -195,24 +196,6 @@ export default function StudentDashboard() {
     }
   };
 
-  const handleDownload = async (requestId) => {
-    setError('');
-    setSuccess('');
-    try {
-      const response = await api.get(`/outpasses/${requestId}/pdf`, { responseType: 'blob' });
-      const fileUrl = window.URL.createObjectURL(new Blob([response.data], { type: 'application/pdf' }));
-      const link = document.createElement('a');
-      link.href = fileUrl;
-      link.download = `outpass-${requestId}.pdf`;
-      document.body.appendChild(link);
-      link.click();
-      link.remove();
-      window.URL.revokeObjectURL(fileUrl);
-    } catch {
-      setError('This outpass is no longer available for download.');
-    }
-  };
-
   // StudentProfile calls this after a successful PUT /auth/me so the
   // header/sidebar greeting uses the new name right away.
   const handleProfileUpdated = (updatedUser) => {
@@ -233,9 +216,18 @@ export default function StudentDashboard() {
   return (
     <StudentLayout
       title="Student Dashboard"
-      subtitle="Apply for outpass, track approvals, edit rejected requests, and download approved PDFs."
+      subtitle="Apply for outpass, track approvals, and show your approved outpass at the gate."
       onNavSelected={handleNavSelected}
     >
+      {detailRequest ? (
+        <OutpassDetails
+          request={detailRequest}
+          user={user}
+          onBack={() => setDetailId(null)}
+          onEdit={scrollToEdit}
+        />
+      ) : (
+        <>
       <section id="dashboard" className="student-hero">
         <p className="eyebrow">St. Joseph&apos;s University · H.O.M.S</p>
         <h2>Hello, {firstName}!</h2>
@@ -291,19 +283,11 @@ export default function StudentDashboard() {
               onStatusFilterChange={setStatusFilter}
               onViewDetails={setDetailId}
               onEdit={scrollToEdit}
-              onDownload={handleDownload}
             />
             <MyRequestsTable
               requests={filteredRequests}
               onViewDetails={setDetailId}
               onEdit={scrollToEdit}
-              onDownload={handleDownload}
-            />
-            <RequestDetailsModal
-              detailRequest={detailRequest}
-              onCloseDetails={() => setDetailId(null)}
-              onEdit={scrollToEdit}
-              onDownload={handleDownload}
             />
           </section>
 
@@ -325,9 +309,10 @@ export default function StudentDashboard() {
               search={historySearch}
               onSearchChange={setHistorySearch}
               onViewDetails={setDetailId}
-              onDownload={handleDownload}
             />
           </section>
+        </>
+      )}
 
       {profileViewActive ? (
         <div

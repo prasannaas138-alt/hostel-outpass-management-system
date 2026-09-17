@@ -3,7 +3,6 @@ import LoadingState from './LoadingState';
 import StudentRequestCard from './StudentRequestCard';
 import StatusBadge from './StatusBadge';
 import { formatDate, formatTime } from './MyRequestsList';
-import { canDownloadPdf } from '../utils/outpassStatus';
 
 export default function OutpassHistory(props) {
   const {
@@ -16,7 +15,6 @@ export default function OutpassHistory(props) {
     search,
     onSearchChange,
     onViewDetails,
-    onDownload,
   } = props;
 
   return (
@@ -60,7 +58,6 @@ export default function OutpassHistory(props) {
                 request={request}
                 variant="history-compact"
                 onViewDetails={onViewDetails}
-                onDownload={onDownload}
               />
             ))}
           </div>
@@ -87,10 +84,7 @@ export default function OutpassHistory(props) {
                     <td><StatusBadge request={request} /></td>
                     <td>
                       <div className="table-actions">
-                        <button className="link-button" type="button" onClick={() => onViewDetails(request._id)}>Details</button>
-                        {canDownloadPdf(request) ? (
-                          <button className="link-button" type="button" onClick={() => onDownload(request._id)}>PDF</button>
-                        ) : null}
+                        <button className="link-button" type="button" onClick={() => onViewDetails(request._id)}>Outpass</button>
                       </div>
                     </td>
                   </tr>

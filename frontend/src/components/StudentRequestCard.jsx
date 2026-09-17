@@ -1,5 +1,4 @@
 import AlertBanner from './AlertBanner';
-import { canDownloadPdf } from '../utils/outpassStatus';
 import StatusBadge from './StatusBadge';
 import { formatDate, formatTime } from './MyRequestsList';
 
@@ -54,14 +53,14 @@ const TypeIcon = ({ requestType }) => (
  * │         📅 09/13/2026 · 08:30–16:30  │
  * │         👤 Leave / Outing         ›  │
  * │ ──────────────────────────────────── │
- * │ [ View details ]  [ Download Outpass]│
+ * │ [ Outpass ]       [ Edit and reapply]│
  * └──────────────────────────────────────┘
  *
- * Renders only below 980px (desktop shows the request tables), and keeps
- * the existing status-badge classes + canDownloadPdf expiry rule.
+ * Renders only below 980px (desktop shows the request tables). "Outpass"
+ * opens the outpass details view; there is intentionally no download
+ * button — the screen itself is the official outpass display.
  */
-export default function StudentRequestCard({ request, variant = '', onViewDetails, onEdit, onDownload }) {
-  const downloadAllowed = canDownloadPdf(request);
+export default function StudentRequestCard({ request, variant = '', onViewDetails, onEdit }) {
 
   return (
     <article className={`history-card ref-card ${variant}`.trim()}>
@@ -92,16 +91,11 @@ export default function StudentRequestCard({ request, variant = '', onViewDetail
 
       <div className="history-card__actions ref-card__actions">
         <button className="secondary-button requests-details-btn" type="button" onClick={() => onViewDetails(request._id)}>
-          View details
+          Outpass
         </button>
         {request.status === 'Rejected' && onEdit ? (
           <button className="link-button" type="button" onClick={() => onEdit(request._id)}>
             Edit and reapply
-          </button>
-        ) : null}
-        {downloadAllowed && onDownload ? (
-          <button className="link-button" type="button" onClick={() => onDownload(request._id)}>
-            Download Outpass
           </button>
         ) : null}
       </div>
