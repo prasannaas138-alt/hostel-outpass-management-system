@@ -41,65 +41,46 @@
   box-shadow: 0 12px 34px rgba(15, 42, 82, 0.08);
 }
 
-/* ---- Header: circular logo + purple brand + OUTPASS ID pill -------------- */
+/* ---- Header: LARGE university logo, Outpass ID below it ------------------
+   The header is a simple column flow (logo, then ID pill). Nothing is
+   absolutely positioned here, so the ID can never overlap or clip the
+   logo at any width — it always sits fully below it with real spacing. */
 
 .outpass-card__header {
   display: flex;
+  flex-direction: column;
   align-items: center;
   gap: 0.8rem;
-  padding: 0.95rem 1.1rem;
+  padding: 1.35rem 1rem 1.15rem;
   border-bottom: 1px solid var(--border);
   background: var(--surface);
+  text-align: center;
 }
 
+/* Large, prominent logo. Fluid width (never wider than the card) with the
+   intrinsic aspect ratio preserved — height:auto + object-fit:contain
+   means it scales down cleanly at 320px without stretching or distortion. */
 .outpass-card__logo {
-  width: 54px;
-  height: 54px;
+  display: block;
+  width: clamp(112px, 40vw, 148px);
+  height: auto;
   object-fit: contain;
-  flex-shrink: 0;
   border-radius: 50%;
 }
 
-.outpass-card__brand {
-  display: grid;
-  justify-items: start;
-  min-width: 0;
-  flex: 1;
-}
-
-.outpass-card__brand strong {
-  font-size: 1.25rem;
-  font-weight: 800;
-  letter-spacing: 0.01em;
-  color: var(--purple-700);
-  line-height: 1.1;
-  border-bottom: 2px solid var(--purple-700);
-  padding-bottom: 0.1rem;
-  white-space: nowrap;
-}
-
-.outpass-card__brand span {
-  margin-top: 0.2rem;
-  font-size: 0.66rem;
-  font-weight: 700;
-  letter-spacing: 0.28em;
-  text-transform: uppercase;
-  color: var(--purple-700);
-}
-
 .outpass-card__idpill {
-  display: grid;
+  display: inline-grid;
   justify-items: center;
   gap: 0.05rem;
-  padding: 0.45rem 0.8rem;
+  padding: 0.4rem 0.95rem;
   border: 1px solid var(--border);
   border-radius: 12px;
   background: var(--surface-soft);
-  flex-shrink: 0;
+  max-width: 100%;
 }
 
 .outpass-card__idpill strong {
-  font-size: 0.8rem;
+  font-size: 0.82rem;
   font-weight: 800;
   letter-spacing: 0.05em;
   color: var(--navy-900);
@@ -404,21 +385,92 @@
   background: var(--red-700);
 }
 
+/* ---- Animated verification ring around APPROVED / EXPIRED ----------------
+   Purely a VISUAL CUE — the backend approval/status data remains the only
+   source of truth. The ring is built from absolutely positioned
+   pseudo-elements, so it causes zero layout shift: a static base ring
+   (always visible, even without animation support), a rotating light
+   sweep (conic gradient, modern browsers), and a glow pulse (everywhere). */
+
+@property --status-spin {
+  syntax: '<angle>';
+  inherits: false;
+  initial-value: 0deg;
+}
+
+.outpass-status-word {
+  position: relative;
+  display: inline-flex;
+  align-items: center;
+  justify-content: center;
+  padding: 0.55rem 2rem;
+  border-radius: 999px;
+  isolation: isolate;
+}
+
+/* Static base ring + soft glow pulse — works in every browser. */
+.outpass-status-word::after {
+  content: '';
+  position: absolute;
+  inset: -5px;
+  border-radius: 999px;
+  border: 2px solid currentColor;
+  opacity: 0.45;
+  z-index: -1;
+  animation: status-ring-glow 2.8s ease-in-out infinite;
+}
+
+/* Rotating light sweep along the ring (masked to a uniform 3px band). */
+.outpass-status-word::before {
+  content: '';
+  position: absolute;
+  inset: -5px;
+  border-radius: 999px;
+  padding: 3px;
+  background: conic-gradient(
+    from var(--status-spin, 0deg),
+    transparent 0deg,
+    transparent 235deg,
+    currentColor 305deg,
+    transparent 360deg
+  );
+  -webkit-mask: linear-gradient(#000 0 0) content-box, linear-gradient(#000 0 0);
+  -webkit-mask-composite: xor;
+  mask: linear-gradient(#000 0 0) content-box, linear-gradient(#000 0 0);
+  mask-composite: exclude;
+  z-index: -1;
+  animation: status-ring-spin 2.8s linear infinite;
+}
+
+@keyframes status-ring-spin {
+  to {
+    --status-spin: 360deg;
+  }
+}
+
+@keyframes status-ring-glow {
+  0%,
+  100% {
+    box-shadow: 0 0 0 0 transparent;
+  }
+  50% {
+    box-shadow: 0 0 16px 2px;
+  }
+}
+
+/* Respect users who prefer less motion — the static ring stays visible. */
+@media (prefers-reduced-motion: reduce) {
+  .outpass-status-word::before,
+  .outpass-status-word::after {
+    animation: none;
+  }
+}
+
 /* ---- Small phones: keep every value readable, never overflow -------------- */
 
 @media (max-width: 400px) {
-  .outpass-card__header {
-    flex-wrap: wrap;
-  }
-
-  .outpass-card__brand strong {
-    font-size: 1.05rem;
-  }
-
-  .outpass-card__idpill {
-    order: 3;
-    width: 100%;
-    justify-items: start;
+  .outpass-card__logo {
+    width: clamp(96px, 44vw, 120px);
   }
 
   .outpass-card__title {

@@ -103,7 +103,7 @@ const approvalClass = (value) => {
 
 /**
  * Student Outpass Details — matches the reference image:
- * circular college logo + purple university brand + "OUTPASS ID" pill,
+ * large circular college logo with the OUTPASS ID pill below it,
  * "OUTPASS SLIP / {Type} request" heading, an icon-row info list
  * (Date / Out Time / Return Time / Reason / HOD / Sister / Warden) and a
  * large centered status banner — GREEN "APPROVED" while valid, RED
@@ -151,16 +151,15 @@ export default function OutpassDetails({ request, user, onBack, onEdit }) {
 
       <article className="outpass-card">
         <header className="outpass-card__header">
+          {/* The logo IS the branding — large, centered, no separate text.
+              The ID pill is the next item in normal column flow, so it can
+              never overlap the logo at any width. */}
           <img
             src="/st-joseph-logo.png"
             alt="St. Joseph's University"
             className="outpass-card__logo"
             onError={(event) => { event.target.style.display = 'none'; }}
           />
-          <div className="outpass-card__brand">
-            <strong>St. Joseph&apos;s</strong>
-            <span>UNIVERSITY</span>
-          </div>
           <div className="outpass-card__idpill">
             <strong>{request.outpassId || 'HOMS-SJU-—'}</strong>
             <span>Outpass ID</span>
@@ -216,13 +215,13 @@ export default function OutpassDetails({ request, user, onBack, onEdit }) {
           {isApprovedValid ? (
             <div className="outpass-card__final outpass-card__final--approved" role="status">
               <span className="outpass-card__glyph"><CheckIcon /></span>
-              <strong>APPROVED</strong>
+              <strong className="outpass-status-word">APPROVED</strong>
               <p>You are allowed to go out.</p>
             </div>
           ) : isExpired ? (
             <div className="outpass-card__final outpass-card__final--expired" role="status">
               <span className="outpass-card__glyph"><RejectIcon /></span>
-              <strong>EXPIRED</strong>
+              <strong className="outpass-status-word">EXPIRED</strong>
               <p>This outpass has expired.</p>
             </div>
           ) : request.status === 'Rejected' ? (
