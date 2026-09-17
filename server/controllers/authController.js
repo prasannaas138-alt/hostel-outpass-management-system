@@ -18,6 +18,7 @@ const sanitizeUser = (user) => ({
   year: user.year,
   hostelBlock: user.hostelBlock,
   roomNumber: user.roomNumber,
+  phone: user.phone,
 });
 
 const emailPattern = /^[^\s@]+@[^\s@]+\.[^\s@]+$/;
@@ -160,6 +161,9 @@ export const updateCurrentUser = async (req, res, next) => {
     }
     if (typeof hostelBlock === 'string') {
       user.hostelBlock = String(hostelBlock).trim();
+    }
+    if (typeof phone === 'string') {
+      user.phone = String(phone).trim();
     }
 
     await user.save();

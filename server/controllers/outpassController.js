@@ -1,4 +1,5 @@
 import Outpass from '../models/Outpass.js';
+import User from '../models/User.js';
 import { isWeekend } from '../utils/date.js';
 import { createOutpassPdf } from '../utils/pdf.js';
 import { notifyNewOutpass, markOutpassNotificationsRead } from '../services/notificationService.js';
@@ -229,7 +230,10 @@ export const getPendingWardenRequests = async (req, res, next) => {
           wardenStatus: 'Pending',
         },
       ],
-    }).sort({ createdAt: -1 });
+    }).sort({ createdAt: -1 })
+      // Populated so the Warden review UI can show the student's real
+      // register number, room number, and phone number from their profile.
+      .populate('studentId', 'name registerNumber roomNumber phone');
 
     res.json(outpasses);
   } catch (error) {
@@ -331,6 +335,57 @@ export const wardenReviewOutpass = async (req, res, next) => {
     await outpass.save();
     await markOutpassNotificationsRead(outpass._id);
     return res.json(outpass);
+  } catch (error) {
+    next(error);
+  }
+};
+
+// Warden-only history: every outpass ever created (pending, approved,
+// expired, rejected), newest first, with the student's profile fields
+// (register number, room, phone) populated for the history table.
+export const getWardenHistory = async (req, res, next) => {
+  try {
+    await refreshExpiredOutpasses();
+    const outpasses = await Outpass.find()
+      .sort({ createdAt: -1 })
+      .populate('studentId', 'name registerNumber roomNumber phone');
+    res.json(outpasses);
+  } catch (error) {
+    next(error);
+  }
+};
+
+// Summary counters for the Warden dashboard cards. All values come from
+// real database queries — nothing is hardcoded in the UI.
+export const getWardenStats = async (req, res, next) => {
+  try {
+    await refreshExpiredOutpasses();
+
+    const startOfToday = new Date();
+    startOfToday.setHours(0, 0, 0, 0);
+
+    const [totalStudents, pendingApprovals, approvedToday, expiredOutpasses] = await Promise.all([
+      User.countDocuments({ role: 'Student' }),
+      Outpass.countDocuments({
+        status: { $in: ACTIVE_STATUSES },
+        $or: [
+          { requestType: 'Outing', wardenStatus: 'Pending' },
+          {
+            requestType: 'Home',
+            hodStatus: 'Approved',
+            sisterStatus: 'Approved',
+            wardenStatus: 'Pending',
+          },
+        ],
+      }),
+      Outpass.countDocuments({
+        'approvedBy.role': 'Warden',
+        'approvedBy.date': { $gte: startOfToday },
+      }),
+      Outpass.countDocuments({ status: 'Expired' }),
+    ]);
+
+    res.json({ totalStudents, pendingApprovals, approvedToday, expiredOutpasses });
   } catch (error) {
     next(error);
   }

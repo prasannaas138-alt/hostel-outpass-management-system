@@ -15,6 +15,7 @@ const demoUsers = [
     department: 'CSE',
     hostelBlock: 'A Block',
     roomNumber: 'A-101',
+    phone: '+91 98765 43210',
     password: 'demo1234',
     role: 'Student',
     year: '2',

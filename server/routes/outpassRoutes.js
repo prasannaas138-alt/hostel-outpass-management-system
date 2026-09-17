@@ -7,6 +7,8 @@ import {
   getPendingHodRequests,
   getPendingSisterRequests,
   getPendingWardenRequests,
+  getWardenHistory,
+  getWardenStats,
   hodReviewOutpass,
   sisterReviewOutpass,
   updateOutpass,
@@ -22,6 +24,8 @@ router.get('/me', protect, authorizeRoles('Student'), getMyOutpasses);
 router.get('/pending/hod', protect, authorizeRoles('HOD'), getPendingHodRequests);
 router.get('/pending/sister', protect, authorizeRoles('Sister'), getPendingSisterRequests);
 router.get('/pending/warden', protect, authorizeRoles('Warden'), getPendingWardenRequests);
+router.get('/warden/history', protect, authorizeRoles('Warden'), getWardenHistory);
+router.get('/warden/stats', protect, authorizeRoles('Warden'), getWardenStats);
 router.get('/:id', protect, getOutpassById);
 router.get('/:id/pdf', protect, downloadOutpassPdf);
 router.patch('/:id/hod', protect, authorizeRoles('HOD'), hodReviewOutpass);
