@@ -108,6 +108,7 @@ export default function WardenOutpassHistory({ items, loading, loadError, onRetr
                   <th scope="col">Room No</th>
                   <th scope="col">Phone No</th>
                   <th scope="col">Requested On</th>
+                  <th scope="col">Return Date</th>
                   <th scope="col">Out Time</th>
                   <th scope="col">Return Time</th>
                   <th scope="col">Status</th>
@@ -128,6 +129,7 @@ export default function WardenOutpassHistory({ items, loading, loadError, onRetr
                       <td className="wd-mono">{item.roomNumber || '—'}</td>
                       <td className="wd-mono">{item.phone || '—'}</td>
                       <td className="wd-nowrap">{dateOf(item)}</td>
+                      <td className="wd-nowrap">{item.returnDate ? dateOf({ date: item.returnDate }) : dateOf(item)}</td>
                       <td className="wd-mono wd-nowrap">{item.outTime || '—'}</td>
                       <td className="wd-mono wd-nowrap">{item.returnTime || '—'}</td>
                       <td><span className={`wd-pill ${status.cls}`}>{status.label}</span></td>

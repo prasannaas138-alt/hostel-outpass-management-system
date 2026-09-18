@@ -379,6 +379,7 @@ export default function SisterDashboard() {
                           : "—"}{" "}
                         · {item.outTime || "—"}–{item.returnTime || "—"}
                       </span>
+                      <span>Return date: {item.returnDate ? new Date(item.returnDate).toLocaleDateString() : (item.date ? new Date(item.date).toLocaleDateString() : "—")}</span>
                     </div>
                     <span className={`wd-pill ${statusClass(item.status)}`}>
                       {item.status || "Pending"}

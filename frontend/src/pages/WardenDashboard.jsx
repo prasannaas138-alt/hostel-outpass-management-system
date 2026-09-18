@@ -241,6 +241,11 @@ export default function WardenDashboard() {
             ))}
           </div>
 
+          <section className="wd-panel" aria-label="Pending review">
+            <div className="wd-panel-head wd-panel-head--single"><div><p className="wd-greet-eyebrow">Pending review</p><h2 className="wd-panel-title">Outpass Requests</h2><p className="wd-panel-sub">Requests waiting for Warden approval.</p></div></div>
+            {items.filter((item) => String(item.status).toLowerCase() === 'pending').length ? <div className="wd-list wd-list--cards">{items.filter((item) => String(item.status).toLowerCase() === 'pending').map((item) => <article className="wd-list-item" key={item._id}><div className="wd-list-name"><strong>{item.studentName}</strong><span>{item.registerNumber || '—'} · Room {item.roomNumber || '—'}</span></div><div className="wd-list-times"><span>{item.requestType} · {item.date ? new Date(item.date).toLocaleDateString() : '—'}</span><span>Return date <b>{item.returnDate ? new Date(item.returnDate).toLocaleDateString() : (item.date ? new Date(item.date).toLocaleDateString() : '—')}</b></span></div><button className="wd-view-btn" type="button" onClick={() => openReview(item)}>Review</button></article>)}</div> : <div className="wd-empty">No pending requests for Warden review.</div>}
+          </section>
+
           <WardenOutpassHistory
             items={items}
             loading={loading}

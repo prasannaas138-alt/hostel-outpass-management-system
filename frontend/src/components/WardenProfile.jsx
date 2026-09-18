@@ -101,7 +101,7 @@ export default function WardenProfile() {
       <header className="wd-profile-head">
         <span className="wd-profile-avatar" aria-hidden="true">{initial}</span>
         <div>
-          <h3>Warden Details</h3>
+          <h3>Profile Details</h3>
           <p className="wd-profile-sub">Manage your username and password.</p>
         </div>
       </header>
