@@ -50,9 +50,15 @@ export default function ApplyOutpassForm({
         <legend>Visit schedule</legend>
         <div className="apply-grid apply-grid--2">
           <label>
-            Date
+            Request/Out Date
             <input name="date" type="date" value={form.date} onChange={onChange} required disabled={saving} />
           </label>
+          <label>
+            Return Date
+            <input name="returnDate" type="date" value={form.returnDate || ''} onChange={onChange} required disabled={saving} />
+          </label>
+        </div>
+        <div className="apply-grid apply-grid--2">
           <label>
             Out Time
             <input name="outTime" type="time" value={form.outTime} onChange={onChange} required disabled={saving} />
@@ -63,6 +69,12 @@ export default function ApplyOutpassForm({
             Return Time
             <input name="returnTime" type="time" value={form.returnTime} onChange={onChange} required disabled={saving} />
           </label>
+          <label>
+            Destination
+            <input name="destination" value={form.destination || ''} onChange={onChange} placeholder="Destination" disabled={saving} />
+          </label>
+        </div>
+        <div className="apply-grid apply-grid--2">
           <label>
             Reason
             <input

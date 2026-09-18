@@ -39,6 +39,11 @@ export default function WardenStudentDetails({ request, onClose }) {
             <div><dt>Name</dt><dd>{request.studentName || '—'}</dd></div>
             <div><dt>Department</dt><dd>{request.department || '—'}</dd></div>
             <div><dt>Year</dt><dd>{request.year || '—'}</dd></div>
+            <div><dt>Register number</dt><dd>{request.registerNumber || '—'}</dd></div>
+            <div><dt>Room number</dt><dd>{request.roomNumber || '—'}</dd></div>
+            <div><dt>Phone number</dt><dd>{request.phone || '—'}</dd></div>
+            <div><dt>Parent/guardian number</dt><dd>{request.parentPhone || '—'}</dd></div>
+            <div><dt>Hostel name</dt><dd>{request.hostelName || '—'}</dd></div>
           </dl>
         </section>
 
@@ -46,9 +51,11 @@ export default function WardenStudentDetails({ request, onClose }) {
           <h4>Outpass request</h4>
           <dl>
             <div><dt>Request type</dt><dd>{request.requestType || '—'}</dd></div>
-            <div><dt>Date</dt><dd>{formatDate(request.date)}</dd></div>
+            <div><dt>Request/Out date</dt><dd>{formatDate(request.date)}</dd></div>
+            <div><dt>Return date</dt><dd>{formatDate(request.returnDate || request.date)}</dd></div>
             <div><dt>Out time</dt><dd>{formatTime(request.outTime)}</dd></div>
             <div><dt>Return time</dt><dd>{formatTime(request.returnTime)}</dd></div>
+            <div><dt>Destination</dt><dd>{request.destination || '—'}</dd></div>
             <div><dt>Reason</dt><dd>{request.reason || '—'}</dd></div>
           </dl>
         </section>

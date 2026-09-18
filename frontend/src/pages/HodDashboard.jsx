@@ -69,10 +69,11 @@ export default function HodDashboard() {
       subtitle="Review Home requests before they move to the Sister queue."
       navItems={[
         { id: 'pending-home-requests', label: 'Pending Home Requests', description: 'Approve or reject' },
+        { id: 'home-history', label: 'Home History', description: 'Completed records' },
       ]}
     >
       <section className="warden-hero" aria-label="Welcome">
-        <p className="eyebrow">St. Joseph&apos;s University · Hostel Office</p>
+        <p className="eyebrow">St. Joseph&apos; University · Hostel Office</p>
         <h2>Hello, {firstName}!</h2>
         <p>Review the Home requests from your department and move them to the Sister queue, or reject them with a reason.</p>
       </section>

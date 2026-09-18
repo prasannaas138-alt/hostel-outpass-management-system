@@ -43,7 +43,13 @@ export const createOutpassPdf = (outpass) => {
   cursorY += 26;
   addField(document, 'Request Type', outpass.requestType, margin, cursorY);
   cursorY += 26;
-  addField(document, 'Date', new Date(outpass.date).toDateString(), margin, cursorY);
+  addField(document, 'Out Date', new Date(outpass.date).toDateString(), margin, cursorY);
+  cursorY += 26;
+  addField(document, 'Return Date', outpass.returnDate ? new Date(outpass.returnDate).toDateString() : new Date(outpass.date).toDateString(), margin, cursorY);
+  if (outpass.destination) {
+    cursorY += 26;
+    addField(document, 'Destination', outpass.destination, margin, cursorY);
+  }
   cursorY += 26;
   addField(document, 'Out Time', outpass.outTime, margin, cursorY);
   cursorY += 26;

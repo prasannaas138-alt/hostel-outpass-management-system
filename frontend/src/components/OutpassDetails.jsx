@@ -77,9 +77,9 @@ const getExpiryMoment = (request) => {
   if (request.expiresAt) {
     return new Date(request.expiresAt).getTime();
   }
-  if (request.date && request.returnTime) {
+  if ((request.returnDate || request.date) && request.returnTime) {
     const [hours, minutes] = String(request.returnTime).split(':').map(Number);
-    const expiry = new Date(request.date);
+    const expiry = new Date(request.returnDate || request.date);
     expiry.setHours(hours || 0, minutes || 0, 0, 0);
     return expiry.getTime();
   }
@@ -176,7 +176,7 @@ export default function OutpassDetails({ request, user, onBack, onEdit }) {
             <div className="info-row">
               <span className="info-row__icon info-row__icon--date"><CalendarIcon /></span>
               <span className="info-row__text">
-                <em>Date</em>
+                <em>Request/Out Date</em>
                 <strong>{formatOutpassDate(request.date)}</strong>
               </span>
             </div>
@@ -190,8 +190,22 @@ export default function OutpassDetails({ request, user, onBack, onEdit }) {
             <div className="info-row">
               <span className="info-row__icon info-row__icon--return"><ClockIcon /></span>
               <span className="info-row__text">
+                <em>Return Date</em>
+                <strong>{formatOutpassDate(request.returnDate || request.date)}</strong>
+              </span>
+            </div>
+            <div className="info-row">
+              <span className="info-row__icon info-row__icon--return"><ClockIcon /></span>
+              <span className="info-row__text">
                 <em>Return Time</em>
                 <strong>{request.returnTime || '—'}</strong>
+              </span>
+            </div>
+            <div className="info-row">
+              <span className="info-row__icon info-row__icon--reason"><ReasonIcon /></span>
+              <span className="info-row__text">
+                <em>Destination</em>
+                <strong>{request.destination || '—'}</strong>
               </span>
             </div>
             <div className="info-row">

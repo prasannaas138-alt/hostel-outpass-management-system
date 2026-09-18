@@ -42,9 +42,11 @@ export function RequestDetailsModal({ detailRequest, onCloseDetails, onEdit }) {
           <span className={`status-badge status-${getStatusClass(detailRequest)}`}>{getDisplayStatus(detailRequest)}</span>
         </div>
         <dl className="requests-detail-grid">
-          <div><dt>Date</dt><dd>{formatDate(detailRequest.date)}</dd></div>
+          <div><dt>Request/Out date</dt><dd>{formatDate(detailRequest.date)}</dd></div>
+          <div><dt>Return date</dt><dd>{formatDate(detailRequest.returnDate || detailRequest.date)}</dd></div>
           <div><dt>Out time</dt><dd>{formatTime(detailRequest.outTime)}</dd></div>
           <div><dt>Return time</dt><dd>{formatTime(detailRequest.returnTime)}</dd></div>
+          <div><dt>Destination</dt><dd>{detailRequest.destination || '—'}</dd></div>
           <div><dt>Reason</dt><dd>{detailRequest.reason || '—'}</dd></div>
           <div><dt>HOD</dt><dd>{detailRequest.hodStatus || '—'}</dd></div>
           <div><dt>Sister</dt><dd>{detailRequest.sisterStatus || '—'}</dd></div>

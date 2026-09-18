@@ -17,8 +17,10 @@ const sanitizeUser = (user) => ({
   department: user.department,
   year: user.year,
   hostelBlock: user.hostelBlock,
+  hostelName: user.hostelName || user.hostelBlock || '',
   roomNumber: user.roomNumber,
   phone: user.phone,
+  parentPhone: user.parentPhone || '',
 });
 
 const emailPattern = /^[^\s@]+@[^\s@]+\.[^\s@]+$/;
@@ -31,11 +33,14 @@ export const registerUser = async (req, res, next) => {
       registerNumber,
       department,
       roomNumber,
+      phone,
+      parentPhone,
+      hostelName,
       password,
       confirmPassword,
     } = req.body;
 
-    if (!name || !email || !registerNumber || !department || !roomNumber || !password || !confirmPassword) {
+    if (!name || !email || !registerNumber || !department || !roomNumber || !phone || !parentPhone || !hostelName || !password || !confirmPassword) {
       return res.status(400).json({ message: 'All fields are required.' });
     }
 
@@ -62,12 +67,28 @@ export const registerUser = async (req, res, next) => {
       return res.status(400).json({ message: 'Email already exists.' });
     }
 
+    const allowedHostels = [
+      'St. Joseph University Boys Hostel',
+      'DMI Boys Hostel',
+    ];
+    if (!allowedHostels.includes(String(hostelName).trim())) {
+      return res.status(400).json({ message: 'Please select a valid hostel name.' });
+    }
+    const phoneRe = /^[0-9+\-\s()]{6,15}$/;
+    if (!phoneRe.test(String(phone).trim()) || !phoneRe.test(String(parentPhone).trim())) {
+      return res.status(400).json({ message: 'Enter valid phone numbers (6-15 digits).' });
+    }
+
     const user = await User.create({
       name,
       email: normalizedEmail,
       registerNumber,
       department,
       roomNumber,
+      phone: String(phone).trim(),
+      parentPhone: String(parentPhone).trim(),
+      hostelName: String(hostelName).trim(),
+      hostelBlock: String(hostelName).trim(),
       password,
       role,
       year: '1',
@@ -136,7 +157,7 @@ export const getCurrentUser = async (req, res) => {
 // (handled by the separate password endpoint below).
 export const updateCurrentUser = async (req, res, next) => {
   try {
-    const { name, department, year, hostelBlock, phone } = req.body;
+    const { name, department, year, hostelBlock, hostelName, phone, parentPhone } = req.body;
 
     if (!name || !name.trim()) {
       return res.status(400).json({ message: 'Name is required.' });
@@ -159,11 +180,16 @@ export const updateCurrentUser = async (req, res, next) => {
     if (typeof year === 'string') {
       user.year = String(year).trim();
     }
-    if (typeof hostelBlock === 'string') {
-      user.hostelBlock = String(hostelBlock).trim();
+    const hostelValue = (typeof hostelName === 'string' && hostelName.trim()) ? hostelName.trim() : ((typeof hostelBlock === 'string' && hostelBlock.trim()) ? hostelBlock.trim() : '');
+    if (hostelValue) {
+      user.hostelBlock = hostelValue;
+      user.hostelName = hostelValue;
     }
-    if (typeof phone === 'string') {
+    if (typeof phone === 'string' && phone.trim()) {
       user.phone = String(phone).trim();
+    }
+    if (typeof parentPhone === 'string' && parentPhone.trim()) {
+      user.parentPhone = String(parentPhone).trim();
     }
 
     await user.save();

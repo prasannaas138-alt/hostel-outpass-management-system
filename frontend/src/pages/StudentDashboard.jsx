@@ -23,6 +23,8 @@ import { useAuth } from '../context/AuthContext';
 const emptyForm = {
   requestType: 'Outing',
   date: '',
+  returnDate: '',
+  destination: '',
   outTime: '',
   returnTime: '',
   reason: '',
@@ -137,6 +139,8 @@ export default function StudentDashboard() {
       setForm({
         requestType: selectedRequest.requestType,
         date: selectedRequest.date.slice(0, 10),
+        returnDate: (selectedRequest.returnDate || selectedRequest.date || '').slice(0, 10),
+        destination: selectedRequest.destination || '',
         outTime: selectedRequest.outTime,
         returnTime: selectedRequest.returnTime,
         reason: selectedRequest.reason,
@@ -229,7 +233,7 @@ export default function StudentDashboard() {
       ) : (
         <>
       <section id="dashboard" className="student-hero">
-        <p className="eyebrow">St. Joseph&apos;s University · H.O.M.S</p>
+        <p className="eyebrow">St. Joseph&apos; University · H.O.M.S</p>
         <h2>Hello, {firstName}!</h2>
         <p>Welcome back. Use the sidebar to apply for a new outpass or check the latest status of your requests.</p>
       </section>

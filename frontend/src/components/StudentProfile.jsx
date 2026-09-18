@@ -8,6 +8,8 @@ const EDITABLE_FIELDS = {
   department: 'Department',
   year: 'Year',
   phone: 'Phone number',
+  parentPhone: 'Parent/guardian number',
+  hostelName: 'Hostel name',
   roomNumber: 'Room number',
 };
 
@@ -33,6 +35,8 @@ export default function StudentProfile({ user, onProfileUpdated }) {
       department: user?.department || '',
       year: user?.year || '',
       phone: user?.phone || '',
+      parentPhone: user?.parentPhone || '',
+      hostelName: user?.hostelName || user?.hostelBlock || '',
       roomNumber: user?.roomNumber || '',
     });
     setEditError('');
@@ -150,9 +154,18 @@ export default function StudentProfile({ user, onProfileUpdated }) {
           <form onSubmit={saveEdit} noValidate>
             <div className="profile-edit-grid">
               {Object.entries(EDITABLE_FIELDS).map(([field, label]) => (
-                <label key={field}>
-                  {label}
-                  <input
+                field === 'hostelName' ? (
+                  <label key={field}>
+                    {label}
+                    <select name="hostelName" value={editForm.hostelName || ''} onChange={handleEditChange} disabled={saving}>
+                      <option value="St. Joseph University Boys Hostel">St. Joseph University Boys Hostel</option>
+                      <option value="DMI Boys Hostel">DMI Boys Hostel</option>
+                    </select>
+                  </label>
+                ) : (
+                  <label key={field}>
+                    {label}
+                    <input
                     type={field === 'phone' ? 'tel' : 'text'}
                     name={field}
                     value={editForm[field] || ''}
@@ -163,27 +176,27 @@ export default function StudentProfile({ user, onProfileUpdated }) {
                     disabled={saving}
                   />
                 </label>
-              ))}
+              )))}
               <label>
-                  Email (read-only)
-                  <input
-                    type="email"
-                    value={user?.email || ''}
-                    readOnly
-                    aria-readonly="true"
-                    disabled={saving}
-                  />
-                </label>
-                <label>
-                  Register number (read-only)
-                  <input
-                    type="text"
-                    value={user?.registerNumber || ''}
-                    readOnly
-                    aria-readonly="true"
-                    disabled={saving}
-                  />
-                </label>
+                <span>Email (read-only)</span>
+                <input
+                  type="email"
+                  value={user?.email || ''}
+                  readOnly
+                  aria-readonly="true"
+                  disabled={saving}
+                />
+              </label>
+              <label>
+                <span>Register number (read-only)</span>
+                <input
+                  type="text"
+                  value={user?.registerNumber || ''}
+                  readOnly
+                  aria-readonly="true"
+                  disabled={saving}
+                />
+              </label>
             </div>
             <div className="button-row">
               <button className="primary-button" type="submit" disabled={saving}>
@@ -212,6 +225,8 @@ export default function StudentProfile({ user, onProfileUpdated }) {
             <h4>Hostel details</h4>
             <dl>
               <div><dt>Phone number</dt><dd>{user?.phone || '—'}</dd></div>
+              <div><dt>Parent/guardian number</dt><dd>{user?.parentPhone || '—'}</dd></div>
+              <div><dt>Hostel name</dt><dd>{user?.hostelName || user?.hostelBlock || '—'}</dd></div>
               <div><dt>Room number</dt><dd>{user?.roomNumber || '—'}</dd></div>
             </dl>
           </section>

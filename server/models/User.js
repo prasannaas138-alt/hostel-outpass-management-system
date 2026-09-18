@@ -1,6 +1,11 @@
 import mongoose from 'mongoose';
 import bcrypt from 'bcryptjs';
 
+export const HOSTEL_NAMES = [
+  'St. Joseph University Boys Hostel',
+  'DMI Boys Hostel',
+];
+
 const userSchema = new mongoose.Schema(
   {
     name: {
@@ -30,6 +35,16 @@ const userSchema = new mongoose.Schema(
       trim: true,
     },
     phone: {
+      type: String,
+      trim: true,
+      default: '',
+    },
+    parentPhone: {
+      type: String,
+      trim: true,
+      default: '',
+    },
+    hostelName: {
       type: String,
       trim: true,
       default: '',

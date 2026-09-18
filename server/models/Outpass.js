@@ -69,6 +69,31 @@ const outpassSchema = new mongoose.Schema(
       type: String,
       required: true,
     },
+    registerNumber: {
+      type: String,
+      trim: true,
+      default: '',
+    },
+    roomNumber: {
+      type: String,
+      trim: true,
+      default: '',
+    },
+    phone: {
+      type: String,
+      trim: true,
+      default: '',
+    },
+    parentPhone: {
+      type: String,
+      trim: true,
+      default: '',
+    },
+    hostelName: {
+      type: String,
+      trim: true,
+      default: '',
+    },
     requestType: {
       type: String,
       required: true,
@@ -77,6 +102,15 @@ const outpassSchema = new mongoose.Schema(
     date: {
       type: Date,
       required: true,
+    },
+    returnDate: {
+      type: Date,
+      default: null,
+    },
+    destination: {
+      type: String,
+      trim: true,
+      default: '',
     },
     outTime: {
       type: String,

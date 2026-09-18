@@ -23,6 +23,12 @@ export default function RequestReviewCard({
     setActiveRejectId(item._id);
   };
 
+  const approvalDot = (value, pendingLabel) => {
+    const v = String(value || 'Pending');
+    const cls = v === 'Approved' ? 'approval-dot approval-dot--approved' : 'approval-dot approval-dot--not';
+    const label = v === 'Approved' ? 'APPROVED' : v === 'Rejected' ? 'REJECTED' : (pendingLabel || 'NOT APPROVED');
+    return (<span className="approval-state"><span className={cls} />{label}</span>);
+  };
   const renderDetail = (label, value) => (
     <div className="detail-chip">
       <span>{label}</span>
@@ -44,18 +50,41 @@ export default function RequestReviewCard({
 
       {variant === 'slip' ? (
         <div className="slip-grid">
-          {renderDetail('Request Date', new Date(item.date).toLocaleDateString())}
+          {renderDetail('Reg. No', item.registerNumber || '-'+'-')}
+          {renderDetail('Room', item.roomNumber || '-'+'-')}
+          {renderDetail('Phone', item.phone || '-'+'-')}
+          {renderDetail('Parent/Guardian', item.parentPhone || '-'+'-')}
+          {renderDetail('Hostel', item.hostelName || '-'+'-')}
+          {renderDetail('Request/Out Date', item.date ? new Date(item.date).toLocaleDateString() : '-'+'-')}
+          {renderDetail('Return Date', item.returnDate ? new Date(item.returnDate).toLocaleDateString() : (item.date ? new Date(item.date).toLocaleDateString() : '-'+'-'))}
           {renderDetail('Out Time', item.outTime)}
           {renderDetail('Return Time', item.returnTime)}
+          {renderDetail('Destination', item.destination || '-'+'-')}
           {renderDetail('Reason', item.reason)}
-          {renderDetail('HOD', item.hodStatus)}
-          {renderDetail('Sister', item.sisterStatus)}
-          {renderDetail('Warden', item.wardenStatus)}
+          <div className='approval-row'>
+            <span>HOD Approval</span>
+            {approvalDot(item.hodStatus)}
+          </div>
+          <div className='approval-row'>
+            <span>Sister Approval</span>
+            {approvalDot(item.sisterStatus)}
+          </div>
+          <div className='approval-row'>
+            <span>Warden Approval</span>
+            {approvalDot(item.wardenStatus, 'APPROVAL NEEDED')}
+          </div>
         </div>
       ) : (
         <div className="request-details">
-          <span>Date: {new Date(item.date).toLocaleDateString()}</span>
+          <span>Reg. No: {item.registerNumber || '—'}</span>
+          <span>Room: {item.roomNumber || '—'}</span>
+          <span>Phone: {item.phone || '—'}</span>
+          <span>Parent/Guardian: {item.parentPhone || '—'}</span>
+          <span>Hostel: {item.hostelName || '—'}</span>
+          <span>Request/Out Date: {item.date ? new Date(item.date).toLocaleDateString() : '—'}</span>
+          <span>Return Date: {item.returnDate ? new Date(item.returnDate).toLocaleDateString() : (item.date ? new Date(item.date).toLocaleDateString() : '—')}</span>
           <span>Time: {item.outTime} - {item.returnTime}</span>
+          <span>Destination: {item.destination || '—'}</span>
           <span>Reason: {item.reason}</span>
           <span>Department: {item.department}</span>
           <span>Year: {item.year}</span>

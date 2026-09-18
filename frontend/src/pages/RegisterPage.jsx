@@ -7,6 +7,10 @@ import { AuthBrandPanel, PasswordField } from '../components/AuthPanels';
 import '../styles/auth.css';
 
 const DEPARTMENTS = ['CSE', 'ECE', 'EEE', 'MECH', 'CIVIL', 'IT', 'MBA', 'MCA', 'BBA', 'BCom', 'BA', 'Other'];
+const HOSTEL_NAMES = [
+  'St. Joseph University Boys Hostel',
+  'DMI Boys Hostel',
+];
 const EMAIL_PATTERN = /^[^\s@]+@[^\s@]+\.[^\s@]+$/;
 
 export default function RegisterPage() {
@@ -17,6 +21,9 @@ export default function RegisterPage() {
     registerNumber: '',
     department: 'CSE',
     roomNumber: '',
+    phone: '',
+    parentPhone: '',
+    hostelName: 'St. Joseph University Boys Hostel',
     password: '',
     confirmPassword: '',
   });
@@ -55,12 +62,20 @@ export default function RegisterPage() {
     }
 
     try {
+      if (!form.phone.trim() || !form.parentPhone.trim() || !form.hostelName.trim()) {
+        setError('Phone, parent/guardian number and hostel name are required.');
+        setLoading(false);
+        return;
+      }
       const payload = {
         name: form.name,
         email: normalizedEmail,
         registerNumber: form.registerNumber,
         department: form.department,
         roomNumber: form.roomNumber,
+        phone: form.phone.trim(),
+        parentPhone: form.parentPhone.trim(),
+        hostelName: form.hostelName,
         password: form.password,
         confirmPassword: form.confirmPassword,
         role: 'Student',
@@ -175,6 +190,24 @@ export default function RegisterPage() {
                   placeholder="Room number"
                   required
                 />
+              </label>
+              <div className="auth-form-grid">
+                <label>
+                  Phone Number
+                  <input name="phone" value={form.phone} onChange={handleChange} placeholder="Your mobile number" required />
+                </label>
+                <label>
+                  Parent/Guardian Number
+                  <input name="parentPhone" value={form.parentPhone} onChange={handleChange} placeholder="Parent or guardian mobile number" required />
+                </label>
+              </div>
+              <label>
+                Hostel Name
+                <select name="hostelName" value={form.hostelName} onChange={handleChange} required>
+                  {HOSTEL_NAMES.map((h) => (
+                    <option key={h} value={h}>{h}</option>
+                  ))}
+                </select>
               </label>
             </fieldset>
 

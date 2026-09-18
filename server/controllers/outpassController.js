@@ -1,4 +1,4 @@
-import Outpass from '../models/Outpass.js';
+﻿import Outpass from '../models/Outpass.js';
 import User from '../models/User.js';
 import { isWeekend } from '../utils/date.js';
 import { createOutpassPdf } from '../utils/pdf.js';
@@ -6,10 +6,32 @@ import { notifyNewOutpass, markOutpassNotificationsRead } from '../services/noti
 
 const ACTIVE_STATUSES = ['Pending', 'Approved'];
 
-const buildExpiresAt = (date, returnTime) => {
+// Student profile fields every approver (HOD / Sister / Warden) must see on review.
+const STUDENT_POPULATE = 'name registerNumber roomNumber phone parentPhone hostelName department year';
+
+// Flattens the populated student profile onto the outpass so review screens and
+// history tables can read registerNumber / roomNumber / phone / parentPhone /
+// hostelName directly from the student's LIVE database values (never hardcoded).
+const enrichOutpass = (outpass) => {
+  const student = outpass.studentId || {};
+  return {
+    ...outpass,
+    student,
+    studentName: outpass.studentName || student.name || '',
+    registerNumber: student.registerNumber || '',
+    roomNumber: student.roomNumber || '',
+    phone: student.phone || '',
+    parentPhone: student.parentPhone || '',
+    hostelName: student.hostelName || '',
+    department: outpass.department || student.department || '',
+    year: outpass.year || student.year || '',
+  };
+};
+
+const buildExpiresAt = (date, returnDate, returnTime) => {
   // The request expires at the end of the return time on the chosen day.
   const [returnHour, returnMinute] = String(returnTime).split(':').map(Number);
-  const expiresAt = new Date(date);
+  const expiresAt = new Date(returnDate || date);
   expiresAt.setHours(returnHour, returnMinute, 0, 0);
   return expiresAt;
 };
@@ -48,7 +70,7 @@ const resetForReapply = (outpass) => {
   outpass.wardenStatus = 'Pending';
   outpass.rejectionReason = '';
   outpass.approvedBy = [];
-  outpass.expiresAt = buildExpiresAt(outpass.date, outpass.returnTime);
+  outpass.expiresAt = buildExpiresAt(outpass.date, outpass.returnDate, outpass.returnTime);
 };
 
 export const createOutpass = async (req, res, next) => {
@@ -57,9 +79,9 @@ export const createOutpass = async (req, res, next) => {
       return res.status(403).json({ message: 'Only students can apply for outpass' });
     }
 
-    const { requestType, date, outTime, returnTime, reason } = req.body;
+    const { requestType, date, returnDate, outTime, returnTime, reason, destination } = req.body;
 
-    if (!requestType || !date || !outTime || !returnTime || !reason) {
+    if (!requestType || !date || !returnDate || !outTime || !returnTime || !reason) {
       return res.status(400).json({ message: 'All fields are required' });
     }
 
@@ -82,17 +104,27 @@ export const createOutpass = async (req, res, next) => {
     const outpass = await Outpass.create({
       studentId: req.user._id,
       studentName: req.user.name,
+      registerNumber: req.user.registerNumber,
+      roomNumber: req.user.roomNumber,
+      phone: req.user.phone,
+      parentPhone: req.user.parentPhone,
+      hostelName: req.user.hostelName,
       department: req.user.department,
       year: req.user.year,
       requestType,
       date,
+      returnDate,
       outTime,
       returnTime,
+      destination: (destination || '').trim(),
       reason,
       hodStatus: requestType === 'Home' ? 'Pending' : 'NotRequired',
+      // Sister only enters the approval chain after the HOD approves a Home
+      // request (hodReviewOutpass flips this to 'Pending'). Outing requests
+      // skip HOD/Sister entirely and go straight to the Warden.
       sisterStatus: 'NotRequired',
       wardenStatus: 'Pending',
-      expiresAt: buildExpiresAt(date, returnTime),
+      expiresAt: buildExpiresAt(date, returnDate, returnTime),
     });
 
     // In-app notifications for Sister/Warden (non-blocking, never fails the request).
@@ -120,17 +152,19 @@ export const updateOutpass = async (req, res, next) => {
       return res.status(400).json({ message: 'Only rejected requests can be edited and reapplied' });
     }
 
-    const { requestType, date, outTime, returnTime, reason } = req.body;
+    const { requestType, date, returnDate, outTime, returnTime, reason, destination } = req.body;
 
     outpass.requestType = requestType || outpass.requestType;
     outpass.date = date || outpass.date;
+    outpass.returnDate = returnDate || outpass.returnDate || outpass.date;
+    if (typeof destination === 'string') outpass.destination = destination.trim();
     outpass.outTime = outTime || outpass.outTime;
     outpass.returnTime = returnTime || outpass.returnTime;
     outpass.reason = reason || outpass.reason;
     outpass.department = req.user.department;
     outpass.year = req.user.year;
     outpass.studentName = req.user.name;
-    outpass.expiresAt = buildExpiresAt(outpass.date, outpass.returnTime);
+    outpass.expiresAt = buildExpiresAt(outpass.date, outpass.returnDate, outpass.returnTime);
 
     if (outpass.requestType === 'Outing' && !isWeekend(outpass.date)) {
       return res.status(400).json({ message: 'Outing requests are allowed only on weekends' });
@@ -189,9 +223,9 @@ export const getPendingHodRequests = async (req, res, next) => {
       requestType: 'Home',
       hodStatus: 'Pending',
       status: 'Pending',
-    }).sort({ createdAt: -1 });
+    }).sort({ createdAt: -1 }).populate('studentId', STUDENT_POPULATE).lean();
 
-    res.json(outpasses);
+    res.json(outpasses.map(enrichOutpass));
   } catch (error) {
     next(error);
   }
@@ -205,9 +239,9 @@ export const getPendingSisterRequests = async (req, res, next) => {
       hodStatus: 'Approved',
       sisterStatus: 'Pending',
       status: 'Pending',
-    }).sort({ createdAt: -1 });
+    }).sort({ createdAt: -1 }).populate('studentId', STUDENT_POPULATE).lean();
 
-    res.json(outpasses);
+    res.json(outpasses.map(enrichOutpass));
   } catch (error) {
     next(error);
   }
@@ -218,24 +252,27 @@ export const getPendingWardenRequests = async (req, res, next) => {
     await refreshExpiredOutpasses();
     const outpasses = await Outpass.find({
       status: { $in: ACTIVE_STATUSES },
+      wardenStatus: 'Pending',
       $or: [
         {
           requestType: 'Outing',
-          wardenStatus: 'Pending',
+          hodStatus: 'NotRequired',
+          sisterStatus: 'NotRequired',
         },
         {
           requestType: 'Home',
           hodStatus: 'Approved',
           sisterStatus: 'Approved',
-          wardenStatus: 'Pending',
         },
       ],
     }).sort({ createdAt: -1 })
       // Populated so the Warden review UI can show the student's real
-      // register number, room number, and phone number from their profile.
-      .populate('studentId', 'name registerNumber roomNumber phone');
+      // register number, room number, phone, parent/guardian number, and
+      // hostel name from their live profile.
+      .populate('studentId', STUDENT_POPULATE)
+      .lean();
 
-    res.json(outpasses);
+    res.json(outpasses.map(enrichOutpass));
   } catch (error) {
     next(error);
   }
@@ -312,8 +349,8 @@ export const wardenReviewOutpass = async (req, res, next) => {
     const allowedForWarden =
       outpass &&
       (outpass.status === 'Pending' || outpass.status === 'Approved') &&
-      ((outpass.requestType === 'Outing' && outpass.wardenStatus === 'Pending') ||
-        (outpass.requestType === 'Home' && outpass.hodStatus === 'Approved' && outpass.sisterStatus === 'Approved' && outpass.wardenStatus === 'Pending'));
+      (outpass.requestType === 'Outing' || outpass.requestType === 'Home') &&
+      outpass.wardenStatus === 'Pending';
 
     if (!allowedForWarden) {
       return res.status(400).json({ message: 'Request is not available for Warden review' });
@@ -322,7 +359,7 @@ export const wardenReviewOutpass = async (req, res, next) => {
     if (action === 'approve') {
       outpass.wardenStatus = 'Approved';
       outpass.status = 'Approved';
-      outpass.expiresAt = buildExpiresAt(outpass.date, outpass.returnTime);
+      outpass.expiresAt = buildExpiresAt(outpass.date, outpass.returnDate, outpass.returnTime);
       outpass.approvedBy.push(buildApprovedByEntry('Warden', req.user._id));
       await outpass.save();
       await markOutpassNotificationsRead(outpass._id);
@@ -372,10 +409,41 @@ export const downloadOutpassPdf = async (req, res, next) => {
 
 // ---------------------------------------------------------------------------
 // Warden "Outpass History": every request that has reached warden review
-// (pending, approved, rejected) plus expired ones — newest first. Room number
+// (pending, approved, rejected) plus expired ones â€” newest first. Room number
 // and phone come from the student's live profile so the history table and the
 // warden review screen always show current contact details.
 // ---------------------------------------------------------------------------
+export const getHodHistory = async (req, res, next) => {
+  try {
+    await refreshExpiredOutpasses();
+    const outpasses = await Outpass.find({
+      requestType: 'Home',
+      $or: [
+        { hodStatus: { $in: ['Approved', 'Rejected'] } },
+        { status: { $in: ['Approved', 'Rejected', 'Expired'] } },
+      ],
+    }).sort({ createdAt: -1 }).populate('studentId', STUDENT_POPULATE).lean();
+    res.json(outpasses.map(enrichOutpass));
+  } catch (error) {
+    next(error);
+  }
+};
+
+export const getSisterHistory = async (req, res, next) => {
+  try {
+    await refreshExpiredOutpasses();
+    const outpasses = await Outpass.find({
+      $or: [
+        { sisterStatus: { $in: ['Approved', 'Rejected'] } },
+        { status: { $in: ['Approved', 'Rejected', 'Expired'] } },
+      ],
+    }).sort({ createdAt: -1 }).populate('studentId', STUDENT_POPULATE).lean();
+    res.json(outpasses.map(enrichOutpass));
+  } catch (error) {
+    next(error);
+  }
+};
+
 export const getWardenHistory = async (req, res, next) => {
   try {
     await refreshExpiredOutpasses();
@@ -387,15 +455,17 @@ export const getWardenHistory = async (req, res, next) => {
       ],
     })
       .sort({ createdAt: -1 })
-      .populate('studentId', 'roomNumber phone registerNumber')
+      .populate('studentId', STUDENT_POPULATE)
       .lean();
 
     res.json(
       outpasses.map((outpass) => ({
         ...outpass,
-        roomNumber: outpass.studentId?.roomNumber || '',
-        phone: outpass.studentId?.phone || '',
-        registerNumber: outpass.studentId?.registerNumber || '',
+        registerNumber: outpass.registerNumber || outpass.studentId?.registerNumber || '',
+        roomNumber: outpass.roomNumber || outpass.studentId?.roomNumber || '',
+        phone: outpass.phone || outpass.studentId?.phone || '',
+        parentPhone: outpass.parentPhone || outpass.studentId?.parentPhone || '',
+        hostelName: outpass.hostelName || outpass.studentId?.hostelName || outpass.studentId?.hostelBlock || '',
       }))
     );
   } catch (error) {
@@ -404,10 +474,10 @@ export const getWardenHistory = async (req, res, next) => {
 };
 
 // ---------------------------------------------------------------------------
-// Warden summary cards — all real counts from the database:
-//   totalStudents → registered students, pendingCount → requests waiting for
-//   warden approval, approvedToday → warden approvals since midnight,
-//   expiredCount → outpasses whose return time has passed.
+// Warden summary cards â€” all real counts from the database:
+//   totalStudents â†’ registered students, pendingCount â†’ requests waiting for
+//   warden approval, approvedToday â†’ warden approvals since midnight,
+//   expiredCount â†’ outpasses whose return time has passed.
 // ---------------------------------------------------------------------------
 export const getWardenStats = async (req, res, next) => {
   try {
@@ -421,10 +491,6 @@ export const getWardenStats = async (req, res, next) => {
       Outpass.countDocuments({
         status: 'Pending',
         wardenStatus: 'Pending',
-        $or: [
-          { requestType: 'Outing' },
-          { requestType: 'Home', hodStatus: 'Approved', sisterStatus: 'Approved' },
-        ],
       }),
       Outpass.countDocuments({
         'approvedBy.role': 'Warden',
@@ -438,3 +504,39 @@ export const getWardenStats = async (req, res, next) => {
     next(error);
   }
 };
+
+// ---------------------------------------------------------------------------
+// Sister summary cards — same shape as the Warden stats but counted from the
+// Sister's point of view: pendingApprovals → HOD-approved requests waiting
+// for Sister, approvedToday → Sister approvals since midnight.
+// ---------------------------------------------------------------------------
+export const getSisterStats = async (req, res, next) => {
+  try {
+    await refreshExpiredOutpasses();
+
+    const startOfToday = new Date();
+    startOfToday.setHours(0, 0, 0, 0);
+
+    const [totalStudents, pendingApprovals, approvedToday, expiredOutpasses] = await Promise.all([
+      User.countDocuments({ role: 'Student' }),
+      Outpass.countDocuments({
+        status: 'Pending',
+        requestType: 'Home',
+        hodStatus: 'Approved',
+        sisterStatus: 'Pending',
+      }),
+      Outpass.countDocuments({
+        'approvedBy.role': 'Sister',
+        'approvedBy.date': { $gte: startOfToday },
+      }),
+      Outpass.countDocuments({ status: 'Expired' }),
+    ]);
+
+    res.json({ totalStudents, pendingApprovals, approvedToday, expiredOutpasses });
+  } catch (error) {
+    next(error);
+  }
+};
+
+
+

@@ -66,7 +66,7 @@ export default function LoginPage() {
         <div className="auth-header-left">
         </div>
         <div className="auth-header-center">
-          <img src="/st-joseph-logo.png" alt="St. Joseph's University" className="auth-header-logo" onError={(e) => {e.target.style.display='none';}} />
+          <img src="/st-joseph-logo.png" alt="St. Joseph University" className="auth-header-logo" onError={(e) => {e.target.style.display='none';}} />
         </div>
         <div className="auth-header-right">
           <img src="/homs-logo.png" alt="H.O.M.S Logo" className="auth-header-brand" onError={(e) => {e.target.style.display='none';}} />
@@ -89,7 +89,7 @@ export default function LoginPage() {
         <div className="auth-mobile-brand-content">
           <img src="/homs-logo.png" alt="H.O.M.S" className="auth-mobile-brand-logo" onError={(e) => {e.target.style.display='none';}} />
           <h2>H.O.M.S — Hostel Outpass Management System</h2>
-          <p>St. Joseph&apos;s University · Hostel Portal</p>
+          <p>St. Joseph&apos; University · Hostel Portal</p>
         </div>
         <div className="auth-mobile-brand-body">
           <AuthBrandPanel hideTop subtitle="Hostel Outpass Management System" />
@@ -100,7 +100,7 @@ export default function LoginPage() {
         <div className="auth-brand-row">
           <div>
             <strong>H.O.M.S — Hostel Outpass Management System</strong>
-            <span>St. Joseph&apos;s University · Hostel Portal</span>
+            <span>St. Joseph&apos; University · Hostel Portal</span>
           </div>
           <img src="/homs-logo.png" alt="H.O.M.S Logo" onError={(e) => {e.target.style.display='none';}} />
         </div>

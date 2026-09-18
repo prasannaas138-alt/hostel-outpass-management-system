@@ -73,7 +73,7 @@ export default function StudentRequestCard({ request, variant = '', onViewDetail
           <strong>{request.requestType}</strong>
           <p className="ref-card__meta">
             <CalendarIcon />
-            <span>{formatDate(request.date)} · {formatTime(request.outTime)}–{formatTime(request.returnTime)}</span>
+            <span>{formatDate(request.date)} → {formatDate(request.returnDate || request.date)} · {formatTime(request.outTime)}–{formatTime(request.returnTime)}</span>
           </p>
           <p className="ref-card__category">
             <UserIcon />

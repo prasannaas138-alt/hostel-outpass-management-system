@@ -108,7 +108,7 @@ export const matchesStatusFilter = (request, filter) => {
   }
   const display = getDisplayStatus(request);
   if (filter === 'Pending') {
-    return display === 'Waiting for Sister Approval' || display === 'Waiting for Warden Approval';
+    return display === 'Waiting for HOD Approval' || display === 'Waiting for Sister Approval' || display === 'Waiting for Warden Approval';
   }
   return display === filter;
 };
