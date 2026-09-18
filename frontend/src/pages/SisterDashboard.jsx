@@ -1,254 +1,51 @@
-﻿import { useEffect, useMemo, useState } from 'react';
+import { useEffect, useMemo, useState } from 'react';
 import api from '../services/api';
 import { useAuth } from '../context/AuthContext';
 import WardenProfile from '../components/WardenProfile';
-import WardenOutpassHistory from '../components/WardenOutpassHistory';
 import RequestReviewCard from '../components/RequestReviewCard';
 import AlertBanner from '../components/AlertBanner';
 import LoadingState from '../components/LoadingState';
 import ErrorState from '../components/ErrorState';
-import { IconHome, IconClock, IconCheck, IconX } from '../components/WardenIcons';
-import SummaryCard from '../components/SummaryCard';
 import NotificationBell from '../components/NotificationBell';
+import { IconHome, IconClock, IconCheck, IconX, IconUsers, IconAlert, IconMenu, IconClose, IconHistory, IconUser, IconLogout, IconSearch } from '../components/WardenIcons';
 import '../styles/warden-dashboard.css';
+import '../styles/sister-dashboard.css';
 
-const STATUS = { Pending: 'pending', Approved: 'approved', Expired: 'expired', Rejected: 'rejected', Closed: 'closed' };
-const toStatus = (s) => STATUS[String(s).toLowerCase()] || 'pending';
+const statusClass = (status) => {
+  const value = String(status || 'Pending').toLowerCase();
+  if (value.includes('approved')) return 'wd-pill--approved';
+  if (value.includes('reject')) return 'wd-pill--rejected';
+  if (value.includes('expired')) return 'wd-pill--expired';
+  return 'wd-pill--pending';
+};
 
 export default function SisterDashboard() {
-  const { user } = useAuth();
-  const [items, setItems] = useState([]);
-  const [history, setHistory] = useState([]);
+  const { user, logout } = useAuth();
+  const [items, setItems] = useState([]); const [history, setHistory] = useState([]);
   const [stats, setStats] = useState({ totalStudents: 0, pendingApprovals: 0, approvedToday: 0, expiredOutpasses: 0 });
-  const [error, setError] = useState('');
-  const [success, setSuccess] = useState('');
-  const [loading, setLoading] = useState(true);
-  const [loadError, setLoadError] = useState('');
-  const [loadingId, setLoadingId] = useState('');
-  const [activeRejectId, setActiveRejectId] = useState('');
-  const [reasonById, setReasonById] = useState({});
-  const [detailId, setDetailId] = useState(null);
-  const [profileOpen, setProfileOpen] = useState(false);
-
+  const [error, setError] = useState(''); const [success, setSuccess] = useState(''); const [loading, setLoading] = useState(true); const [loadError, setLoadError] = useState('');
+  const [loadingId, setLoadingId] = useState(''); const [activeRejectId, setActiveRejectId] = useState(''); const [reasonById, setReasonById] = useState({});
+  const [profileOpen, setProfileOpen] = useState(false); const [drawerOpen, setDrawerOpen] = useState(false); const [search, setSearch] = useState('');
   const firstName = useMemo(() => (user?.name || 'Sister').split(' ')[0], [user]);
-  const today = useMemo(() => new Date().toLocaleDateString(), []);
+  const today = useMemo(() => new Date().toLocaleDateString(undefined, { weekday: 'short', day: 'numeric', month: 'short', year: 'numeric' }), []);
+  const visibleHistory = useMemo(() => { const term = search.trim().toLowerCase(); return term ? history.filter((item) => String(item.studentName || '').toLowerCase().includes(term)) : history; }, [history, search]);
+  const initial = firstName.charAt(0).toUpperCase();
 
-  const loadItems = async () => {
-    setLoading(true);
-    setLoadError('');
-    try {
-      const { data } = await api.get('/outpasses/pending/sister');
-      setItems(data);
-    } catch (loadError) {
-      setLoadError(loadError.response?.data?.message || 'Failed to load requests');
-    } finally {
-      setLoading(false);
-    }
-  };
-
-  const loadHistory = async () => {
-    try {
-      const { data } = await api.get('/outpasses/history/sister');
-      setHistory(data);
-    } catch (err) { setHistory([]); }
-  };
-
-  const loadStats = async () => {
-    try {
-      const { data } = await api.get('/outpasses/sister/stats');
-      setStats(data);
-    } catch (err) {
-      setStats({ totalStudents: 0, pendingApprovals: 0, approvedToday: 0, expiredOutpasses: 0 });
-    }
-  };
-
+  const loadItems = async () => { setLoading(true); setLoadError(''); try { const { data } = await api.get('/outpasses/pending/sister'); setItems(data); } catch (err) { setLoadError(err.response?.data?.message || 'Failed to load requests'); } finally { setLoading(false); } };
+  const loadHistory = async () => { try { const { data } = await api.get('/outpasses/history/sister'); setHistory(data); } catch { setHistory([]); } };
+  const loadStats = async () => { try { const { data } = await api.get('/outpasses/sister/stats'); setStats(data); } catch { setStats({ totalStudents: 0, pendingApprovals: 0, approvedToday: 0, expiredOutpasses: 0 }); } };
   useEffect(() => { loadItems(); loadHistory(); loadStats(); }, []);
-
-  const review = async (id, action) => {
-    setError('');
-    setSuccess('');
-    setLoadingId(id);
-    try {
-      await api.patch(`/outpasses/${id}/sister`, { action, rejectionReason: reasonById[id] || '' });
-      setReasonById((c) => ({ ...c, [id]: '' }));
-      setActiveRejectId('');
-      setSuccess(action === 'approve' ? 'Request moved to Warden review.' : 'Request rejected.');
-      await loadItems(); await loadHistory(); await loadStats();
-    } catch (reviewError) {
-      setError(reviewError.response?.data?.message || 'Failed to review request');
-    } finally {
-      setLoadingId('');
-    }
-  };
-
-  const approve = (id) => review(id, 'approve');
-  const reject = (id) => review(id, 'reject');
-
-    return (
-    <div className="wd-shell">
-      <WardenProfile open={profileOpen} onClose={() => setProfileOpen(false)} />
-
-        <nav className="wd-sidebar" aria-label="Sister navigation">
-          <div className="wd-sidebar-body">
-            <div className="wd-brand">
-              <img className="wd-brand-logo" src="/st-joseph-logo.png" alt="St. Joseph's University" onError={(e) => { e.target.style.display = 'none'; }} />
-              <div>
-                <span className="wd-brand-title">H.O.M.S</span>
-                <span className="wd-brand-sub">St.Joseph University</span>
-              </div>
-            </div>
-
-            <div className="wd-user">
-              <span className="wd-user-avatar" aria-hidden="true">{(user?.name || 'S').charAt(0).toUpperCase()}</span>
-              <div className="wd-user-info">
-                <span className="wd-user-name">{user?.name || 'Sister'}</span>
-                <span className="wd-user-role">Sister</span>
-              </div>
-            </div>
-
-            <ul className="wd-nav" role="list">
-              <li><a href="#sister-dashboard" className="wd-nav-link wd-nav-link--active"><IconHome />Dashboard</a></li>
-              <li><a href="#sister-history" className="wd-nav-link"><IconClock />Outpass History</a></li>
-              <li>
-                <button type="button" className="wd-nav-link wd-nav-link--plain" onClick={() => setProfileOpen(true)} aria-label="Profile">
-                  <IconX />Profile
-                </button>
-              </li>
-              <li>
-                <button type="button" className="wd-nav-link wd-nav-link--plain wd-logout" onClick={() => { localStorage.removeItem('hostel_outpass_auth'); window.location.href = '/login'; }}>
-                  <IconX />Logout
-                </button>
-              </li>
-            </ul>
-          </div>
-        </nav>
-
-        <div className="wd-main">
-          <header className="wd-topbar">
-            <div className="wd-topbar-brand">
-              <button type="button" className="wd-menu-btn" aria-label="Open menu" title="Open menu">
-                <span aria-hidden="true">☰</span>
-              </button>
-              <img className="wd-topbar-logo" src="/st-joseph-logo.png" alt="St. Joseph's University" onError={(e) => { e.target.style.display = 'none'; }} />
-            </div>
-            <div className="wd-topbar-user">
-              <NotificationBell />
-              <span className="wd-topbar-date">{today}</span>
-            </div>
-          </header>
-
-          <div className="wd-body" id="sister-dashboard">
-            <section className="wd-greet">
-              <div>
-                <p className="wb-eyebrow">Good Morning,</p>
-                <h1>{firstName}</h1>
-              </div>
-              <p className="wb-sub">Sister Dashboard — review HOD-approved Home Outpass requests.</p>
-            </section>
-
-            <div className="wd-cards">
-              <SummaryCard icon={<IconHome />} label="Total Students" value={stats.totalStudents} sub="In Hostel" />
-              <SummaryCard icon={<IconClock />} label="Pending Approvals" value={stats.pendingApprovals} sub="Need your attention" />
-              <SummaryCard icon={<IconCheck />} label="Approved Today" value={stats.approvedToday} sub="Outpasses issued" />
-              <SummaryCard icon={<IconX />} label="Expired Outpasses" value={stats.expiredOutpasses} sub="Not returned yet" />
-            </div>
-            <section className="wd-panel" id="sister-pending">
-              <div className="wd-panel-head">
-                <div>
-                  <p className="wb-eyebrow">Pending review</p>
-                  <h2>HOME Outpass Requests</h2>
-                </div>
-              </div>
-
-              <AlertBanner type="error" message={error} />
-              <AlertBanner type="success" message={success} />
-
-              {loading ? (
-                <LoadingState label="Loading HOD-approved Home requests..." />
-              ) : loadError ? (
-                <ErrorState message={loadError} onRetry={loadItems} retryLabel="Reload queue" />
-              ) : items.length ? (
-                <>
-                  <div className="wd-list wd-list--cards">
-                    {items.map((item) => (
-                      <div key={item._id} className="wd-card wd-request-card">
-                        <RequestReviewCard
-                          item={item}
-                          variant="slip"
-                          approveLabel="Approve"
-                          rejectLabel="Reject"
-                          activeRejectId={activeRejectId}
-                          setActiveRejectId={setActiveRejectId}
-                          reasonById={reasonById}
-                          setReasonById={setReasonById}
-                          loadingId={loadingId}
-                          onApprove={(id) => approve(id)}
-                          onReject={(id) => reject(id)}
-                        />
-                      </div>
-                    ))}
-                  </div>
-
-                  <div className="wd-table-wrap wd-table-wrap--sm">
-                    <table className="wd-table">
-                      <thead>
-                        <tr>
-                          <th scope="col">#</th>
-                          <th scope="col">Student</th>
-                          <th scope="col">Reg. No.</th>
-                          <th scope="col">Room No</th>
-                          <th scope="col">Phone No</th>
-                          <th scope="col">Requested On</th>
-                          <th scope="col">Out Time</th>
-                          <th scope="col">Return Time</th>
-                          <th scope="col">Status</th>
-                          <th scope="col">Action</th>
-                        </tr>
-                      </thead>
-                      <tbody>
-                        {items.map((item, idx) => (
-                          <tr key={item._id}>
-                            <td className="wd-mono">{String((item.seq ?? idx) + 1).padStart(3, '0')}</td>
-                            <td><strong>{item.studentName || '—'}</strong><small>{item.department || ''} · Year {item.year || ''}</small></td>
-                            <td className="wd-mono">{item.registerNumber || '—'}</td>
-                            <td>{item.roomNumber || '—'}</td>
-                            <td className="wd-mono">{item.phone || '—'}</td>
-                            <td>{new Date(item.date).toLocaleDateString()}</td>
-                            <td className="wd-mono">{item.outTime || '—'}</td>
-                            <td className="wd-mono">{item.returnTime || '—'}</td>
-                            <td><span className={`wd-pill wd-pill--${toStatus(item.status)}`}>{item.status}</span></td>
-                            <td><button className="wd-view-btn" type="button" onClick={() => setDetailId(item._id)}>View <IconX /></button></td>
-                          </tr>
-                        ))}
-                      </tbody>
-                    </table>
-                  </div>
-                </>
-              ) : (
-                <div className="wd-empty">No pending HOD-approved Home requests for Sister review.</div>
-              )}
-            </section>
-
-            <section className="wd-panel" id="sister-history">
-              <div className="wd-panel-head">
-                <div>
-                  <p className="wb-eyebrow">History</p>
-                  <h2>Outpass History</h2>
-                </div>
-                <div className="wd-search-wrap">
-                  <input
-                    type="search"
-                    className="wd-search"
-                    placeholder="Search by student name..."
-                    aria-label="Search student name"
-                  />
-                </div>
-              </div>
-
-              <WardenOutpassHistory items={history} statusBar={false} />
-            </section>
-          </div>
-                </div>
-      </div>
-  );
+  const review = async (id, action) => { setError(''); setSuccess(''); setLoadingId(id); try { await api.patch(`/outpasses/${id}/sister`, { action, rejectionReason: reasonById[id] || '' }); setReasonById((current) => ({ ...current, [id]: '' })); setActiveRejectId(''); setSuccess(action === 'approve' ? 'Request moved to Warden review.' : 'Request rejected.'); await Promise.all([loadItems(), loadHistory(), loadStats()]); } catch (err) { setError(err.response?.data?.message || 'Failed to review request'); } finally { setLoadingId(''); } };
+  const goTo = (id) => { setDrawerOpen(false); document.getElementById(id)?.scrollIntoView({ behavior: 'smooth' }); };
+  const cards = [{ label: 'Total Students', value: stats.totalStudents, sub: 'In Hostel', icon: IconUsers, tone: 'wd-card-icon--green' }, { label: 'Pending Approvals', value: stats.pendingApprovals, sub: 'Need your attention', icon: IconClock, tone: 'wd-card-icon--amber' }, { label: 'Approved Today', value: stats.approvedToday, sub: 'Outpasses issued', icon: IconCheck, tone: 'wd-card-icon--green' }, { label: 'Expired Outpasses', value: stats.expiredOutpasses, sub: 'Not returned yet', icon: IconAlert, tone: 'wd-card-icon--red' }];
+  return <div className="wd-shell ss-shell">
+    {drawerOpen && <button className="wd-scrim" type="button" aria-label="Close navigation" onClick={() => setDrawerOpen(false)} />}
+    <aside className={drawerOpen ? 'wd-sidebar wd-sidebar--open' : 'wd-sidebar'} aria-label="Sister navigation"><div className="wd-side-brand"><img src="/st-joseph-logo.png" alt="St. Joseph's University" /><div><strong>St. Joseph's University</strong><span>Hostel Office · H.O.M.S</span></div></div><div className="wd-side-user"><span className="wd-avatar">{initial}</span><div className="wd-user-meta"><strong>{user?.name || 'Sister'}</strong><span>Sister</span></div></div><nav className="wd-nav" aria-label="Sister sections"><button type="button" className="wd-nav-item wd-nav-item--active" onClick={() => goTo('sister-dashboard')}><IconHome size={18} />Dashboard</button><button type="button" className="wd-nav-item" onClick={() => goTo('sister-history')}><IconHistory size={18} />Outpass History</button><button type="button" className="wd-nav-item" onClick={() => { setDrawerOpen(false); setProfileOpen(true); }}><IconUser size={18} />Profile</button></nav><button className="wd-side-logout" type="button" onClick={logout}><IconLogout size={18} />Logout</button></aside>
+    <div className="wd-body"><header className="wd-topbar"><div className="wd-topbar-main"><img className="wd-topbar-logo" src="/st-joseph-logo.png" alt="St. Joseph's University" /><div className="wd-topbar-brand"><strong>St. Joseph's University</strong><span>Hostel Office · H.O.M.S</span></div><button className="wd-burger" type="button" aria-label={drawerOpen ? 'Close menu' : 'Open menu'} aria-expanded={drawerOpen} onClick={() => setDrawerOpen((open) => !open)}>{drawerOpen ? <IconClose size={20} /> : <IconMenu size={20} />}</button></div><div className="wd-topbar-user"><span className="wd-avatar">{initial}</span><div className="wd-user-meta"><strong>{user?.name || 'Sister'}</strong><span>Sister</span></div><NotificationBell /></div></header>
+      <main className="wd-main" id="sister-dashboard"><section className="wd-greet ss-welcome"><div><p className="wd-greet-eyebrow">Sister Dashboard</p><h1>Hello, {firstName}</h1><p>Review HOD-approved Home Outpass requests and track their status.</p></div><span className="wd-date-chip">{today}</span></section><div className="wd-cards">{cards.map(({ label, value, sub, icon: Icon, tone }) => <article className="wd-card" key={label}><span className={`wd-card-icon ${tone}`}><Icon size={20} /></span><p className="wd-card-label">{label}</p><p className="wd-card-value">{value ?? '—'}</p><p className="wd-card-sub">{sub}</p></article>)}</div>
+        <section className="wd-panel" id="sister-pending"><div><p className="wd-greet-eyebrow">Pending review</p><h2 className="wd-panel-title">HOME Outpass Requests</h2><p className="wd-panel-sub">Requests waiting for Sister review.</p></div><AlertBanner type="error" message={error} /><AlertBanner type="success" message={success} />{loading ? <LoadingState label="Loading HOD-approved Home requests..." /> : loadError ? <ErrorState message={loadError} onRetry={loadItems} retryLabel="Reload queue" /> : items.length ? <div className="ss-request-grid">{items.map((item) => <RequestReviewCard key={item._id} item={item} variant="slip" activeRejectId={activeRejectId} setActiveRejectId={setActiveRejectId} reasonById={reasonById} setReasonById={setReasonById} loadingId={loadingId} onApprove={(id) => review(id, 'approve')} onReject={(id) => review(id, 'reject')} />)}</div> : <div className="wd-empty">No pending HOD-approved Home requests for Sister review.</div>}</section>
+        <section className="wd-panel" id="sister-history"><div className="wd-panel-head"><div><p className="wd-greet-eyebrow">History</p><h2 className="wd-panel-title">Outpass History</h2><p className="wd-panel-sub">Home Outpass requests reviewed by Sister.</p></div><label className="wd-search"><IconSearch size={17} /><input type="search" placeholder="Search by student name..." value={search} onChange={(event) => setSearch(event.target.value)} aria-label="Search by student name" /></label></div>{visibleHistory.length ? <div className="ss-history-list">{visibleHistory.map((item) => <article className="ss-history-row" key={item._id}><div><strong>{item.studentName || '—'}</strong><span>{item.registerNumber || '—'} · Room {item.roomNumber || '—'}</span></div><div><span>{item.reason || 'No reason provided'}</span><span>{item.date ? new Date(item.date).toLocaleDateString() : '—'} · {item.outTime || '—'}–{item.returnTime || '—'}</span></div><span className={`wd-pill ${statusClass(item.status)}`}>{item.status || 'Pending'}</span></article>)}</div> : <div className="wd-empty">No Home Outpass history matches this search.</div>}</section></main>
+      <nav className="wd-bottomnav" aria-label="Sister mobile navigation"><button type="button" className="wd-bottomnav-item wd-bottomnav-item--active" onClick={() => goTo('sister-dashboard')}><IconHome size={20} /><span>Dashboard</span></button><button type="button" className="wd-bottomnav-item" onClick={() => goTo('sister-history')}><IconClock size={20} /><span>History</span></button><button type="button" className="wd-bottomnav-item" onClick={() => setProfileOpen(true)}><IconUser size={20} /><span>Profile</span></button></nav></div>
+    {profileOpen && <div className="wd-overlay" role="dialog" aria-modal="true" aria-label="Sister profile"><div className="wd-modal"><button className="ss-profile-close" type="button" onClick={() => setProfileOpen(false)} aria-label="Close profile"><IconClose size={18} /></button><WardenProfile /></div></div>}
+  </div>;
 }

@@ -1,0 +1,13 @@
+.ss-shell .wd-body { min-width: 0; }
+.ss-welcome { grid-template-columns: minmax(0, 1fr); align-items: end; }
+.ss-request-grid { display: grid; grid-template-columns: repeat(auto-fit, minmax(280px, 1fr)); gap: .9rem; }
+.ss-request-grid .request-card { padding: 1rem; min-width: 0; }
+.ss-history-list { display: grid; gap: .65rem; }
+.ss-history-row { display: grid; grid-template-columns: minmax(150px, 1fr) minmax(180px, 1.4fr) auto; align-items: center; gap: 1rem; padding: .8rem; border: 1px solid #e6eaf3; border-radius: 14px; color: var(--wd-ink); }
+.ss-history-row div { display: grid; gap: .15rem; min-width: 0; }
+.ss-history-row strong { font-size: .9rem; }
+.ss-history-row span:not(.wd-pill) { color: var(--wd-muted); font-size: .78rem; overflow-wrap: anywhere; }
+.ss-profile-close { position: absolute; top: .7rem; right: .7rem; display: grid; place-items: center; width: 38px; min-height: 38px; border: 1px solid #e2e7f1; border-radius: 10px; background: #fff; color: var(--wd-ink); }
+.ss-shell .wd-modal { position: relative; }
+@media (min-width: 640px) { .ss-welcome { grid-template-columns: minmax(0, 1fr) auto; } }
+@media (max-width: 639px) { .ss-history-row { grid-template-columns: 1fr; gap: .45rem; } .ss-history-row .wd-pill { justify-self: start; } }
