@@ -9,6 +9,5 @@
 .ss-history-row span:not(.wd-pill) { color: var(--wd-muted); font-size: .78rem; overflow-wrap: anywhere; }
 .ss-profile-close { position: absolute; top: .7rem; right: .7rem; display: grid; place-items: center; width: 38px; min-height: 38px; border: 1px solid #e2e7f1; border-radius: 10px; background: #fff; color: var(--wd-ink); }
 .ss-shell .wd-modal { position: relative; }
-.ss-legacy-history { display: none; }
 @media (min-width: 640px) { .ss-welcome { grid-template-columns: minmax(0, 1fr) auto; } }
 @media (max-width: 639px) { .ss-history-row { grid-template-columns: 1fr; gap: .45rem; } .ss-history-row .wd-pill { justify-self: start; } }

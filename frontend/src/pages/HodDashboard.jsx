@@ -7,8 +7,6 @@ import LoadingState from '../components/LoadingState';
 import ErrorState from '../components/ErrorState';
 import RequestReviewCard from '../components/RequestReviewCard';
 import WardenProfile from '../components/WardenProfile';
-import WardenOutpassHistory from '../components/WardenOutpassHistory';
-import WardenStudentDetails from '../components/WardenStudentDetails';
 import { IconUsers, IconClock, IconCheck, IconAlert, IconSearch } from '../components/WardenIcons';
 import '../styles/dashboard.css';
 import '../styles/student.css';
@@ -21,7 +19,6 @@ export default function HodDashboard() {
   const [history, setHistory] = useState([]);
   const [view, setView] = useState('dashboard');
   const [search, setSearch] = useState('');
-  const [studentDetail, setStudentDetail] = useState(null);
   const [error, setError] = useState('');
   const [success, setSuccess] = useState('');
   const [loading, setLoading] = useState(true);
@@ -188,12 +185,10 @@ export default function HodDashboard() {
           <div className="empty-state">No pending Home requests for HOD review.</div>
         )}
       </section>
-      <section className="wd-panel ss-legacy-history" id="hod-history">
+      <section className="wd-panel" id="hod-history">
         <div className="wd-panel-head"><div><p className="wd-greet-eyebrow">History</p><h2 className="wd-panel-title">Outpass History</h2><p className="wd-panel-sub">Students who received or requested a Home Outpass.</p></div><label className="wd-search"><IconSearch size={17} /><input type="search" placeholder="Search by student name..." value={search} onChange={(event) => setSearch(event.target.value)} /></label></div>
         {visibleHistory.length ? <div className="ss-history-list">{visibleHistory.map((item) => <article className="ss-history-row" key={item._id}><div><strong>{item.studentName || '—'}</strong><span>{item.registerNumber || '—'} · Room {item.roomNumber || '—'} · {item.department || '—'}</span></div><div><span>{item.reason || 'No reason provided'}</span><span>{item.date ? new Date(item.date).toLocaleDateString() : '—'} · {item.outTime || '—'}–{item.returnTime || '—'}</span><span>Return date: {item.returnDate ? new Date(item.returnDate).toLocaleDateString() : (item.date ? new Date(item.date).toLocaleDateString() : '—')}</span></div><span className="wd-pill wd-pill--neutral">{item.status || 'Pending'}</span></article>)}</div> : <div className="wd-empty">No Home Outpass history is available.</div>}
       </section>
-      <WardenOutpassHistory items={history} loading={false} loadError="" onView={setStudentDetail} />
-      {studentDetail ? <WardenStudentDetails request={studentDetail} onClose={() => setStudentDetail(null)} /> : null}
       </>}
     </WardenLayout>
   );
