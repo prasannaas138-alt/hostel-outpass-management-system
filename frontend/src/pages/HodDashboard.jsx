@@ -1,7 +1,7 @@
 import { useEffect, useState } from 'react';
 import api from '../services/api';
 import { useAuth } from '../context/AuthContext';
-import DashboardLayout from '../components/DashboardLayout';
+import WardenLayout from '../components/WardenLayout';
 import AlertBanner from '../components/AlertBanner';
 import LoadingState from '../components/LoadingState';
 import ErrorState from '../components/ErrorState';
@@ -64,14 +64,7 @@ export default function HodDashboard() {
   };
 
   return (
-    <DashboardLayout
-      title="HOD Dashboard"
-      subtitle="Review Home requests before they move to the Sister queue."
-      navItems={[
-        { id: 'pending-home-requests', label: 'Pending Home Requests', description: 'Approve or reject' },
-        { id: 'home-history', label: 'Home History', description: 'Completed records' },
-      ]}
-    >
+    <WardenLayout>
       <section className="warden-hero" aria-label="Welcome">
         <p className="eyebrow">St. Joseph&apos; University · Hostel Office</p>
         <h2>Hello, {firstName}!</h2>
@@ -165,6 +158,6 @@ export default function HodDashboard() {
           <div className="empty-state">No pending Home requests for HOD review.</div>
         )}
       </section>
-    </DashboardLayout>
+    </WardenLayout>
   );
 }
