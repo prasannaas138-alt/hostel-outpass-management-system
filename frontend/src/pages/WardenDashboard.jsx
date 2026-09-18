@@ -4,6 +4,7 @@ import { useAuth } from '../context/AuthContext';
 import WardenLayout from '../components/WardenLayout';
 import WardenProfile from '../components/WardenProfile';
 import WardenOutpassHistory from '../components/WardenOutpassHistory';
+import WardenStudentDetails from '../components/WardenStudentDetails';
 import {
   IconArrowLeft,
   IconUsers,
@@ -32,6 +33,7 @@ export default function WardenDashboard() {
   const [loading, setLoading] = useState(true);
   const [loadError, setLoadError] = useState('');
   const [selected, setSelected] = useState(null);
+  const [studentProfile, setStudentProfile] = useState(null);
   const [rejecting, setRejecting] = useState(false);
   const [reason, setReason] = useState('');
   const [reviewBusy, setReviewBusy] = useState(false);
@@ -251,8 +253,9 @@ export default function WardenDashboard() {
             loading={loading}
             loadError={loadError}
             onRetry={loadHistory}
-            onView={openReview}
+            onView={setStudentProfile}
           />
+          {studentProfile ? <WardenStudentDetails request={studentProfile} onClose={() => setStudentProfile(null)} /> : null}
         </>
       )}
     </WardenLayout>

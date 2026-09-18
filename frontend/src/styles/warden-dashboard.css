@@ -610,7 +610,7 @@
 .wd-view-btn:hover { border-color: var(--wd-navy); background: #f7f9fd; }
 
 /* ------------------------------------------------------------- deskt. table */
-.wd-table-wrap { display: none; }
+.wd-table-wrap { display: none; overflow-x: auto; -webkit-overflow-scrolling: touch; }
 
 .wd-table {
   width: 100%;

@@ -104,7 +104,6 @@ export default function WardenOutpassHistory({ items, loading, loadError, onRetr
                 <tr>
                   <th scope="col">#</th>
                   <th scope="col">Student Name</th>
-                  <th scope="col">Reg. No.</th>
                   <th scope="col">Room No</th>
                   <th scope="col">Phone No</th>
                   <th scope="col">Requested On</th>
@@ -112,7 +111,7 @@ export default function WardenOutpassHistory({ items, loading, loadError, onRetr
                   <th scope="col">Out Time</th>
                   <th scope="col">Return Time</th>
                   <th scope="col">Status</th>
-                  <th scope="col">Action</th>
+                  <th scope="col">Profile</th>
                 </tr>
               </thead>
               <tbody>

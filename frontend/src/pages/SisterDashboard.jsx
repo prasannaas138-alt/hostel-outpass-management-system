@@ -3,6 +3,8 @@ import api from "../services/api";
 import { useAuth } from "../context/AuthContext";
 import WardenProfile from "../components/WardenProfile";
 import RequestReviewCard from "../components/RequestReviewCard";
+import WardenOutpassHistory from "../components/WardenOutpassHistory";
+import WardenStudentDetails from "../components/WardenStudentDetails";
 import AlertBanner from "../components/AlertBanner";
 import LoadingState from "../components/LoadingState";
 import ErrorState from "../components/ErrorState";
@@ -51,6 +53,7 @@ export default function SisterDashboard() {
   const [profileOpen, setProfileOpen] = useState(false);
   const [drawerOpen, setDrawerOpen] = useState(false);
   const [search, setSearch] = useState("");
+  const [studentDetail, setStudentDetail] = useState(null);
 
   const firstName = useMemo(
     () => (user?.name || "Sister").split(" ")[0],
@@ -340,7 +343,7 @@ export default function SisterDashboard() {
               </div>
             )}
           </section>
-          <section className="wd-panel" id="sister-history">
+          <section className="wd-panel ss-legacy-history" id="sister-history">
             <div className="wd-panel-head">
               <div>
                 <p className="wd-greet-eyebrow">History</p>
@@ -393,6 +396,8 @@ export default function SisterDashboard() {
               </div>
             )}
           </section>
+          <WardenOutpassHistory items={history} loading={false} loadError="" onView={setStudentDetail} />
+          {studentDetail ? <WardenStudentDetails request={studentDetail} onClose={() => setStudentDetail(null)} /> : null}
         </main>
         <nav className="wd-bottomnav" aria-label="Sister mobile navigation">
           <button
