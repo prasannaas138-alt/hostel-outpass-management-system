@@ -14,6 +14,9 @@ import {
   IconX,
   IconCheck,
 } from '../components/WardenIcons';
+import LoadingState from '../components/LoadingState';
+import ErrorState from '../components/ErrorState';
+import RequestReviewCard from '../components/RequestReviewCard';
 import { getDisplayStatus } from '../utils/outpassStatus';
 import '../styles/warden-dashboard.css';
 
@@ -29,13 +32,19 @@ export default function WardenDashboard() {
   const [view, setView] = useState('dashboard');
   const [stats, setStats] = useState(null);
   const [items, setItems] = useState([]);
+  const [pendingItems, setPendingItems] = useState([]);
   const [loading, setLoading] = useState(true);
   const [loadError, setLoadError] = useState('');
+  const [pendingLoading, setPendingLoading] = useState(true);
+  const [pendingLoadError, setPendingLoadError] = useState('');
   const [selected, setSelected] = useState(null);
   const [rejecting, setRejecting] = useState(false);
   const [reason, setReason] = useState('');
   const [reviewBusy, setReviewBusy] = useState(false);
   const [reviewError, setReviewError] = useState('');
+  const [loadingId, setLoadingId] = useState('');
+  const [activeRejectId, setActiveRejectId] = useState('');
+  const [reasonById, setReasonById] = useState({});
 
   const loadHistory = useCallback(async () => {
     setLoading(true);
@@ -59,27 +68,43 @@ export default function WardenDashboard() {
     }
   }, []);
 
+  const loadPending = useCallback(async () => {
+    setPendingLoading(true);
+    setPendingLoadError('');
+    try {
+      const { data } = await api.get('/outpasses/pending/warden');
+      setPendingItems(Array.isArray(data) ? data : []);
+    } catch (error) {
+      setPendingLoadError(error.response?.data?.message || 'Failed to load pending requests.');
+    } finally {
+      setPendingLoading(false);
+    }
+  }, []);
+
   useEffect(() => {
     loadHistory();
     loadStats();
-  }, [loadHistory, loadStats]);
+    loadPending();
+  }, [loadHistory, loadStats, loadPending]);
 
-  // Existing approval workflow â€” same endpoint/payload as the old dashboard
+  // Existing approval workflow — same endpoint/payload as the old dashboard
   // (PATCH /outpasses/:id/warden). Only the presentation changed.
-  const review = async (action) => {
-    if (!selected || reviewBusy) return;
+  const review = async (id, action) => {
+    if (reviewBusy) return;
     setReviewError('');
     setReviewBusy(true);
+    setLoadingId(id);
     try {
-      await api.patch(`/outpasses/${selected._id}/warden`, {
+      await api.patch(`/outpasses/${id}/warden`, {
         action,
-        rejectionReason: action === 'reject' ? reason : undefined,
+        rejectionReason: action === 'reject' ? reasonById[id] : undefined,
       });
-      setSelected(null);
-      setRejecting(false);
-      setReason('');
+      setLoadingId('');
+      setActiveRejectId('');
+      setReasonById((prev) => ({ ...prev, [id]: '' }));
       await loadHistory();
       await loadStats();
+      await loadPending();
     } catch (error) {
       setReviewError(error.response?.data?.message || 'Failed to review request.');
     } finally {
@@ -208,7 +233,7 @@ export default function WardenDashboard() {
                   <IconX size={16} />
                   {rejecting ? 'Cancel reject' : 'Reject'}
                 </button>
-                <button className="wd-btn wd-btn--approve" type="button" onClick={() => review('approve')} disabled={reviewBusy}>
+                <button className="wd-btn wd-btn--approve" type="button" onClick={() => review(selected._id, 'approve')} disabled={reviewBusy}>
                   <IconCheck size={16} />
                   {reviewBusy ? 'Processingâ€¦' : 'Approve'}
                 </button>
@@ -242,8 +267,43 @@ export default function WardenDashboard() {
           </div>
 
           <section className="wd-panel" aria-label="Pending review">
-            <div className="wd-panel-head wd-panel-head--single"><div><p className="wd-greet-eyebrow">Pending review</p><h2 className="wd-panel-title">Outpass Requests</h2><p className="wd-panel-sub">Requests waiting for Warden approval.</p></div></div>
-            {items.filter((item) => String(item.status).toLowerCase() === 'pending').length ? <div className="wd-list wd-list--cards">{items.filter((item) => String(item.status).toLowerCase() === 'pending').map((item) => <article className="wd-list-item" key={item._id}><div className="wd-list-name"><strong>{item.studentName}</strong><span>{item.registerNumber || '—'} · Room {item.roomNumber || '—'}</span></div><div className="wd-list-times"><span>{item.requestType} · {item.date ? new Date(item.date).toLocaleDateString() : '—'}</span><span>Return date <b>{item.returnDate ? new Date(item.returnDate).toLocaleDateString() : (item.date ? new Date(item.date).toLocaleDateString() : '—')}</b></span></div><button className="wd-view-btn" type="button" onClick={() => openReview(item)}>Review</button></article>)}</div> : <div className="wd-empty">No pending requests for Warden review.</div>}
+            <div className="wd-panel-head wd-panel-head--single">
+              <div>
+                <p className="wd-greet-eyebrow">Pending review</p>
+                <h2 className="wd-panel-title">Outpass Requests</h2>
+                <p className="wd-panel-sub">Requests waiting for Warden approval.</p>
+              </div>
+            </div>
+            {pendingLoading ? (
+              <LoadingState label="Loading pending requests..." />
+            ) : pendingLoadError ? (
+              <ErrorState
+                message={pendingLoadError}
+                onRetry={loadPending}
+                retryLabel="Reload queue"
+              />
+            ) : pendingItems.length ? (
+              <div className="wd-approvals-cards">
+                {pendingItems.map((item) => (
+                  <RequestReviewCard
+                    key={item._id}
+                    item={item}
+                    variant="slip"
+                    approveLabel="Approve"
+                    rejectLabel="Reject"
+                    activeRejectId={activeRejectId}
+                    setActiveRejectId={setActiveRejectId}
+                    reasonById={reasonById}
+                    setReasonById={setReasonById}
+                    loadingId={loadingId}
+                    onApprove={(id) => review(id, 'approve')}
+                    onReject={(id) => review(id, 'reject')}
+                  />
+                ))}
+              </div>
+            ) : (
+              <div className="wd-empty">No pending requests for Warden review.</div>
+            )}
           </section>
 
           <WardenOutpassHistory
