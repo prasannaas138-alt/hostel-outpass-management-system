@@ -17,7 +17,7 @@ router.post('/login', loginUser);
 router.get('/me', protect, getCurrentUser);
 router.get('/students/:id/profile', protect, authorizeRoles('HOD', 'Sister', 'Warden'), getStudentProfile);
 router.put('/me', protect, updateCurrentUser);
-router.put('/me/username', protect, updateMyUsername);
+router.put('/me/username', protect, authorizeRoles('HOD', 'Sister', 'Warden'), updateMyUsername);
 router.put('/me/password', protect, changeMyPassword);
 
 export default router;

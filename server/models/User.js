@@ -22,13 +22,23 @@ const userSchema = new mongoose.Schema(
     },
     registerNumber: {
       type: String,
-      required: true,
       trim: true,
+      required: {
+        validator: function () {
+          return this.role === 'Student';
+        },
+        message: 'Register number is required.',
+      },
     },
     department: {
       type: String,
-      required: true,
       trim: true,
+      required: {
+        validator: function () {
+          return this.role === 'Student';
+        },
+        message: 'Department is required.',
+      },
     },
     hostelBlock: {
       type: String,
@@ -51,8 +61,13 @@ const userSchema = new mongoose.Schema(
     },
     roomNumber: {
       type: String,
-      required: true,
       trim: true,
+      required: {
+        validator: function () {
+          return this.role === 'Student';
+        },
+        message: 'Room number is required.',
+      },
     },
     password: {
       type: String,

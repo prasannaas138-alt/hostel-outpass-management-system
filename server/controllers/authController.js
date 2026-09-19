@@ -233,7 +233,7 @@ export const changeMyPassword = async (req, res, next) => {
       return res.status(400).json({ message: 'New passwords do not match.' });
     }
 
-    if (newPassword === currentPassword) {
+if (newPassword === currentPassword) {
       return res.status(400).json({ message: 'New password must be different from the current password.' });
     }
 
@@ -245,17 +245,17 @@ export const changeMyPassword = async (req, res, next) => {
       return res.status(401).json({ message: 'Current password is incorrect.' });
     }
 
-    // Update only the authenticated user's own record.
-    const user = await User.findById(req.user._id).select('+password');
+    // Targeted update that hashes the password inline. This avoids loading
+    // and re-saving the full document, so updating a staff account never
+    // triggers Student-only field validation.
+    const salt = await bcrypt.genSalt(10);
+    const hashedPassword = await bcrypt.hash(newPassword, salt);
+    await User.updateOne(
+      { _id: req.user._id },
+      { $set: { password: hashedPassword } }
+    );
 
-    if (!user) {
-      return res.status(404).json({ message: 'User not found.' });
-    }
-
-    user.password = newPassword;
-    await user.save(); // existing pre('save') hook hashes with bcrypt
-
-    res.json({ message: 'Password changed successfully.', user: sanitizeUser(user) });
+    res.json({ message: 'Password changed successfully.', user: sanitizeUser(req.user) });
   } catch (error) {
     next(error);
   }
@@ -263,9 +263,9 @@ export const changeMyPassword = async (req, res, next) => {
 
 // ---------------------------------------------------------------------------
 // Staff profile update (Warden profile card). Updates username and email
-// only. Deliberately separate from updateCurrentUser so no
-// student/system fields (department, year, hostelBlock, phone, role,
-// registerNumber) can change through here.
+// only, using a targeted Mongo update so no student/system fields
+// (department, year, hostelBlock, phone, role, registerNumber) can change
+// through here and no unrelated document validation is triggered.
 // ---------------------------------------------------------------------------
 export const updateMyUsername = async (req, res, next) => {
   try {
@@ -275,32 +275,39 @@ export const updateMyUsername = async (req, res, next) => {
       return res.status(400).json({ message: 'Username is required.' });
     }
 
-    const user = await User.findById(req.user._id);
+    const trimmedName = String(name).trim();
+    const trimmedEmail = email !== undefined ? String(email).trim().toLowerCase() : null;
 
-    if (!user) {
-      return res.status(404).json({ message: 'User not found.' });
-    }
-
-    if (email !== undefined) {
-      const trimmedEmail = String(email).trim().toLowerCase();
+    if (trimmedEmail !== null) {
       if (!emailPattern.test(trimmedEmail)) {
         return res.status(400).json({ message: 'Invalid email address.' });
       }
 
+      // Only block if ANOTHER user holds the email for the same role.
       const duplicate = await User.findOne({
         email: trimmedEmail,
-        _id: { $ne: user._id },
+        role: req.user.role,
+        _id: { $ne: req.user._id },
       });
 
       if (duplicate) {
         return res.status(400).json({ message: 'Email already exists.' });
       }
-
-      user.email = trimmedEmail;
     }
 
-    user.name = String(name).trim();
-    await user.save();
+    const $set = { name: trimmedName };
+    if (trimmedEmail !== null) {
+      $set.email = trimmedEmail;
+    }
+
+    // Targeted update: bypasses the full-document save hook so updating a
+    // staff account never triggers Student-only field validation.
+    await User.updateOne(
+      { _id: req.user._id },
+      { $set }
+    );
+
+    const user = await User.findById(req.user._id);
 
     res.json({ message: 'Profile updated successfully.', user: sanitizeUser(user) });
   } catch (error) {
