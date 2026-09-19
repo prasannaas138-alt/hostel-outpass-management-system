@@ -1,26 +1,35 @@
 /* Student layout: desktop sidebar, mobile top header + bottom nav. */
 
 .student-shell {
-  width: min(1280px, calc(100% - 2rem));
-  margin: 0 auto;
-  padding: 1rem 0 2rem;
+  width: 100%;
+  margin: 0;
+  padding: 0 0 2rem;
   display: grid;
   grid-template-columns: 330px minmax(0, 1fr);
   gap: 1rem;
   align-items: start;
 }
 
+/* Mirrors the HOD (wd) sidebar structure: a full-height navy application
+   panel flush with the LEFT EDGE — sticky, square corners, no border or
+   shadow, so it reads as a permanent navigation column rather than a
+   floating rounded card. Four grid rows pin Logout to the bottom:
+   branding / user card / navigation (1fr) / logout. */
 .student-sidebar {
   position: sticky;
-  top: 1rem;
+  top: 0;
+  height: 100vh;
+  height: 100dvh;
+  overflow-y: auto;
   display: grid;
+  grid-template-rows: auto auto 1fr auto;
   gap: 1rem;
-  padding: 1rem;
-  border-radius: var(--radius-lg);
+  padding: 1.25rem 1rem;
+  border-radius: 0;
   background: var(--navy-900);
-  border: 1px solid var(--navy-900);
+  border: 0;
   color: #fff;
-  box-shadow: var(--shadow-sm);
+  box-shadow: none;
 }
 
 .student-brand {
@@ -104,6 +113,9 @@
 .student-nav {
   display: grid;
   gap: 0.55rem;
+  /* Nav sits at the TOP of the 1fr sidebar row so the logout button
+     stays pinned at the bottom, exactly like the HOD sidebar. */
+  align-content: start;
 }
 
 .student-link {
