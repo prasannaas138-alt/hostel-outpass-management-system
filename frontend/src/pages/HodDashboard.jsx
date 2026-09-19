@@ -1,4 +1,4 @@
-import { useEffect, useMemo, useState } from 'react';
+import { useEffect, useState } from 'react';
 import api from '../services/api';
 import { useAuth } from '../context/AuthContext';
 import WardenLayout from '../components/WardenLayout';
@@ -7,7 +7,8 @@ import LoadingState from '../components/LoadingState';
 import ErrorState from '../components/ErrorState';
 import RequestReviewCard from '../components/RequestReviewCard';
 import WardenProfile from '../components/WardenProfile';
-import { IconUsers, IconClock, IconCheck, IconAlert, IconSearch } from '../components/WardenIcons';
+import RoleOutpassHistory from '../components/RoleOutpassHistory';
+import { IconUsers, IconClock, IconCheck, IconAlert } from '../components/WardenIcons';
 import '../styles/dashboard.css';
 import '../styles/student.css';
 import '../styles/warden.css';
@@ -18,7 +19,6 @@ export default function HodDashboard() {
   const [items, setItems] = useState([]);
   const [history, setHistory] = useState([]);
   const [view, setView] = useState('dashboard');
-  const [search, setSearch] = useState('');
   const [error, setError] = useState('');
   const [success, setSuccess] = useState('');
   const [loading, setLoading] = useState(true);
@@ -28,10 +28,6 @@ export default function HodDashboard() {
   const [reasonById, setReasonById] = useState({});
 
   const firstName = (user?.name || 'HOD').split(' ')[0];
-  const visibleHistory = useMemo(() => {
-    const term = search.trim().toLowerCase();
-    return term ? history.filter((item) => String(item.studentName || '').toLowerCase().includes(term)) : history;
-  }, [history, search]);
 
   // Self-contained loader: owns its loading/error lifecycle so a failed
   // initial load shows a retry state instead of an unhandled rejection.
@@ -185,10 +181,12 @@ export default function HodDashboard() {
           <div className="empty-state">No pending Home requests for HOD review.</div>
         )}
       </section>
-      <section className="wd-panel" id="hod-history">
-        <div className="wd-panel-head"><div><p className="wd-greet-eyebrow">History</p><h2 className="wd-panel-title">Outpass History</h2><p className="wd-panel-sub">Students who received or requested a Home Outpass.</p></div><label className="wd-search"><IconSearch size={17} /><input type="search" placeholder="Search by student name..." value={search} onChange={(event) => setSearch(event.target.value)} /></label></div>
-        {visibleHistory.length ? <div className="ss-history-list">{visibleHistory.map((item) => <article className="ss-history-row" key={item._id}><div><strong>{item.studentName || '—'}</strong><span>{item.registerNumber || '—'} · Room {item.roomNumber || '—'} · {item.department || '—'}</span></div><div><span>{item.reason || 'No reason provided'}</span><span>{item.date ? new Date(item.date).toLocaleDateString() : '—'} · {item.outTime || '—'}–{item.returnTime || '—'}</span><span>Return date: {item.returnDate ? new Date(item.returnDate).toLocaleDateString() : (item.date ? new Date(item.date).toLocaleDateString() : '—')}</span></div><span className="wd-pill wd-pill--neutral">{item.status || 'Pending'}</span></article>)}</div> : <div className="wd-empty">No Home Outpass history is available.</div>}
-      </section>
+      <RoleOutpassHistory
+        id="hod-history"
+        items={history}
+        subtitle="Students who received or requested a Home Outpass."
+        emptyMessage="No Home Outpass history is available."
+      />
       </>}
     </WardenLayout>
   );

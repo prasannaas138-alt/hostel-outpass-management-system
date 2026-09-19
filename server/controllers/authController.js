@@ -152,6 +152,20 @@ export const getCurrentUser = async (req, res) => {
   res.json({ user: sanitizeUser(req.user) });
 };
 
+export const getStudentProfile = async (req, res, next) => {
+  try {
+    const user = await User.findById(req.params.id);
+
+    if (!user || user.role !== 'Student') {
+      return res.status(404).json({ message: 'Student profile not found.' });
+    }
+
+    res.json({ user: sanitizeUser(user) });
+  } catch (error) {
+    next(error);
+  }
+};
+
 // Editable fields for a student's own profile. Deliberately excludes
 // email/registerNumber (identity), role (system-controlled) and password
 // (handled by the separate password endpoint below).

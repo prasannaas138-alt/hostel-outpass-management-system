@@ -3,6 +3,7 @@ import api from "../services/api";
 import { useAuth } from "../context/AuthContext";
 import WardenProfile from "../components/WardenProfile";
 import RequestReviewCard from "../components/RequestReviewCard";
+import RoleOutpassHistory from "../components/RoleOutpassHistory";
 import AlertBanner from "../components/AlertBanner";
 import LoadingState from "../components/LoadingState";
 import ErrorState from "../components/ErrorState";
@@ -18,18 +19,9 @@ import {
   IconHistory,
   IconUser,
   IconLogout,
-  IconSearch,
 } from "../components/WardenIcons";
 import "../styles/warden-dashboard.css";
 import "../styles/sister-dashboard.css";
-
-const statusClass = (status) => {
-  const value = String(status || "Pending").toLowerCase();
-  if (value.includes("approved")) return "wd-pill--approved";
-  if (value.includes("reject")) return "wd-pill--rejected";
-  if (value.includes("expired")) return "wd-pill--expired";
-  return "wd-pill--pending";
-};
 
 export default function SisterDashboard() {
   const { user, logout } = useAuth();
@@ -50,7 +42,6 @@ export default function SisterDashboard() {
   const [reasonById, setReasonById] = useState({});
   const [profileOpen, setProfileOpen] = useState(false);
   const [drawerOpen, setDrawerOpen] = useState(false);
-  const [search, setSearch] = useState("");
 
   const firstName = useMemo(
     () => (user?.name || "Sister").split(" ")[0],
@@ -67,17 +58,6 @@ export default function SisterDashboard() {
       }),
     [],
   );
-  const visibleHistory = useMemo(() => {
-    const term = search.trim().toLowerCase();
-    return term
-      ? history.filter((item) =>
-          String(item.studentName || "")
-            .toLowerCase()
-            .includes(term),
-        )
-      : history;
-  }, [history, search]);
-
   const loadItems = async () => {
     setLoading(true);
     setLoadError("");
@@ -340,59 +320,12 @@ export default function SisterDashboard() {
               </div>
             )}
           </section>
-          <section className="wd-panel" id="sister-history">
-            <div className="wd-panel-head">
-              <div>
-                <p className="wd-greet-eyebrow">History</p>
-                <h2 className="wd-panel-title">Outpass History</h2>
-                <p className="wd-panel-sub">
-                  Home Outpass requests reviewed by Sister.
-                </p>
-              </div>
-              <label className="wd-search">
-                <IconSearch size={17} />
-                <input
-                  type="search"
-                  placeholder="Search by student name..."
-                  value={search}
-                  onChange={(event) => setSearch(event.target.value)}
-                  aria-label="Search by student name"
-                />
-              </label>
-            </div>
-            {visibleHistory.length ? (
-              <div className="ss-history-list">
-                {visibleHistory.map((item) => (
-                  <article className="ss-history-row" key={item._id}>
-                    <div>
-                      <strong>{item.studentName || "—"}</strong>
-                      <span>
-                        {item.registerNumber || "—"} · Room{" "}
-                        {item.roomNumber || "—"}
-                      </span>
-                    </div>
-                    <div>
-                      <span>{item.reason || "No reason provided"}</span>
-                      <span>
-                        {item.date
-                          ? new Date(item.date).toLocaleDateString()
-                          : "—"}{" "}
-                        · {item.outTime || "—"}–{item.returnTime || "—"}
-                      </span>
-                      <span>Return date: {item.returnDate ? new Date(item.returnDate).toLocaleDateString() : (item.date ? new Date(item.date).toLocaleDateString() : "—")}</span>
-                    </div>
-                    <span className={`wd-pill ${statusClass(item.status)}`}>
-                      {item.status || "Pending"}
-                    </span>
-                  </article>
-                ))}
-              </div>
-            ) : (
-              <div className="wd-empty">
-                No Home Outpass history matches this search.
-              </div>
-            )}
-          </section>
+          <RoleOutpassHistory
+            id="sister-history"
+            items={history}
+            subtitle="Home Outpass requests reviewed by Sister."
+            emptyMessage="No Home Outpass history matches this view."
+          />
         </main>
         <nav className="wd-bottomnav" aria-label="Sister mobile navigation">
           <button

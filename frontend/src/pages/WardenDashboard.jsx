@@ -251,7 +251,6 @@ export default function WardenDashboard() {
             loading={loading}
             loadError={loadError}
             onRetry={loadHistory}
-            onView={openReview}
           />
         </>
       )}
