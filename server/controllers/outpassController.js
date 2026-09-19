@@ -57,6 +57,45 @@ const refreshExpiredOutpasses = async () => {
   );
 };
 
+// Auto-rejects pending Warden outpasses whose Out Date + Out Time has passed.
+// This runs inside existing Warden endpoints so expired requests are rejected
+// with the exact reason before they are shown or reviewed.
+const WARDEN_EXPIRED_REJECTION_REASON = 'Automatically rejected: outpass expired at Out Date + Out Time';
+
+const buildOutTimeExpiry = (outpass) => {
+  const [hour, minute] = String(outpass.outTime || '00:00').split(':').map(Number);
+  const expiresAt = new Date(outpass.date);
+  expiresAt.setHours(hour, minute, 0, 0);
+  return expiresAt;
+};
+
+const isWardenOutpassExpired = (outpass) => {
+  return Boolean(outpass.date && outpass.outTime) && buildOutTimeExpiry(outpass).getTime() <= Date.now();
+};
+
+const rejectExpiredWardenOutpasses = async () => {
+  const pending = await Outpass.find({
+    status: { $in: ACTIVE_STATUSES },
+    wardenStatus: 'Pending',
+  }).lean();
+
+  const expired = pending.filter(isWardenOutpassExpired);
+  if (!expired.length) return;
+
+  await Outpass.updateMany(
+    {
+      _id: { $in: expired.map((outpass) => outpass._id) },
+    },
+    {
+      $set: {
+        status: 'Rejected',
+        wardenStatus: 'Rejected',
+        rejectionReason: WARDEN_EXPIRED_REJECTION_REASON,
+      },
+    }
+  );
+};
+
 const buildApprovedByEntry = (role, userId) => ({
   role,
   user: userId,
@@ -192,6 +231,7 @@ export const getMyOutpasses = async (req, res, next) => {
 export const getOutpassById = async (req, res, next) => {
   try {
     await refreshExpiredOutpasses();
+    await rejectExpiredWardenOutpasses();
     const outpass = await Outpass.findById(req.params.id);
 
     if (!outpass) {
@@ -250,6 +290,7 @@ export const getPendingSisterRequests = async (req, res, next) => {
 export const getPendingWardenRequests = async (req, res, next) => {
   try {
     await refreshExpiredOutpasses();
+    await rejectExpiredWardenOutpasses();
     const outpasses = await Outpass.find({
       status: { $in: ACTIVE_STATUSES },
       wardenStatus: 'Pending',
@@ -343,6 +384,7 @@ export const sisterReviewOutpass = async (req, res, next) => {
 export const wardenReviewOutpass = async (req, res, next) => {
   try {
     await refreshExpiredOutpasses();
+    await rejectExpiredWardenOutpasses();
     const { action, rejectionReason } = req.body;
     const outpass = await Outpass.findById(req.params.id);
 
@@ -380,6 +422,7 @@ export const wardenReviewOutpass = async (req, res, next) => {
 export const downloadOutpassPdf = async (req, res, next) => {
   try {
     await refreshExpiredOutpasses();
+    await rejectExpiredWardenOutpasses();
     const outpass = await Outpass.findById(req.params.id).populate('approvedBy.user', 'name role');
 
     if (!outpass) {
@@ -447,6 +490,7 @@ export const getSisterHistory = async (req, res, next) => {
 export const getWardenHistory = async (req, res, next) => {
   try {
     await refreshExpiredOutpasses();
+    await rejectExpiredWardenOutpasses();
 
     const outpasses = await Outpass.find({
       $or: [
@@ -482,6 +526,7 @@ export const getWardenHistory = async (req, res, next) => {
 export const getWardenStats = async (req, res, next) => {
   try {
     await refreshExpiredOutpasses();
+    await rejectExpiredWardenOutpasses();
 
     const startOfToday = new Date();
     startOfToday.setHours(0, 0, 0, 0);

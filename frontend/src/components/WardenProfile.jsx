@@ -7,18 +7,21 @@ import '../styles/warden-dashboard.css';
 
 // Warden profile — follows the Student Dashboard profile interaction pattern
 // (avatar with initial, editable username, password change with current/new/
-// confirm + validation + success/error banners) but exposes ONLY the two
-// fields a Warden may change: username and password. No student fields.
+// confirm + validation + success/error banners) but exposes the fields a
+// Warden may change: username, email address, and password. No student fields.
 // Everything runs on the authenticated user via /auth/me, so future real
 // Warden accounts work without changes.
 export default function WardenProfile() {
   const { user, updateUser } = useAuth();
   const initial = (user?.name || 'W').charAt(0).toUpperCase();
 
-  // --- username form ---
+  // --- username/email form ---
   const [username, setUsername] = useState(user?.name || '');
+  const [email, setEmail] = useState(user?.email || '');
   const [nameError, setNameError] = useState('');
+  const [emailError, setEmailError] = useState('');
   const [nameSuccess, setNameSuccess] = useState('');
+  const [emailSuccess, setEmailSuccess] = useState('');
   const [savingName, setSavingName] = useState(false);
 
   // --- password form ---
@@ -34,22 +37,37 @@ export default function WardenProfile() {
   const saveUsername = async (event) => {
     event.preventDefault();
     setNameError('');
+    setEmailError('');
     setNameSuccess('');
+    setEmailSuccess('');
 
     if (!username.trim()) {
       setNameError('Username is required.');
       return;
     }
 
+    const trimmedEmail = email.trim();
+    if (!trimmedEmail) {
+      setEmailError('Email Address is required.');
+      return;
+    }
+    if (!/^[^\s@]+@[^\s@]+\.[^\s@]+$/.test(trimmedEmail)) {
+      setEmailError('Enter a valid email address.');
+      return;
+    }
+
     setSavingName(true);
     try {
-      // Username-only endpoint: no student/system field (department, year,
-      // room number, role…) can be changed from the Warden profile.
+      // Staff profile endpoint: updates username and email only. No
+      // student/system field (department, year, room number, role…) can
+      // be changed from the Warden profile.
       const { data } = await api.put('/auth/me/username', {
         name: username.trim(),
+        email: trimmedEmail,
       });
       updateUser(data.user);
       setNameSuccess('Username updated successfully.');
+      setEmailSuccess('Email Address updated successfully.');
     } catch (err) {
       setNameError(err.response?.data?.message || 'Failed to update username.');
     } finally {
@@ -108,8 +126,6 @@ export default function WardenProfile() {
 
       <section className="wd-profile-section" aria-label="Change username">
         <h4>Username</h4>
-        <AlertBanner type="error" message={nameError} />
-        <AlertBanner type="success" message={nameSuccess} />
         <form onSubmit={saveUsername} noValidate>
           <label className="wd-field">
             <span>Username</span>
@@ -122,7 +138,22 @@ export default function WardenProfile() {
               autoComplete="username"
             />
           </label>
-          <p className="wd-field-hint">You can change your username here.</p>
+          <label className="wd-field">
+            <span>Email Address</span>
+            <input
+              type="email"
+              name="email"
+              value={email}
+              onChange={(event) => setEmail(event.target.value)}
+              disabled={savingName}
+              autoComplete="email"
+            />
+          </label>
+          <AlertBanner type="error" message={nameError} />
+          <AlertBanner type="error" message={emailError} />
+          <AlertBanner type="success" message={nameSuccess} />
+          <AlertBanner type="success" message={emailSuccess} />
+          <p className="wd-field-hint">You can change your username and email address here.</p>
           <div className="wd-profile-actions">
             <button className="wd-btn wd-btn--dark" type="submit" disabled={savingName}>
               {savingName ? 'Updating...' : 'Update Username'}

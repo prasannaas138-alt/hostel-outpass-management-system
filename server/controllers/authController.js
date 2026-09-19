@@ -262,13 +262,14 @@ export const changeMyPassword = async (req, res, next) => {
 };
 
 // ---------------------------------------------------------------------------
-// Username-only profile update (Warden profile card). Deliberately separate
-// from updateCurrentUser so no student/system fields (department, year,
-// hostelBlock, phone, role, email, registerNumber) can change through here.
+// Staff profile update (Warden profile card). Updates username and email
+// only. Deliberately separate from updateCurrentUser so no
+// student/system fields (department, year, hostelBlock, phone, role,
+// registerNumber) can change through here.
 // ---------------------------------------------------------------------------
 export const updateMyUsername = async (req, res, next) => {
   try {
-    const { name } = req.body;
+    const { name, email } = req.body;
 
     if (!name || !String(name).trim()) {
       return res.status(400).json({ message: 'Username is required.' });
@@ -280,10 +281,28 @@ export const updateMyUsername = async (req, res, next) => {
       return res.status(404).json({ message: 'User not found.' });
     }
 
+    if (email !== undefined) {
+      const trimmedEmail = String(email).trim().toLowerCase();
+      if (!emailPattern.test(trimmedEmail)) {
+        return res.status(400).json({ message: 'Invalid email address.' });
+      }
+
+      const duplicate = await User.findOne({
+        email: trimmedEmail,
+        _id: { $ne: user._id },
+      });
+
+      if (duplicate) {
+        return res.status(400).json({ message: 'Email already exists.' });
+      }
+
+      user.email = trimmedEmail;
+    }
+
     user.name = String(name).trim();
     await user.save();
 
-    res.json({ message: 'Username updated successfully.', user: sanitizeUser(user) });
+    res.json({ message: 'Profile updated successfully.', user: sanitizeUser(user) });
   } catch (error) {
     next(error);
   }
