@@ -216,3 +216,22 @@
     padding: 1rem;
   }
 }
+
+/* 12-hour time picker (TimeField12) — hour / minutes / AM-PM selects */
+.time-field__controls {
+  display: grid;
+  grid-template-columns: 1.1fr 1.2fr auto;
+  gap: 0.45rem;
+  margin-top: 0.35rem;
+}
+
+.time-field__controls select {
+  width: 100%;
+  min-height: 44px;
+}
+
+@media (max-width: 480px) {
+  .time-field__controls {
+    grid-template-columns: 1fr 1fr 1fr;
+  }
+}

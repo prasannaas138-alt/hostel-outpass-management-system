@@ -56,3 +56,15 @@ export const formatDate = (value) => {
   if (Number.isNaN(parsed.getTime())) return String(value);
   return parsed.toLocaleDateString();
 };
+
+/**
+ * Formats an outpass date (YYYY-MM-DD or full ISO string) as a short
+ * readable date, e.g. "9/13/2026". Safe against missing/invalid values.
+ * Used by the Outpass Details slip for Request/Out Date and Return Date.
+ */
+export const formatOutpassDate = (value) => {
+  if (!value) return '—';
+  const parsed = new Date(value);
+  if (Number.isNaN(parsed.getTime())) return String(value);
+  return parsed.toLocaleDateString();
+};

@@ -62,7 +62,7 @@ const RejectIcon = () => (
   </svg>
 );
 
-import { formatTime12Hour as formatTime } from '../utils/timeFormat';
+import { formatTime12Hour as formatTime, formatOutpassDate } from '../utils/timeFormat';
 
 /* Expiry moment: backend-computed `expiresAt` is the source of truth;
    date + returnTime is only a fallback. Display-only — this never

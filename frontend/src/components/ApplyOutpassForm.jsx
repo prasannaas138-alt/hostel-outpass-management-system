@@ -1,4 +1,5 @@
 import AlertBanner from './AlertBanner';
+import TimeField12 from './TimeField12';
 
 export default function ApplyOutpassForm({
   user,
@@ -59,13 +60,29 @@ export default function ApplyOutpassForm({
         <div className="apply-grid apply-grid--2">
           <label>
             Out Time
-            <input name="outTime" type="time" value={form.outTime} onChange={onChange} required disabled={saving} />
+            {/* 12-hour picker (1-12 + AM/PM). Still stores the same
+                internal 24-hour "HH:MM" value the backend expects. */}
+            <TimeField12
+              name="outTime"
+              label="Out Time"
+              value={form.outTime}
+              onChange={onChange}
+              required
+              disabled={saving}
+            />
           </label>
         </div>
         <div className="apply-grid apply-grid--2">
           <label>
             Return Time
-            <input name="returnTime" type="time" value={form.returnTime} onChange={onChange} required disabled={saving} />
+            <TimeField12
+              name="returnTime"
+              label="Return Time"
+              value={form.returnTime}
+              onChange={onChange}
+              required
+              disabled={saving}
+            />
           </label>
           <label>
             Destination

@@ -55,20 +55,35 @@ export default function StudentDashboard() {
   const [detailId, setDetailId] = useState(null);
   const [profileViewActive, setProfileViewActive] = useState(false);
 
+  // A minute-ticker forces the expiry filters to re-evaluate so an
+  // approved outpass flips from My Requests to Outpass History right
+  // when its Return Date + Return Time passes — no manual refresh
+  // needed (the 30s poll also keeps data fresh from the backend).
+  const [nowTick, setNowTick] = useState(0);
+  useEffect(() => {
+    const ticker = setInterval(() => setNowTick((value) => value + 1), 60000);
+    return () => clearInterval(ticker);
+  }, []);
+
   const selectedRequest = useMemo(() => requests.find((item) => item._id === selectedId) || null, [requests, selectedId]);
   const isOutgoingWeekendValid = form.requestType !== 'Outing' || !form.date || isWeekend(form.date);
   const firstName = (user?.name || 'Student').split(' ')[0];
 
-  // My Requests: everything that is not expired (expired records move to Outpass History).
+  // My Requests: only ACTIVE outpasses — Pending, Approved and Rejected.
+  // A rejected outpass stays rejected here (existing behaviour).
   const visibleRequests = useMemo(
     () => requests.filter((item) => !isExpiredRequest(item)),
-    [requests],
+    // nowTick: recompute when the minute ticker fires so time-based expiry
+    // moves outpasses between sections without a manual refresh.
+    [requests, nowTick],
   );
 
-  // History: approved, previously approved and now expired, or expired.
+  // Outpass History: ONLY outpasses whose Return Date + Return Time has
+  // passed. An active approved outpass must NEVER appear here — this is
+  // what keeps the two sections mutually exclusive.
   const historyRequests = useMemo(
-    () => requests.filter((item) => ['Approved', 'Approved - Expired', 'Expired'].includes(getDisplayStatus(item))),
-    [requests],
+    () => requests.filter((item) => isExpiredRequest(item)),
+    [requests, nowTick],
   );
 
   const visibleHistoryRequests = useMemo(() => {
@@ -299,7 +314,7 @@ export default function StudentDashboard() {
             <div className="panel-heading">
               <div>
                 <p className="eyebrow">Outpass history</p>
-                <h2>Approved and expired outpasses</h2>
+                <h2>Expired outpasses</h2>
               </div>
             </div>
 

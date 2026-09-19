@@ -83,12 +83,15 @@ export default function StudentLayout({ title, subtitle, actions, children, onNa
         </div>
 
         <div className="student-user">
-          <span className="student-avatar" aria-hidden="true">
-            {(user?.name || 'S').charAt(0).toUpperCase()}
-          </span>
-          <div>
-            <strong>{user?.name || 'Student'}</strong>
-            <span>{user?.role || 'Student'}</span>
+          <span className="student-user__label">Signed in as</span>
+          <div className="student-user__row">
+            <span className="student-avatar" aria-hidden="true">
+              {(user?.name || 'S').charAt(0).toUpperCase()}
+            </span>
+            <div>
+              <strong>{user?.name || 'Student'}</strong>
+              <span>{user?.role || 'Student'}</span>
+            </div>
           </div>
         </div>
 

@@ -50,13 +50,29 @@
 }
 
 .student-user {
-  display: flex;
-  align-items: center;
-  gap: 0.75rem;
-  padding: 0.8rem;
+  display: grid;
+  gap: 0.5rem;
+  padding: 0.9rem;
   border-radius: var(--radius-md);
   background: rgba(255, 255, 255, 0.1);
   border: 1px solid rgba(255, 255, 255, 0.14);
+}
+
+/* Matches the HOD sidebar user card: a small-caps "Signed in as" label
+   above the avatar + name row, so the card reads as an integrated part
+   of the sidebar instead of a floating chip under the brand block. */
+.student-user__label {
+  font-size: var(--text-xs);
+  letter-spacing: 0.08em;
+  text-transform: uppercase;
+  color: rgba(255, 255, 255, 0.72);
+}
+
+.student-user__row {
+  display: flex;
+  align-items: center;
+  gap: 0.75rem;
+  min-width: 0;
 }
 
 /* Higher specificity than ".student-user span" so the letter stays navy
