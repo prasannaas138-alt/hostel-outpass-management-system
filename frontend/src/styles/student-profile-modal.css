@@ -26,13 +26,12 @@
 }
 
 .wd-col-seq { width: 3.5rem; }
-.wd-col-student { width: 19%; }
-.wd-col-room { width: 7.5%; }
-.wd-col-phone { width: 9%; }
-.wd-col-date { width: 9.5%; }
-.wd-col-time { width: 7.5%; }
+.wd-col-student { width: 20%; }
+.wd-col-room { width: 8%; }
+.wd-col-date { width: 12%; }
+.wd-col-time { width: 9%; }
 .wd-col-status { width: 10%; }
-.wd-col-profile { width: 8.5%; }
+.wd-col-profile { width: 11%; }
 
 .wd-table th,
 .wd-table td {
@@ -43,10 +42,12 @@
 .wd-table th {
   line-height: 1.25;
   white-space: normal;
+  padding-inline: 0.3rem;
 }
 
 .wd-table td {
   line-height: 1.35;
+  padding-inline: 0.3rem;
 }
 
 .wd-table .wd-row-name {
@@ -60,10 +61,15 @@
   line-height: 1.35;
 }
 
-.wd-table .wd-break,
-.wd-table .wd-nowrap {
-  white-space: normal;
+.wd-table .wd-break {
   overflow-wrap: anywhere;
+}
+
+.wd-table .wd-nowrap,
+.wd-table .wd-seq,
+.wd-table .wd-pill,
+.wd-table .wd-view-btn {
+  white-space: nowrap;
 }
 
 .wd-table .wd-view-btn {
@@ -74,7 +80,6 @@
   padding: 0.35rem 0.4rem;
   font-size: 0.72rem;
   line-height: 1.1;
-  white-space: normal;
   text-align: center;
 }
 

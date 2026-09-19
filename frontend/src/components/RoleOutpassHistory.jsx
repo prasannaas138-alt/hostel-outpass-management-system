@@ -113,7 +113,6 @@ export default function RoleOutpassHistory({
                 <col className="wd-col-seq" />
                 <col className="wd-col-student" />
                 <col className="wd-col-room" />
-                <col className="wd-col-phone" />
                 <col className="wd-col-date" />
                 <col className="wd-col-date" />
                 <col className="wd-col-time" />
@@ -126,7 +125,6 @@ export default function RoleOutpassHistory({
                   <th scope="col">#</th>
                   <th scope="col">Student Name</th>
                   <th scope="col">Room No.</th>
-                  <th scope="col">Phone No.</th>
                   <th scope="col">Requested On</th>
                   <th scope="col">Return Date</th>
                   <th scope="col">Out Time</th>
@@ -147,7 +145,6 @@ export default function RoleOutpassHistory({
                         <small className="wd-panel-sub">{item.requestType} · {item.department || '—'} · Year {item.year || '—'}</small>
                       </td>
                       <td className="wd-mono">{item.roomNumber || '—'}</td>
-                      <td className="wd-mono wd-break">{item.phone || '—'}</td>
                       <td className="wd-nowrap">{dateOf(item.date)}</td>
                       <td className="wd-nowrap">{dateOf(item.returnDate || item.date)}</td>
                       <td className="wd-mono wd-nowrap">{item.outTime || '—'}</td>
