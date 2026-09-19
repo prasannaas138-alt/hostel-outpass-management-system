@@ -9,6 +9,7 @@ import RequestReviewCard from '../components/RequestReviewCard';
 import WardenProfile from '../components/WardenProfile';
 import RoleOutpassHistory from '../components/RoleOutpassHistory';
 import { IconUsers, IconClock, IconCheck, IconAlert } from '../components/WardenIcons';
+import { formatTime12Hour as formatTime } from '../utils/timeFormat';
 import '../styles/dashboard.css';
 import '../styles/student.css';
 import '../styles/warden.css';
@@ -80,7 +81,7 @@ export default function HodDashboard() {
     <WardenLayout view={view} onNavigate={setView}>
       {view === 'profile' ? <section className="wd-panel"><WardenProfile /></section> : <>
       <section className="warden-hero" aria-label="Welcome">
-        <p className="eyebrow">St. Joseph&apos; University · Hostel Office</p>
+        <p className="eyebrow">St. Joseph University · Hostel Office</p>
         <h2>Hello, {firstName}!</h2>
         <p>Review the Home requests from your department and move them to the Sister queue, or reject them with a reason.</p>
       </section>
@@ -156,7 +157,7 @@ export default function HodDashboard() {
                       </td>
                       <td>{item.requestType}</td>
                       <td>{new Date(item.date).toLocaleDateString()}</td>
-                      <td>{item.outTime || '—'}–{item.returnTime || '—'}</td>
+                      <td>{formatTime(item.outTime)}–{formatTime(item.returnTime)}</td>
                       <td className="warden-reason-cell">{item.reason}</td>
                       <td>
                         <span className={`status-badge status-${String(item.status).toLowerCase()}`}>{item.status}</span>

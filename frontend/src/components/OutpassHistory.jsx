@@ -2,7 +2,7 @@ import AlertBanner from './AlertBanner';
 import LoadingState from './LoadingState';
 import StudentRequestCard from './StudentRequestCard';
 import StatusBadge from './StatusBadge';
-import { formatDate, formatTime } from './MyRequestsList';
+import { formatDate, formatTime12Hour as formatTime } from '../utils/timeFormat';
 
 export default function OutpassHistory(props) {
   const {

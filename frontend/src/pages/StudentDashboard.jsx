@@ -233,7 +233,7 @@ export default function StudentDashboard() {
       ) : (
         <>
       <section id="dashboard" className="student-hero">
-        <p className="eyebrow">St. Joseph&apos; University · H.O.M.S</p>
+        <p className="eyebrow">St. Joseph University · H.O.M.S</p>
         <h2>Hello, {firstName}!</h2>
         <p>Welcome back. Use the sidebar to apply for a new outpass or check the latest status of your requests.</p>
       </section>

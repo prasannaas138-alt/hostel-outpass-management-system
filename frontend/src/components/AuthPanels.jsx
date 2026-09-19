@@ -47,7 +47,7 @@ export function AuthBrandPanel({ title, subtitle, showSignInLink = false, hideTo
             <i aria-hidden="true" />
             University Hostel Portal
           </span>
-          <p className="eyebrow">St. Joseph&apos;s University</p>
+          <p className="eyebrow">St. Joseph University</p>
           <h1>H.O.M.S</h1>
           <p className="auth-subtitle">{subtitle || title}</p>
         </>

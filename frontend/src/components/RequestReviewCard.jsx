@@ -1,3 +1,5 @@
+import { formatTime12Hour as formatTime } from '../utils/timeFormat';
+
 export default function RequestReviewCard({
   item,
   variant = 'review',
@@ -57,8 +59,8 @@ export default function RequestReviewCard({
           {renderDetail('Hostel', item.hostelName || '-'+'-')}
           {renderDetail('Request/Out Date', item.date ? new Date(item.date).toLocaleDateString() : '-'+'-')}
           {renderDetail('Return Date', item.returnDate ? new Date(item.returnDate).toLocaleDateString() : (item.date ? new Date(item.date).toLocaleDateString() : '-'+'-'))}
-          {renderDetail('Out Time', item.outTime)}
-          {renderDetail('Return Time', item.returnTime)}
+          {renderDetail('Out Time', item.outTime ? formatTime(item.outTime) : '-'+'-')}
+          {renderDetail('Return Time', item.returnTime ? formatTime(item.returnTime) : '-'+'-')}
           {renderDetail('Destination', item.destination || '-'+'-')}
           {renderDetail('Reason', item.reason)}
           <div className='approval-row'>
@@ -83,7 +85,7 @@ export default function RequestReviewCard({
           <span>Hostel: {item.hostelName || '—'}</span>
           <span>Request/Out Date: {item.date ? new Date(item.date).toLocaleDateString() : '—'}</span>
           <span>Return Date: {item.returnDate ? new Date(item.returnDate).toLocaleDateString() : (item.date ? new Date(item.date).toLocaleDateString() : '—')}</span>
-          <span>Time: {item.outTime} - {item.returnTime}</span>
+          <span>Time: {item.outTime ? formatTime(item.outTime) : '-'+'-'} - {item.returnTime ? formatTime(item.returnTime) : '-'+'-'}</span>
           <span>Destination: {item.destination || '—'}</span>
           <span>Reason: {item.reason}</span>
           <span>Department: {item.department}</span>

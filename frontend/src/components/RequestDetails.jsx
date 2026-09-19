@@ -1,5 +1,5 @@
 import StatusTracker from './StatusTracker';
-import { formatDate, formatTime } from './MyRequestsList';
+import { formatDate, formatTime12Hour as formatTime } from '../utils/timeFormat';
 import { getDisplayStatus, getStatusClass } from '../utils/outpassStatus';
 
 export function MyRequestsTable({ requests, onViewDetails, onEdit }) {

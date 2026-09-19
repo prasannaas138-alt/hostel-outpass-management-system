@@ -62,13 +62,7 @@ const RejectIcon = () => (
   </svg>
 );
 
-/* "9/13/2026" — the watchman-facing date format from the reference. */
-const formatOutpassDate = (value) => {
-  if (!value) return '—';
-  const parsed = new Date(value);
-  if (Number.isNaN(parsed.getTime())) return String(value);
-  return parsed.toLocaleDateString('en-US');
-};
+import { formatTime12Hour as formatTime } from '../utils/timeFormat';
 
 /* Expiry moment: backend-computed `expiresAt` is the source of truth;
    date + returnTime is only a fallback. Display-only — this never
@@ -156,7 +150,7 @@ export default function OutpassDetails({ request, user, onBack, onEdit }) {
               never overlap the logo at any width. */}
           <img
             src="/st-joseph-logo.png"
-            alt="St. Joseph's University"
+            alt="St. Joseph University"
             className="outpass-card__logo"
             onError={(event) => { event.target.style.display = 'none'; }}
           />
@@ -184,7 +178,7 @@ export default function OutpassDetails({ request, user, onBack, onEdit }) {
               <span className="info-row__icon info-row__icon--out"><ClockIcon /></span>
               <span className="info-row__text">
                 <em>Out Time</em>
-                <strong>{request.outTime || '—'}</strong>
+                <strong>{request.outTime ? formatTime(request.outTime) : '—'}</strong>
               </span>
             </div>
             <div className="info-row">
@@ -198,7 +192,7 @@ export default function OutpassDetails({ request, user, onBack, onEdit }) {
               <span className="info-row__icon info-row__icon--return"><ClockIcon /></span>
               <span className="info-row__text">
                 <em>Return Time</em>
-                <strong>{request.returnTime || '—'}</strong>
+                <strong>{request.returnTime ? formatTime(request.returnTime) : '—'}</strong>
               </span>
             </div>
             <div className="info-row">

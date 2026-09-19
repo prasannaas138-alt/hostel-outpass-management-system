@@ -61,11 +61,11 @@ export default function WardenLayout({ view = 'dashboard', onNavigate, children 
         <div className="wd-side-brand">
           <img
             src="/st-joseph-logo.png"
-            alt="St. Joseph's University"
+            alt="St. Joseph University"
             onError={(e) => { e.target.style.display = 'none'; }}
           />
           <div>
-            <strong>St. Joseph's University</strong>
+            <strong>St. Joseph University</strong>
             <span>Hostel Office</span>
           </div>
         </div>
@@ -105,11 +105,11 @@ export default function WardenLayout({ view = 'dashboard', onNavigate, children 
             <img
               className="wd-topbar-logo"
               src="/st-joseph-logo.png"
-              alt="St. Joseph's University"
+alt="St. Joseph University"
               onError={(e) => { e.target.style.display = 'none'; }}
             />
             <div className="wd-topbar-brand">
-              <strong>St. Joseph's University</strong>
+<strong>St. Joseph University</strong>
               <span>Hostel Office · H.O.M.S</span>
             </div>
             <button

@@ -8,7 +8,7 @@
           <img
             className="sidebar-brand__logo"
             src={brandLogo}
-            alt="St. Joseph's University"
+            alt="St. Joseph University"
             onError={(e) => { e.target.style.display = 'none'; }}
           />
         ) : null}

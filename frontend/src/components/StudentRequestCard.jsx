@@ -1,6 +1,6 @@
 import AlertBanner from './AlertBanner';
 import StatusBadge from './StatusBadge';
-import { formatDate, formatTime } from './MyRequestsList';
+import { formatDate, formatTime12Hour as formatTime } from '../utils/timeFormat';
 
 /* Small inline SVG icons — this project uses no icon library, so the
    reference-image card keeps its own tiny SVG set. */

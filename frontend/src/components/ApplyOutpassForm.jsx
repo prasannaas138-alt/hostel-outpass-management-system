@@ -40,9 +40,7 @@ export default function ApplyOutpassForm({
           </label>
         </div>
         <p className="apply-hint">
-          {form.requestType === 'Home'
-            ? 'Home requests need HOD, Sister and Warden approval.'
-            : 'Outing requests are allowed only on weekends and need Warden approval.'}
+          {form.requestType === 'Home'}
         </p>
       </fieldset>
 

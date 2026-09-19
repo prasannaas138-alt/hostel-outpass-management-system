@@ -75,10 +75,10 @@ export default function StudentLayout({ title, subtitle, actions, children, onNa
 
       <aside className={`student-sidebar ${mobileNavOpen ? 'open' : ''}`} aria-label="Student primary">
         <div className="student-brand">
-          <img src="/st-joseph-logo.png" alt="St. Joseph's University" onError={(e) => { e.target.style.display = 'none'; }} />
+          <img src="/st-joseph-logo.png" alt="St. Joseph University" onError={(e) => { e.target.style.display = 'none'; }} />
           <div>
             <strong>H.O.M.S</strong>
-            <span>St. Joseph&apos;s University</span>
+            <span>St. Joseph University</span>
           </div>
         </div>
 

@@ -175,9 +175,9 @@ export default function SisterDashboard() {
         aria-label="Sister navigation"
       >
         <div className="wd-side-brand">
-          <img src="/st-joseph-logo.png" alt="St. Joseph's University" />
+          <img src="/st-joseph-logo.png" alt="St. Joseph University" />
           <div>
-            <strong>St. Joseph's University</strong>
+            <strong>St. Joseph University</strong>
             <span>Hostel Office · H.O.M.S</span>
           </div>
         </div>
@@ -229,10 +229,10 @@ export default function SisterDashboard() {
             <img
               className="wd-topbar-logo"
               src="/st-joseph-logo.png"
-              alt="St. Joseph's University"
+              alt="St. Joseph University"
             />
             <div className="wd-topbar-brand">
-              <strong>St. Joseph's University</strong>
+<strong>St. Joseph University</strong>
               <span>Hostel Office · H.O.M.S</span>
             </div>
             <button

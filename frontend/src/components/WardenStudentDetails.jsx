@@ -1,11 +1,4 @@
-const formatDate = (value) => {
-  if (!value) return '—';
-  const parsed = new Date(value);
-  if (Number.isNaN(parsed.getTime())) return String(value);
-  return parsed.toLocaleDateString();
-};
-
-const formatTime = (value) => value || '—';
+import { formatDate, formatTime12Hour as formatTime } from '../utils/timeFormat';
 
 export default function WardenStudentDetails({ request, onClose }) {
   if (!request) {

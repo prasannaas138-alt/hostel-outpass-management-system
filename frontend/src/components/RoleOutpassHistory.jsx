@@ -3,6 +3,7 @@ import '../styles/warden-dashboard.css';
 import { IconEye, IconSearch } from './WardenIcons';
 import StudentProfileModal from './StudentProfileModal';
 import { getDisplayStatus } from '../utils/outpassStatus';
+import { formatTime12Hour } from '../utils/timeFormat';
 
 const statusMeta = (item) => {
   const display = getDisplayStatus(item);
@@ -147,8 +148,8 @@ export default function RoleOutpassHistory({
                       <td className="wd-mono">{item.roomNumber || '—'}</td>
                       <td className="wd-nowrap">{dateOf(item.date)}</td>
                       <td className="wd-nowrap">{dateOf(item.returnDate || item.date)}</td>
-                      <td className="wd-mono wd-nowrap">{item.outTime || '—'}</td>
-                      <td className="wd-mono wd-nowrap">{item.returnTime || '—'}</td>
+                      <td className="wd-mono wd-nowrap">{item.outTime ? formatTime12Hour(item.outTime) : '—'}</td>
+                      <td className="wd-mono wd-nowrap">{item.returnTime ? formatTime12Hour(item.returnTime) : '—'}</td>
                       <td><span className={`wd-pill ${status.cls}`}>{status.label}</span></td>
                       <td>
                         <button
@@ -187,8 +188,8 @@ export default function RoleOutpassHistory({
                     <span>Phone <b>{item.phone || '—'}</b></span>
                     <span>Requested <b>{dateOf(item.date)}</b></span>
                     <span>Return date <b>{dateOf(item.returnDate || item.date)}</b></span>
-                    <span>Out <b>{item.outTime || '—'}</b></span>
-                    <span>Return <b>{item.returnTime || '—'}</b></span>
+                    <span>Out <b>{item.outTime ? formatTime12Hour(item.outTime) : '—'}</b></span>
+                    <span>Return <b>{item.returnTime ? formatTime12Hour(item.returnTime) : '—'}</b></span>
                   </div>
                   <div className="wd-list-foot">
                     <span>{item.department || '—'}</span>

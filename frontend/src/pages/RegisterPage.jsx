@@ -96,7 +96,7 @@ export default function RegisterPage() {
       <header className="auth-header">
         <div className="auth-header-left"></div>
         <div className="auth-header-center">
-          <img src="/st-joseph-logo.png" alt="St. Joseph's University" className="auth-header-logo" onError={(e) => {e.target.style.display='none';}} />
+          <img src="/st-joseph-logo.png" alt="St. Joseph University" className="auth-header-logo" onError={(e) => {e.target.style.display='none';}} />
         </div>
         <div className="auth-header-right">
           <img src="/homs-logo.png" alt="H.O.M.S Logo" className="auth-header-brand" onError={(e) => {e.target.style.display='none';}} />
@@ -105,10 +105,10 @@ export default function RegisterPage() {
 
       <div className="auth-main">
         <div className="auth-brand-row">
-          <img src="/st-joseph-logo.png" alt="St. Joseph's University" onError={(e) => {e.target.style.display='none';}} />
+          <img src="/st-joseph-logo.png" alt="St. Joseph University" onError={(e) => {e.target.style.display='none';}} />
           <div>
             <strong>H.O.M.S — Hostel Outpass Management System</strong>
-            <span>St. Joseph&apos;s University · Hostel Portal</span>
+            <span>St. Joseph University · Hostel Portal</span>
           </div>
           <img src="/homs-logo.png" alt="H.O.M.S Logo" onError={(e) => {e.target.style.display='none';}} />
         </div>
@@ -267,7 +267,7 @@ export default function RegisterPage() {
 
       <footer className="auth-footer">
         <h4>H.O.M.S — Hostel Outpass Management System</h4>
-        <p>St. Joseph&apos;s University</p>
+        <p>St. Joseph University</p>
         <p>Making hostel management simple and accessible.</p>
       </footer>
     </main>

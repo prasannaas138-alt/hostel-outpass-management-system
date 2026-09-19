@@ -18,6 +18,7 @@ import LoadingState from '../components/LoadingState';
 import ErrorState from '../components/ErrorState';
 import RequestReviewCard from '../components/RequestReviewCard';
 import { getDisplayStatus } from '../utils/outpassStatus';
+import { formatTime12Hour as formatTime } from '../utils/timeFormat';
 import '../styles/warden-dashboard.css';
 
 // Redesigned Warden Dashboard â€” reference divisions 1-4:
@@ -203,8 +204,8 @@ export default function WardenDashboard() {
               <div className="wd-info-grid">
                 <div className="wd-info"><span>Request Type</span><strong>{selected.requestType || 'â€”'}</strong></div>
                 <div className="wd-info"><span>Requested On</span><strong>{selected.date ? new Date(selected.date).toLocaleDateString() : 'â€”'}</strong></div>
-                <div className="wd-info"><span>Out Time</span><strong>{selected.outTime || 'â€”'}</strong></div>
-                <div className="wd-info"><span>Return Time</span><strong>{selected.returnTime || 'â€”'}</strong></div>
+                <div className="wd-info"><span>Out Time</span><strong>{selected.outTime ? formatTime(selected.outTime) : 'â€”'}</strong></div>
+                <div className="wd-info"><span>Return Time</span><strong>{selected.returnTime ? formatTime(selected.returnTime) : 'â€”'}</strong></div>
                 <div className="wd-info wd-info--wide"><span>Reason</span><strong>{selected.reason || 'â€”'}</strong></div>
                 {selected.rejectionReason ? (
                   <div className="wd-info wd-info--wide"><span>Earlier rejection</span><strong>{selected.rejectionReason}</strong></div>

@@ -1,17 +1,7 @@
 import AlertBanner from './AlertBanner';
 import LoadingState from './LoadingState';
 import StudentRequestCard from './StudentRequestCard';
-
-const formatDate = (value) => {
-  if (!value) return '—';
-  const parsed = new Date(value);
-  if (Number.isNaN(parsed.getTime())) return String(value);
-  return parsed.toLocaleDateString();
-};
-
-const formatTime = (value) => value || '—';
-
-export { formatDate, formatTime };
+import { formatDate, formatTime12Hour as formatTime } from '../utils/timeFormat';
 
 const STATUS_FILTERS = ['All', 'Pending', 'Approved', 'Rejected'];
 
