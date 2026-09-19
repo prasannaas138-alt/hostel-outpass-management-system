@@ -5,15 +5,16 @@
  *
  * Home flow:  Waiting for Sister Approval -> Waiting for Warden Approval -> Approved
  * Outing flow: Waiting for Warden Approval -> Approved
- * Expired approved outings read as "Approved - Expired".
+ * Any approved outpass (Home or Outing) expires after Return Date + Return Time.
  */
 
-// An approved Outing past its issued window reads as "Approved - Expired".
-const isApprovedOutingExpired = (request) => {
-  if (!request || request.requestType !== 'Outing') {
+// Check if an approved outpass (Home or Outing) has passed its return datetime.
+const isApprovedExpired = (request) => {
+  if (!request) {
     return false;
   }
 
+  // Only check expiration for approved outpasses
   const wasApproved =
     request.status === 'Approved' ||
     request.status === 'Expired' ||
@@ -23,14 +24,16 @@ const isApprovedOutingExpired = (request) => {
     return false;
   }
 
+  // Use backend-computed expiresAt if available
   if (request.expiresAt) {
     return new Date(request.expiresAt).getTime() <= Date.now();
   }
 
-  // Fallback: compute from date + returnTime if expiresAt is missing.
-  if (request.date && request.returnTime) {
+  // Fallback: compute from Return Date + Return Time
+  const returnDate = request.returnDate || request.date;
+  if (returnDate && request.returnTime) {
     const [returnHour, returnMinute] = String(request.returnTime).split(':').map(Number);
-    const expiry = new Date(request.date);
+    const expiry = new Date(returnDate);
     expiry.setHours(returnHour || 0, returnMinute || 0, 0, 0);
     return expiry.getTime() <= Date.now();
   }
@@ -38,13 +41,17 @@ const isApprovedOutingExpired = (request) => {
   return false;
 };
 
+// Legacy function name for backward compatibility
+const isApprovedOutingExpired = isApprovedExpired;
+
 export const getDisplayStatus = (request) => {
   if (!request) {
     return 'Pending';
   }
 
-  if (request.requestType === 'Outing' && isApprovedOutingExpired(request)) {
-    return 'Approved - Expired';
+  // Check if an approved outpass has expired (both Home and Outing)
+  if (isApprovedExpired(request)) {
+    return 'Expired';
   }
 
   switch (request.status) {
@@ -53,7 +60,7 @@ export const getDisplayStatus = (request) => {
     case 'Rejected':
       return 'Rejected';
     case 'Expired':
-      return request.wardenStatus === 'Approved' ? 'Approved - Expired' : 'Expired';
+      return 'Expired';
     default:
       break;
   }
@@ -76,7 +83,6 @@ export const getStatusClass = (request) => {
       return 'approved';
     case 'Rejected':
       return 'rejected';
-    case 'Approved - Expired':
     case 'Expired':
       return 'expired';
     case 'Waiting for Warden Approval':
@@ -95,7 +101,7 @@ export const isExpiredRequest = (request) => {
   if (request.status === 'Expired') {
     return true;
   }
-  return request.requestType === 'Outing' && isApprovedOutingExpired(request);
+  return isApprovedExpired(request);
 };
 
 // The approved PDF may only be downloaded while the outpass is still valid.
@@ -109,6 +115,9 @@ export const matchesStatusFilter = (request, filter) => {
   const display = getDisplayStatus(request);
   if (filter === 'Pending') {
     return display === 'Waiting for HOD Approval' || display === 'Waiting for Sister Approval' || display === 'Waiting for Warden Approval';
+  }
+  if (filter === 'Expired') {
+    return display === 'Expired';
   }
   return display === filter;
 };
