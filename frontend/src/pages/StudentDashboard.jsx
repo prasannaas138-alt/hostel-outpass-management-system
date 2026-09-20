@@ -248,7 +248,6 @@ export default function StudentDashboard() {
       ) : (
         <>
       <section id="dashboard" className="student-hero">
-        <p className="eyebrow">St. Joseph University · H.O.M.S</p>
               <h1>Hello, {firstName} <picture>
   <source srcset="https://fonts.gstatic.com/s/e/notoemoji/latest/1f44b/512.webp" type="image/webp"/>
   <img src="https://fonts.gstatic.com/s/e/notoemoji/latest/1f44b/512.gif" alt="👋" width="27" height="27"/>

@@ -81,7 +81,7 @@ export default function HodDashboard() {
     <WardenLayout view={view} onNavigate={setView}>
       {view === 'profile' ? <section className="wd-panel"><WardenProfile /></section> : <>
       <section className="warden-hero" aria-label="Welcome">
-        <p className="eyebrow">St. Joseph University · Hostel Office</p>
+        <p className="eyebrow">HOD Portal</p>
         <h2>Hello, {firstName}! <picture>
   <source srcset="https://fonts.gstatic.com/s/e/notoemoji/latest/1f44b/512.webp" type="image/webp"/>
   <img src="https://fonts.gstatic.com/s/e/notoemoji/latest/1f44b/512.gif" alt="👋" width="27" height="27"/>
@@ -191,7 +191,7 @@ export default function HodDashboard() {
             </div>
           </>
         ) : (
-          <div className="empty-state">No pending Home requests for HOD review.</div>
+          <div className="empty-state">No pending Outpass requests for HOD review.</div>
         )}
       </section>
       <RoleOutpassHistory

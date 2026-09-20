@@ -323,7 +323,7 @@ export default function SisterDashboard() {
               </div>
             ) : (
               <div className="wd-empty">
-                No pending HOD-approved Home requests for Sister review.
+                No pending Outpass requests for your review.
               </div>
             )}
           </section>
