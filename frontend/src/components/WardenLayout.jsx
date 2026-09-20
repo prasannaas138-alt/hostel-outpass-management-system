@@ -1,4 +1,4 @@
-﻿import { useState } from 'react';
+import { useState } from 'react';
 import { useNavigate } from 'react-router-dom';
 import { useAuth } from '../context/AuthContext';
 import NotificationBell from './NotificationBell';
@@ -22,7 +22,7 @@ export const WARDEN_NAV = [
   { id: 'profile', label: 'Profile', icon: IconUser },
 ];
 
-export default function WardenLayout({ view = 'dashboard', onNavigate, children }) {
+export default function WardenLayout({ view = 'dashboard', onNavigate, navItems = WARDEN_NAV, children }) {
   const { user, logout } = useAuth();
   const navigate = useNavigate();
   const [drawerOpen, setDrawerOpen] = useState(false);
@@ -78,8 +78,8 @@ export default function WardenLayout({ view = 'dashboard', onNavigate, children 
           </div>
         </div>
 
-        <nav className="wd-nav" aria-label="Warden sections">
-          {WARDEN_NAV.map(({ id, label, icon: Icon }) => (
+        <nav className="wd-nav" aria-label="Portal sections">
+          {navItems.map(({ id, label, icon: Icon }) => (
             <button
               key={id}
               type="button"
@@ -137,8 +137,8 @@ alt="St. Joseph University"
           {children}
         </main>
 
-        <nav className="wd-bottomnav" aria-label="Warden mobile navigation">
-          {WARDEN_NAV.map(({ id, label, icon: Icon }) => (
+        <nav className="wd-bottomnav" aria-label="Mobile navigation">
+          {navItems.map(({ id, label, icon: Icon }) => (
             <button
               key={id}
               type="button"

@@ -148,7 +148,8 @@ export default function RequestDetailModal({ request, role, busy, onApprove, onR
             <h5>Additional Details</h5>
             <div className="staff-extra__grid">
               <div className="staff-field"><span>Phone</span><strong>{request.phone || '--'}</strong></div>
-              <div className="staff-field"><span>Parent/Guardian</span><strong>{request.parentPhone || '--'}</strong></div>
+              <div className="staff-field"><span>Parent/Guardian Name</span><strong>{request.parentGuardianName || '--'}</strong></div>
+              <div className="staff-field"><span>Parent/Guardian Number</span><strong>{request.parentPhone || '--'}</strong></div>
               <div className="staff-field"><span>Hostel</span><strong>{request.hostelName || '--'}</strong></div>
               <div className="staff-field"><span>Room</span><strong>{request.roomNumber || '--'}</strong></div>
               <div className="staff-field"><span>Request/Out Date</span><strong>{formatShortDate(request.date)}</strong></div>

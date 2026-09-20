@@ -1,7 +1,7 @@
 import { useEffect, useState } from 'react';
 import api from '../services/api';
 import { useAuth } from '../context/AuthContext';
-import WardenLayout from '../components/WardenLayout';
+import WardenLayout, { WARDEN_NAV } from '../components/WardenLayout';
 import AlertBanner from '../components/AlertBanner';
 import LoadingState from '../components/LoadingState';
 import ErrorState from '../components/ErrorState';
@@ -10,6 +10,8 @@ import StaffRequestTable from '../components/StaffRequestTable';
 import RequestDetailModal from '../components/RequestDetailModal';
 import WardenProfile from '../components/WardenProfile';
 import RoleOutpassHistory from '../components/RoleOutpassHistory';
+import ProfileChangeRequests from '../components/ProfileChangeRequests';
+import HodStudentsProfile from '../components/HodStudentsProfile';
 import { IconUsers, IconClock, IconCheck, IconAlert } from '../components/WardenIcons';
 import { formatTime12Hour as formatTime } from '../utils/timeFormat';
 import '../styles/dashboard.css';
@@ -17,6 +19,15 @@ import '../styles/student.css';
 import '../styles/warden.css';
 import '../styles/sister-dashboard.css';
 import '../styles/staff-requests.css';
+import '../styles/hod-students.css';
+
+// HOD navigation = the shared staff nav + the HOD-only Students Profile item.
+const HOD_NAV = [
+  WARDEN_NAV[0], // Dashboard
+  WARDEN_NAV[1], // Outpass History
+  { id: 'students', label: 'Students Profile', icon: IconUsers },
+  WARDEN_NAV[2], // Profile
+];
 
 export default function HodDashboard() {
   const { user } = useAuth();
@@ -31,6 +42,10 @@ export default function HodDashboard() {
   const [activeRejectId, setActiveRejectId] = useState('');
   const [reasonById, setReasonById] = useState({});
   const [detailId, setDetailId] = useState(null);
+  const [changeRequests, setChangeRequests] = useState([]);
+  const [busyChangeId, setBusyChangeId] = useState('');
+  const [changeMessage, setChangeMessage] = useState('');
+  const [changeError, setChangeError] = useState('');
 
   const detailItem = items.find((item) => item._id === detailId) || null;
 
@@ -56,9 +71,34 @@ export default function HodDashboard() {
     catch { setHistory([]); }
   };
 
+  const loadChangeRequests = async () => {
+    try {
+      const { data } = await api.get('/auth/change-requests');
+      setChangeRequests(Array.isArray(data) ? data : []);
+    } catch {
+      setChangeRequests([]);
+    }
+  };
+
+  const reviewChangeRequest = async (id, action) => {
+    setBusyChangeId(id);
+    setChangeMessage('');
+    setChangeError('');
+    try {
+      const { data } = await api.patch(`/auth/change-requests/${id}`, { action });
+      setChangeMessage(data.message || (action === 'approve' ? 'Changes approved and applied.' : 'Changes rejected. Original values kept.'));
+      await loadChangeRequests();
+    } catch (err) {
+      setChangeError(err.response?.data?.message || 'Failed to review the change request.');
+    } finally {
+      setBusyChangeId('');
+    }
+  };
+
   useEffect(() => {
     loadItems();
     loadHistory();
+    loadChangeRequests();
   }, []);
 
   const review = async (id, action, reasonOverride) => {
@@ -84,8 +124,10 @@ export default function HodDashboard() {
   };
 
   return (
-    <WardenLayout view={view} onNavigate={setView}>
-      {view === 'profile' ? <section className="wd-panel"><WardenProfile /></section> : <>
+    <WardenLayout view={view} onNavigate={setView} navItems={HOD_NAV}>
+      {view === 'profile' ? <section className="wd-panel"><WardenProfile /></section>
+        : view === 'students' ? <HodStudentsProfile />
+        : <>
       <section className="warden-hero" aria-label="Welcome">
         <p className="eyebrow">HOD Portal</p>
         <h2>Hello, {firstName}! <picture>
@@ -97,6 +139,15 @@ export default function HodDashboard() {
   <img src="https://fonts.gstatic.com/s/e/notoemoji/latest/1f525/512.gif" alt="🔥" width="27" height="27"/>
 </picture></p>
       </section>
+
+      <AlertBanner type="success" message={changeMessage} />
+      <AlertBanner type="error" message={changeError} />
+
+      <ProfileChangeRequests
+        requests={changeRequests}
+        busyId={busyChangeId}
+        onReview={reviewChangeRequest}
+      />
 
       <div className="wd-cards">
         {[

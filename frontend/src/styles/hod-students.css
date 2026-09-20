@@ -1,0 +1,398 @@
+/* ==========================================================================
+   HOD Students Profile + Profile Change Requests (HOD portal only)
+   Reuses the warden-dashboard tokens (wd-*) and student-profile-modal shell.
+   ========================================================================== */
+
+/* ---- Profile Change Requests (compact one-line rows) ---- */
+.pcr-card {
+  display: flex;
+  flex-direction: column;
+  gap: 0.9rem;
+}
+
+.pcr-head {
+  display: flex;
+  align-items: flex-start;
+  justify-content: space-between;
+  gap: 1rem;
+  flex-wrap: wrap;
+}
+
+.pcr-head-main {
+  display: flex;
+  align-items: flex-start;
+  gap: 0.75rem;
+  min-width: 0;
+}
+
+.pcr-bell {
+  display: inline-flex;
+  align-items: center;
+  justify-content: center;
+  width: 38px;
+  height: 38px;
+  border-radius: 10px;
+  background: #eef4ff;
+  color: #1d4ed8;
+  flex-shrink: 0;
+}
+
+.pcr-title {
+  margin: 0;
+  font-size: 1.05rem;
+  font-weight: 700;
+  color: #0f172a;
+}
+
+.pcr-sub {
+  margin: 0.15rem 0 0;
+  font-size: 0.8rem;
+  color: #64748b;
+}
+
+.pcr-count {
+  display: inline-flex;
+  align-items: center;
+  padding: 0.3rem 0.75rem;
+  border-radius: 999px;
+  background: #fee2e2;
+  color: #b91c1c;
+  font-size: 0.78rem;
+  font-weight: 600;
+  white-space: nowrap;
+}
+
+.pcr-empty {
+  padding: 1rem;
+  border-radius: 10px;
+  background: #f8fafc;
+  border: 1px dashed #e2e8f0;
+  color: #64748b;
+  font-size: 0.85rem;
+  text-align: center;
+}
+
+.pcr-list {
+  list-style: none;
+  margin: 0;
+  padding: 0;
+  display: flex;
+  flex-direction: column;
+  gap: 0.6rem;
+}
+
+.pcr-row {
+  display: flex;
+  align-items: center;
+  gap: 0.85rem;
+  padding: 0.7rem 0.9rem;
+  border: 1px solid #e2e8f0;
+  border-radius: 12px;
+  background: #f8fafc;
+  min-width: 0;
+}
+
+.pcr-avatar {
+  display: inline-flex;
+  align-items: center;
+  justify-content: center;
+  width: 38px;
+  height: 38px;
+  border-radius: 50%;
+  background: #4f46e5;
+  color: #fff;
+  font-weight: 700;
+  font-size: 0.85rem;
+  flex-shrink: 0;
+}
+
+.pcr-avatar--sm {
+  width: 30px;
+  height: 30px;
+  font-size: 0.75rem;
+}
+
+.pcr-row:nth-child(2n) .pcr-avatar {
+  background: #0ea5e9;
+}
+
+.pcr-name {
+  font-size: 0.9rem;
+  color: #0f172a;
+  white-space: nowrap;
+}
+
+.pcr-desc {
+  flex: 1;
+  min-width: 0;
+  font-size: 0.82rem;
+  color: #334155;
+  overflow-wrap: anywhere;
+}
+
+.pcr-actions {
+  display: flex;
+  gap: 0.5rem;
+  flex-shrink: 0;
+}
+
+.pcr-btn {
+  display: inline-flex;
+  align-items: center;
+  justify-content: center;
+  gap: 0.4rem;
+  padding: 0.45rem 0.95rem;
+  border: none;
+  border-radius: 8px;
+  font-size: 0.82rem;
+  font-weight: 600;
+  cursor: pointer;
+  transition: filter 0.15s ease;
+}
+
+.pcr-btn:disabled {
+  opacity: 0.6;
+  cursor: not-allowed;
+}
+
+.pcr-btn--approve {
+  background: #22c55e;
+  color: #fff;
+}
+
+.pcr-btn--approve:hover:not(:disabled) {
+  filter: brightness(0.94);
+}
+
+.pcr-btn--reject {
+  background: #ef4444;
+  color: #fff;
+}
+
+.pcr-btn--reject:hover:not(:disabled) {
+  filter: brightness(0.94);
+}
+
+.pcr-btn--cancel {
+  background: #f1f5f9;
+  color: #334155;
+  border: 1px solid #e2e8f0;
+}
+
+.pcr-time {
+  font-size: 0.75rem;
+  color: #94a3b8;
+  white-space: nowrap;
+  flex-shrink: 0;
+}
+
+/* ---- Students Profile table ---- */
+.hod-students {
+  display: flex;
+  flex-direction: column;
+  gap: 0.9rem;
+}
+
+.hod-students-table td,
+.hod-students-table th {
+  white-space: nowrap;
+}
+
+.hod-student-name {
+  display: inline-flex;
+  align-items: center;
+  gap: 0.6rem;
+  min-width: 0;
+}
+
+.hod-student-name strong {
+  font-size: 0.88rem;
+  color: #0f172a;
+}
+
+.hod-students-foot {
+  display: flex;
+  align-items: center;
+  justify-content: space-between;
+  gap: 1rem;
+  flex-wrap: wrap;
+}
+
+.hod-students-count {
+  font-size: 0.8rem;
+  color: #64748b;
+}
+
+.hod-students-pager {
+  display: flex;
+  gap: 0.35rem;
+  flex-wrap: wrap;
+}
+
+.hod-students-page-btn {
+  min-width: 32px;
+  height: 32px;
+  padding: 0 0.5rem;
+  border: 1px solid #e2e8f0;
+  border-radius: 8px;
+  background: #fff;
+  color: #334155;
+  font-size: 0.82rem;
+  font-weight: 600;
+  cursor: pointer;
+}
+
+.hod-students-page-btn:disabled {
+  opacity: 0.45;
+  cursor: not-allowed;
+}
+
+.hod-students-page-btn--active {
+  background: #1d4ed8;
+  border-color: #1d4ed8;
+  color: #fff;
+}
+
+.hod-students-error {
+  display: flex;
+  flex-direction: column;
+  align-items: center;
+  gap: 0.7rem;
+}
+
+/* ---- Student profile card (HOD direct edit) ---- */
+.hod-student-head-actions {
+  display: flex;
+  align-items: center;
+  gap: 0.6rem;
+  margin-left: auto;
+  flex-shrink: 0;
+}
+
+.hod-student-edit-btn {
+  display: inline-flex;
+  align-items: center;
+  gap: 0.45rem;
+  padding: 0.5rem 1rem;
+  border: 1px solid rgba(255, 255, 255, 0.4);
+  border-radius: 10px;
+  background: rgba(255, 255, 255, 0.12);
+  color: #fff;
+  font-size: 0.82rem;
+  font-weight: 600;
+  cursor: pointer;
+}
+
+.hod-student-edit-btn:hover {
+  background: rgba(255, 255, 255, 0.22);
+}
+
+.hod-student-hostel {
+  font-size: 0.78rem;
+  color: rgba(255, 255, 255, 0.75);
+  margin-top: 0.15rem;
+}
+
+.hod-student-sections {
+  display: grid;
+  grid-template-columns: repeat(3, minmax(0, 1fr));
+  gap: 0.85rem;
+}
+
+.hod-student-alert {
+  margin: 0 0 0.75rem;
+  padding: 0.55rem 0.8rem;
+  border-radius: 8px;
+  font-size: 0.82rem;
+}
+
+.hod-student-alert--error {
+  background: #fee2e2;
+  color: #b91c1c;
+}
+
+.hod-student-alert--success {
+  background: #dcfce7;
+  color: #15803d;
+}
+
+.hod-student-edit-title {
+  margin: 0 0 0.75rem;
+  font-size: 1rem;
+  color: #0f172a;
+}
+
+.hod-student-edit-grid {
+  display: grid;
+  grid-template-columns: repeat(2, minmax(0, 1fr));
+  gap: 0.75rem;
+}
+
+.hod-student-edit-grid label {
+  display: flex;
+  flex-direction: column;
+  gap: 0.3rem;
+  font-size: 0.78rem;
+  font-weight: 600;
+  color: #475569;
+}
+
+.hod-student-edit-grid input,
+.hod-student-edit-grid select {
+  padding: 0.55rem 0.7rem;
+  border: 1px solid #cbd5e1;
+  border-radius: 8px;
+  font-size: 0.85rem;
+  color: #0f172a;
+  background: #fff;
+}
+
+.hod-student-edit-grid input:focus,
+.hod-student-edit-grid select:focus {
+  outline: 2px solid #1d4ed8;
+  outline-offset: 1px;
+  border-color: #1d4ed8;
+}
+
+.hod-student-edit-actions,
+.hod-student-foot {
+  display: flex;
+  gap: 0.6rem;
+  margin-top: 1rem;
+  flex-wrap: wrap;
+}
+
+/* ---- Responsive ---- */
+@media (max-width: 1100px) {
+  .hod-student-sections {
+    grid-template-columns: repeat(2, minmax(0, 1fr));
+  }
+}
+
+@media (max-width: 900px) {
+  .pcr-row {
+    flex-wrap: wrap;
+  }
+
+  .pcr-desc {
+    flex-basis: 100%;
+    order: 3;
+  }
+
+  .pcr-time {
+    margin-left: auto;
+    order: 4;
+  }
+
+  .hod-student-sections {
+    grid-template-columns: 1fr;
+  }
+
+  .hod-student-edit-grid {
+    grid-template-columns: 1fr;
+  }
+
+  .hod-students-table {
+    min-width: 640px;
+  }
+}

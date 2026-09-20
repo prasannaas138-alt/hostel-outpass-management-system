@@ -23,6 +23,8 @@ export default function RegisterPage() {
     roomNumber: '',
     phone: '',
     parentPhone: '',
+    parentGuardianName: '',
+    batch: '',
     hostelName: 'St. Joseph University Boys Hostel',
     password: '',
     confirmPassword: '',
@@ -62,11 +64,18 @@ export default function RegisterPage() {
     }
 
     try {
-      if (!form.phone.trim() || !form.parentPhone.trim() || !form.hostelName.trim()) {
-        setError('Phone, parent/guardian number and hostel name are required.');
+      if (!form.phone.trim() || !form.parentPhone.trim() || !form.parentGuardianName.trim() || !form.hostelName.trim() || !form.batch.trim()) {
+        setError('Phone, parent/guardian name, parent/guardian number, hostel name and batch are required.');
         setLoading(false);
         return;
       }
+
+      if (!/^[0-9]{4}-[0-9]{4}$/.test(form.batch.trim())) {
+        setError('Batch must be in YYYY-YYYY format (e.g. 2025-2029).');
+        setLoading(false);
+        return;
+      }
+
       const payload = {
         name: form.name,
         email: normalizedEmail,
@@ -75,6 +84,8 @@ export default function RegisterPage() {
         roomNumber: form.roomNumber,
         phone: form.phone.trim(),
         parentPhone: form.parentPhone.trim(),
+        parentGuardianName: form.parentGuardianName.trim(),
+        batch: form.batch.trim(),
         hostelName: form.hostelName,
         password: form.password,
         confirmPassword: form.confirmPassword,
@@ -199,6 +210,16 @@ export default function RegisterPage() {
                 <label>
                   Parent/Guardian Number
                   <input name="parentPhone" value={form.parentPhone} onChange={handleChange} placeholder="Parent or guardian mobile number" required />
+                </label>
+              </div>
+              <div className="auth-form-grid">
+                <label>
+                  Parent/Guardian Name
+                  <input name="parentGuardianName" value={form.parentGuardianName} onChange={handleChange} placeholder="Parent or guardian full name" required />
+                </label>
+                <label>
+                  Batch
+                  <input name="batch" value={form.batch} onChange={handleChange} placeholder="YYYY-YYYY (e.g. 2025-2029)" pattern="[0-9]{4}-[0-9]{4}" required />
                 </label>
               </div>
               <label>

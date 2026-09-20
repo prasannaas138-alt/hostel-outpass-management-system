@@ -1,12 +1,16 @@
 import jwt from 'jsonwebtoken';
 import bcrypt from 'bcryptjs';
 import User from '../models/User.js';
+import ProfileChangeRequest from '../models/ProfileChangeRequest.js';
 
 const createToken = (userId, role) => {
   return jwt.sign({ id: userId, role }, process.env.JWT_SECRET, {
     expiresIn: process.env.JWT_EXPIRES_IN || '7d',
   });
 };
+
+const batchPattern = /^[0-9]{4}-[0-9]{4}$/;
+const phonePattern = /^[0-9+\-\s()]{6,15}$/;
 
 const sanitizeUser = (user) => ({
   _id: user._id,
@@ -16,11 +20,13 @@ const sanitizeUser = (user) => ({
   role: user.role,
   department: user.department,
   year: user.year,
+  batch: user.batch || '',
   hostelBlock: user.hostelBlock,
   hostelName: user.hostelName || user.hostelBlock || '',
   roomNumber: user.roomNumber,
   phone: user.phone,
   parentPhone: user.parentPhone || '',
+  parentGuardianName: user.parentGuardianName || '',
 });
 
 const emailPattern = /^[^\s@]+@[^\s@]+\.[^\s@]+$/;
@@ -35,12 +41,14 @@ export const registerUser = async (req, res, next) => {
       roomNumber,
       phone,
       parentPhone,
+      parentGuardianName,
       hostelName,
+      batch,
       password,
       confirmPassword,
     } = req.body;
 
-    if (!name || !email || !registerNumber || !department || !roomNumber || !phone || !parentPhone || !hostelName || !password || !confirmPassword) {
+    if (!name || !email || !registerNumber || !department || !roomNumber || !phone || !parentPhone || !parentGuardianName || !hostelName || !batch || !password || !confirmPassword) {
       return res.status(400).json({ message: 'All fields are required.' });
     }
 
@@ -79,6 +87,11 @@ export const registerUser = async (req, res, next) => {
       return res.status(400).json({ message: 'Enter valid phone numbers (6-15 digits).' });
     }
 
+    const trimmedBatch = String(batch).trim();
+    if (!batchPattern.test(trimmedBatch)) {
+      return res.status(400).json({ message: 'Batch must be in YYYY-YYYY format (e.g. 2025-2029).' });
+    }
+
     const user = await User.create({
       name,
       email: normalizedEmail,
@@ -87,8 +100,10 @@ export const registerUser = async (req, res, next) => {
       roomNumber,
       phone: String(phone).trim(),
       parentPhone: String(parentPhone).trim(),
+      parentGuardianName: String(parentGuardianName).trim(),
       hostelName: String(hostelName).trim(),
       hostelBlock: String(hostelName).trim(),
+      batch: trimmedBatch,
       password,
       role,
       year: '1',
@@ -166,49 +181,107 @@ export const getStudentProfile = async (req, res, next) => {
   }
 };
 
-// Editable fields for a student's own profile. Deliberately excludes
-// email/registerNumber (identity), role (system-controlled) and password
-// (handled by the separate password endpoint below).
+// ---------------------------------------------------------------------------
+// Student self-service profile update.
+//
+// Direct-edit fields: name, year, hostelName, batch (applied immediately).
+// PROTECTED fields — registerNumber, phone, parentPhone, parentGuardianName,
+// department — are NEVER applied here. Any change to them is stored as a
+// pending ProfileChangeRequest that ONLY the HOD can approve/reject, so a
+// student cannot bypass HOD approval by calling this endpoint directly.
+// ---------------------------------------------------------------------------
 export const updateCurrentUser = async (req, res, next) => {
   try {
-    const { name, department, year, hostelBlock, hostelName, phone, parentPhone } = req.body;
+    const {
+      name,
+      department,
+      year,
+      hostelBlock,
+      hostelName,
+      phone,
+      parentPhone,
+      parentGuardianName,
+      registerNumber,
+      batch,
+    } = req.body;
 
     if (!name || !name.trim()) {
       return res.status(400).json({ message: 'Name is required.' });
     }
-    if (!department || !String(department).trim()) {
-      return res.status(400).json({ message: 'Department is required.' });
-    }
 
-    // Editable fields only. System-controlled fields are never taken from the
-    // request body: role (system), registerNumber (identity), email (identity),
-    // and roomNumber are not editable through this profile-update endpoint.
     const user = await User.findById(req.user._id);
 
     if (!user) {
       return res.status(404).json({ message: 'User not found.' });
     }
 
+    // ---- Batch (direct-edit, strict YYYY-YYYY when non-empty) ----
+    let nextBatch = user.batch || '';
+    if (typeof batch === 'string') {
+      const candidate = batch.trim();
+      if (candidate && !batchPattern.test(candidate)) {
+        return res.status(400).json({ message: 'Batch must be in YYYY-YYYY format (e.g. 2025-2029).' });
+      }
+      nextBatch = candidate;
+    }
+
+    // ---- Protected fields: collect actual old -> new changes ----
+    const protectedFields = [
+      { field: 'registerNumber', label: 'Registration Number', requested: registerNumber },
+      { field: 'phone', label: 'Phone Number', requested: phone },
+      { field: 'parentPhone', label: 'Parent/Guardian Number', requested: parentPhone },
+      { field: 'parentGuardianName', label: 'Parent Name', requested: parentGuardianName },
+      { field: 'department', label: 'Department', requested: department },
+    ];
+
+    const changes = [];
+    for (const { field, label, requested } of protectedFields) {
+      if (typeof requested !== 'string') continue;
+      const newValue = requested.trim();
+      const oldValue = String(user[field] || '');
+      if (newValue === oldValue) continue;
+
+      if ((field === 'phone' || field === 'parentPhone') && newValue && !phonePattern.test(newValue)) {
+        return res.status(400).json({ message: `Enter a valid ${label.toLowerCase()} (6-15 digits).` });
+      }
+      if (field === 'registerNumber' && !newValue) {
+        return res.status(400).json({ message: 'Register number cannot be empty.' });
+      }
+      if (field === 'department' && !newValue) {
+        return res.status(400).json({ message: 'Department cannot be empty.' });
+      }
+
+      changes.push({ field, label, oldValue, newValue });
+    }
+
+    // ---- Direct-edit fields (applied immediately) ----
     user.name = String(name).trim();
-    user.department = String(department).trim();
     if (typeof year === 'string') {
       user.year = String(year).trim();
     }
+    user.batch = nextBatch;
     const hostelValue = (typeof hostelName === 'string' && hostelName.trim()) ? hostelName.trim() : ((typeof hostelBlock === 'string' && hostelBlock.trim()) ? hostelBlock.trim() : '');
     if (hostelValue) {
       user.hostelBlock = hostelValue;
       user.hostelName = hostelValue;
     }
-    if (typeof phone === 'string' && phone.trim()) {
-      user.phone = String(phone).trim();
-    }
-    if (typeof parentPhone === 'string' && parentPhone.trim()) {
-      user.parentPhone = String(parentPhone).trim();
+
+    // ---- Protected fields: pending HOD request, official values untouched ----
+    let changeRequest = null;
+    if (changes.length > 0) {
+      changeRequest = await ProfileChangeRequest.create({
+        student: user._id,
+        changes,
+      });
     }
 
     await user.save();
 
-    res.json({ message: 'Profile updated successfully.', user: sanitizeUser(user) });
+    const message = changeRequest
+      ? 'Profile updated. Your protected field change(s) were sent to the HOD for approval.'
+      : 'Profile updated successfully.';
+
+    res.json({ message, user: sanitizeUser(user), changeRequest });
   } catch (error) {
     next(error);
   }
@@ -311,6 +384,169 @@ export const updateMyUsername = async (req, res, next) => {
 
     res.json({ message: 'Profile updated successfully.', user: sanitizeUser(user) });
   } catch (error) {
+    next(error);
+  }
+};
+
+// ---------------------------------------------------------------------------
+// Profile change requests (HOD approval system for protected student fields).
+// ---------------------------------------------------------------------------
+
+export const getMyChangeRequests = async (req, res, next) => {
+  try {
+    const requests = await ProfileChangeRequest.find({ student: req.user._id, status: 'Pending' })
+      .sort({ createdAt: -1 })
+      .lean();
+    res.json(requests);
+  } catch (error) {
+    next(error);
+  }
+};
+
+export const getProfileChangeRequests = async (req, res, next) => {
+  try {
+    const requests = await ProfileChangeRequest.find({ status: 'Pending' })
+      .sort({ createdAt: -1 })
+      .populate('student', 'name registerNumber department year batch')
+      .lean();
+    res.json(requests);
+  } catch (error) {
+    next(error);
+  }
+};
+
+export const reviewProfileChangeRequest = async (req, res, next) => {
+  try {
+    const { action } = req.body;
+
+    if (!['approve', 'reject'].includes(action)) {
+      return res.status(400).json({ message: 'Action must be approve or reject.' });
+    }
+
+    const request = await ProfileChangeRequest.findById(req.params.id);
+
+    if (!request) {
+      return res.status(404).json({ message: 'Change request not found.' });
+    }
+    if (request.status !== 'Pending') {
+      return res.status(400).json({ message: 'This change request was already reviewed.' });
+    }
+
+    if (action === 'approve') {
+      // Apply every approved change with a targeted $set so untouched required
+      // fields (roomNumber, registerNumber of OTHER students, etc.) are never
+      // re-validated or replaced.
+      const $set = {};
+      for (const change of request.changes) {
+        $set[change.field] = change.newValue;
+      }
+      await User.updateOne({ _id: request.student }, { $set });
+    }
+
+    request.status = action === 'approve' ? 'Approved' : 'Rejected';
+    request.reviewedBy = req.user._id;
+    await request.save();
+
+    res.json({
+      message: action === 'approve'
+        ? 'Changes approved and applied to the student profile.'
+        : 'Changes rejected. The original values were kept.',
+    });
+  } catch (error) {
+    next(error);
+  }
+};
+
+// ---------------------------------------------------------------------------
+// HOD Students Profile: list all students + DIRECT profile editing (no
+// approval needed when the HOD edits — changes apply immediately).
+// ---------------------------------------------------------------------------
+
+export const listStudents = async (req, res, next) => {
+  try {
+    const students = await User.find({ role: 'Student' })
+      .sort({ name: 1 })
+      .select('name email registerNumber department year batch hostelName hostelBlock roomNumber phone parentPhone parentGuardianName')
+      .lean();
+    res.json(students);
+  } catch (error) {
+    next(error);
+  }
+};
+
+export const hodUpdateStudentProfile = async (req, res, next) => {
+  try {
+    const student = await User.findById(req.params.id);
+
+    if (!student || student.role !== 'Student') {
+      return res.status(404).json({ message: 'Student not found.' });
+    }
+
+    const allowed = [
+      'name', 'registerNumber', 'department', 'year', 'batch',
+      'hostelName', 'roomNumber', 'phone', 'parentPhone', 'parentGuardianName', 'email',
+    ];
+
+    const updates = {};
+    for (const key of allowed) {
+      if (typeof req.body[key] === 'string') {
+        updates[key] = req.body[key].trim();
+      }
+    }
+
+    if (Object.keys(updates).length === 0) {
+      return res.status(400).json({ message: 'No changes submitted.' });
+    }
+
+    if (updates.batch && !batchPattern.test(updates.batch)) {
+      return res.status(400).json({ message: 'Batch must be in YYYY-YYYY format (e.g. 2025-2029).' });
+    }
+
+    for (const key of ['phone', 'parentPhone']) {
+      if (updates[key] && !phonePattern.test(updates[key])) {
+        return res.status(400).json({ message: 'Enter valid phone numbers (6-15 digits).' });
+      }
+    }
+
+    if (updates.email) {
+      const normalizedEmail = updates.email.toLowerCase();
+      if (!emailPattern.test(normalizedEmail)) {
+        return res.status(400).json({ message: 'Invalid email address.' });
+      }
+      const duplicate = await User.findOne({
+        email: normalizedEmail,
+        _id: { $ne: student._id },
+      });
+      if (duplicate) {
+        return res.status(400).json({ message: 'Email already exists.' });
+      }
+      updates.email = normalizedEmail;
+    }
+
+    if (updates.registerNumber === '') {
+      return res.status(400).json({ message: 'Register number cannot be empty.' });
+    }
+    if (updates.department === '') {
+      return res.status(400).json({ message: 'Department cannot be empty.' });
+    }
+
+    // Direct $set of ONLY the submitted fields — the HOD does not need anyone's
+    // approval, and untouched required fields stay exactly as they are.
+    const $set = { ...updates };
+    if ($set.hostelName) {
+      // Keep the legacy mirror field in sync (existing app convention).
+      $set.hostelBlock = $set.hostelName;
+    }
+
+    await User.updateOne({ _id: student._id }, { $set });
+
+    const updated = await User.findById(student._id);
+
+    res.json({ message: 'Student profile updated.', user: sanitizeUser(updated) });
+  } catch (error) {
+    if (error.code === 11000) {
+      return res.status(400).json({ message: 'Email already exists.' });
+    }
     next(error);
   }
 };

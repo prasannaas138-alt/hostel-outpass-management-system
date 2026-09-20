@@ -18,6 +18,7 @@ const sections = [
       ['Registration Number', 'registerNumber'],
       ['Email Address', 'email'],
       ['Phone Number', 'phone'],
+      ['Parent/Guardian Name', 'parentGuardianName'],
       ['Parent/Guardian Number', 'parentPhone'],
     ],
   },
@@ -26,6 +27,7 @@ const sections = [
     fields: [
       ['Department', 'department'],
       ['Year', 'year'],
+      ['Batch', 'batch'],
       ['Account Role', 'role'],
     ],
   },
@@ -33,7 +35,6 @@ const sections = [
     title: 'Hostel Details',
     fields: [
       ['Hostel Name', 'hostelName'],
-      ['Hostel Block', 'hostelBlock'],
       ['Room Number', 'roomNumber'],
     ],
   },

@@ -6,11 +6,12 @@ import { notifyNewOutpass, markOutpassNotificationsRead } from '../services/noti
 const ACTIVE_STATUSES = ['Pending', 'Approved'];
 
 // Student profile fields every approver (HOD / Sister / Warden) must see on review.
-const STUDENT_POPULATE = 'name registerNumber roomNumber phone parentPhone hostelName department year';
+const STUDENT_POPULATE = 'name registerNumber roomNumber phone parentPhone parentGuardianName hostelName department year batch';
 
 // Flattens the populated student profile onto the outpass so review screens and
 // history tables can read registerNumber / roomNumber / phone / parentPhone /
-// hostelName directly from the student's LIVE database values (never hardcoded).
+// parentGuardianName / batch / hostelName directly from the student's LIVE
+// database values (never hardcoded).
 const enrichOutpass = (outpass) => {
   const student = outpass.studentId || {};
   return {
@@ -21,9 +22,11 @@ const enrichOutpass = (outpass) => {
     roomNumber: student.roomNumber || '',
     phone: student.phone || '',
     parentPhone: student.parentPhone || '',
+    parentGuardianName: student.parentGuardianName || '',
     hostelName: student.hostelName || '',
     department: outpass.department || student.department || '',
     year: outpass.year || student.year || '',
+    batch: student.batch || '',
   };
 };
 

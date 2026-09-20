@@ -54,6 +54,11 @@ const userSchema = new mongoose.Schema(
       trim: true,
       default: '',
     },
+    parentGuardianName: {
+      type: String,
+      trim: true,
+      default: '',
+    },
     hostelName: {
       type: String,
       trim: true,
@@ -84,6 +89,20 @@ const userSchema = new mongoose.Schema(
       type: String,
       trim: true,
       default: '',
+    },
+    batch: {
+      type: String,
+      trim: true,
+      default: '',
+      // Optional for legacy accounts (empty passes), but when a value is
+      // present it MUST be strict YYYY-YYYY (e.g. 2025-2029).
+      validate: {
+        validator: function (value) {
+          const text = String(value || '').trim();
+          return !text || /^[0-9]{4}-[0-9]{4}$/.test(text);
+        },
+        message: 'Batch must be in YYYY-YYYY format (e.g. 2025-2029).',
+      },
     },
   },
   {

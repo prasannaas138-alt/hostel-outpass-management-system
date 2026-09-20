@@ -5,10 +5,13 @@ import { PasswordField } from './AuthPanels';
 
 const EDITABLE_FIELDS = {
   name: 'Full name',
+  registerNumber: 'Register number',
   department: 'Department',
   year: 'Year',
+  batch: 'Batch (YYYY-YYYY)',
   phone: 'Phone number',
   parentPhone: 'Parent/guardian number',
+  parentGuardianName: 'Parent/guardian name',
   hostelName: 'Hostel name',
   roomNumber: 'Room number',
 };
@@ -20,6 +23,7 @@ export default function StudentProfile({ user, onProfileUpdated }) {
   const [editing, setEditing] = useState(false);
   const [editForm, setEditForm] = useState({});
   const [editError, setEditError] = useState('');
+  const [editSuccess, setEditSuccess] = useState('');
   const [saving, setSaving] = useState(false);
 
   // Change Password state
@@ -32,14 +36,18 @@ export default function StudentProfile({ user, onProfileUpdated }) {
   const openEdit = () => {
     setEditForm({
       name: user?.name || '',
+      registerNumber: user?.registerNumber || '',
       department: user?.department || '',
       year: user?.year || '',
+      batch: user?.batch || '',
       phone: user?.phone || '',
       parentPhone: user?.parentPhone || '',
+      parentGuardianName: user?.parentGuardianName || '',
       hostelName: user?.hostelName || user?.hostelBlock || '',
       roomNumber: user?.roomNumber || '',
     });
     setEditError('');
+    setEditSuccess('');
     setEditing(true);
   };
 
@@ -55,11 +63,20 @@ export default function StudentProfile({ user, onProfileUpdated }) {
 
   const validateEdit = () => {
     if (!editForm.name?.trim()) return 'Full name is required.';
+    if (!editForm.registerNumber?.trim()) return 'Register number is required.';
     if (!editForm.department?.trim()) return 'Department is required.';
     if (!editForm.roomNumber?.trim()) return 'Room number is required.';
     const phone = (editForm.phone || '').trim();
     if (phone && !/^[0-9+\-\s()]{6,15}$/.test(phone)) {
       return 'Enter a valid phone number (6-15 digits).';
+    }
+    const parentPhone = (editForm.parentPhone || '').trim();
+    if (parentPhone && !/^[0-9+\-\s()]{6,15}$/.test(parentPhone)) {
+      return 'Enter a valid parent/guardian number (6-15 digits).';
+    }
+    const batch = (editForm.batch || '').trim();
+    if (batch && !/^[0-9]{4}-[0-9]{4}$/.test(batch)) {
+      return 'Batch must be in YYYY-YYYY format (e.g. 2025-2029).';
     }
     return '';
   };
@@ -75,6 +92,7 @@ export default function StudentProfile({ user, onProfileUpdated }) {
       const { data } = await api.put('/auth/me', editForm);
       onProfileUpdated?.(data.user);
       setEditing(false);
+      setEditSuccess(data.message || 'Profile updated successfully.');
     } catch (err) {
       setEditError(err.response?.data?.message || 'Failed to update profile. Please try again.');
     } finally {
@@ -171,8 +189,13 @@ export default function StudentProfile({ user, onProfileUpdated }) {
                     value={editForm[field] || ''}
                     onChange={handleEditChange}
                     inputMode={field === 'phone' ? 'tel' : undefined}
-                    placeholder={field === 'phone' ? '10-digit mobile number' : undefined}
-                    maxLength={field === 'year' ? 10 : field === 'phone' ? 15 : 60}
+                    placeholder={
+                      field === 'batch' ? 'YYYY-YYYY (e.g. 2025-2029)'
+                        : field === 'phone' ? '10-digit mobile number'
+                          : field === 'parentPhone' ? 'Parent or guardian mobile number'
+                            : undefined
+                    }
+                    maxLength={field === 'year' ? 10 : field === 'batch' ? 9 : field === 'phone' ? 15 : 60}
                     disabled={saving}
                   />
                 </label>
@@ -187,17 +210,11 @@ export default function StudentProfile({ user, onProfileUpdated }) {
                   disabled={saving}
                 />
               </label>
-              <label>
-                <span>Register number (read-only)</span>
-                <input
-                  type="text"
-                  value={user?.registerNumber || ''}
-                  readOnly
-                  aria-readonly="true"
-                  disabled={saving}
-                />
-              </label>
             </div>
+            <p className="hint">
+              Changes to register number, phone, parent/guardian details and department are sent to the
+              HOD for approval before they are applied. Other changes save immediately.
+            </p>
             <div className="button-row">
               <button className="primary-button" type="submit" disabled={saving}>
                 {saving ? 'Saving...' : 'Save changes'}
@@ -210,6 +227,10 @@ export default function StudentProfile({ user, onProfileUpdated }) {
         </section>
       ) : null}
 
+      {editSuccess && !editing ? (
+        <AlertBanner type="success" message={editSuccess} />
+      ) : null}
+
       {!editing ? (
         <div className="profile-sections">
           <section className="profile-card" aria-label="Academic details">
@@ -218,6 +239,7 @@ export default function StudentProfile({ user, onProfileUpdated }) {
               <div><dt>Register number</dt><dd>{user?.registerNumber || '—'}</dd></div>
               <div><dt>Department</dt><dd>{user?.department || '—'}</dd></div>
               <div><dt>Year</dt><dd>{user?.year || '—'}</dd></div>
+              <div><dt>Batch</dt><dd>{user?.batch || '—'}</dd></div>
             </dl>
           </section>
 
@@ -225,6 +247,7 @@ export default function StudentProfile({ user, onProfileUpdated }) {
             <h4>Hostel details</h4>
             <dl>
               <div><dt>Phone number</dt><dd>{user?.phone || '—'}</dd></div>
+              <div><dt>Parent/guardian name</dt><dd>{user?.parentGuardianName || '—'}</dd></div>
               <div><dt>Parent/guardian number</dt><dd>{user?.parentPhone || '—'}</dd></div>
               <div><dt>Hostel name</dt><dd>{user?.hostelName || user?.hostelBlock || '—'}</dd></div>
               <div><dt>Room number</dt><dd>{user?.roomNumber || '—'}</dd></div>
