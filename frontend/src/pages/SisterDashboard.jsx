@@ -2,7 +2,8 @@ import { useEffect, useMemo, useState } from "react";
 import api from "../services/api";
 import { useAuth } from "../context/AuthContext";
 import WardenProfile from "../components/WardenProfile";
-import RequestReviewCard from "../components/RequestReviewCard";
+import StaffRequestTable from "../components/StaffRequestTable";
+import RequestDetailModal from "../components/RequestDetailModal";
 import RoleOutpassHistory from "../components/RoleOutpassHistory";
 import AlertBanner from "../components/AlertBanner";
 import LoadingState from "../components/LoadingState";
@@ -22,6 +23,7 @@ import {
 } from "../components/WardenIcons";
 import "../styles/warden-dashboard.css";
 import "../styles/sister-dashboard.css";
+import "../styles/staff-requests.css";
 
 export default function SisterDashboard() {
   const { user, logout } = useAuth();
@@ -40,8 +42,11 @@ export default function SisterDashboard() {
   const [loadingId, setLoadingId] = useState("");
   const [activeRejectId, setActiveRejectId] = useState("");
   const [reasonById, setReasonById] = useState({});
+  const [detailId, setDetailId] = useState("");
   const [profileOpen, setProfileOpen] = useState(false);
   const [drawerOpen, setDrawerOpen] = useState(false);
+
+  const detailItem = items.find((item) => item._id === detailId) || null;
 
   const firstName = useMemo(
     () => (user?.name || "Sister").split(" ")[0],
@@ -100,14 +105,14 @@ export default function SisterDashboard() {
     loadStats();
   }, []);
 
-  const review = async (id, action) => {
+  const review = async (id, action, reasonOverride) => {
     setError("");
     setSuccess("");
     setLoadingId(id);
     try {
       await api.patch(`/outpasses/${id}/sister`, {
         action,
-        rejectionReason: reasonById[id] || "",
+        rejectionReason: reasonById[id] || reasonOverride || "",
       });
       setReasonById((current) => ({ ...current, [id]: "" }));
       setActiveRejectId("");
@@ -305,28 +310,27 @@ export default function SisterDashboard() {
                 retryLabel="Reload queue"
               />
             ) : items.length ? (
-              <div className="ss-request-grid">
-                {items.map((item) => (
-                  <RequestReviewCard
-                    key={item._id}
-                    item={item}
-                    variant="slip"
-                    activeRejectId={activeRejectId}
-                    setActiveRejectId={setActiveRejectId}
-                    reasonById={reasonById}
-                    setReasonById={setReasonById}
-                    loadingId={loadingId}
-                    onApprove={(id) => review(id, "approve")}
-                    onReject={(id) => review(id, "reject")}
-                  />
-                ))}
-              </div>
+              <StaffRequestTable
+                items={items}
+                onView={(item) => setDetailId(item._id)}
+                emptyMessage="No pending outpass requests for your review."
+              />
             ) : (
               <div className="wd-empty">
                 No pending Outpass requests for your review.
               </div>
             )}
           </section>
+          {detailItem ? (
+            <RequestDetailModal
+              request={detailItem}
+              role="sister"
+              busy={loadingId === detailItem._id}
+              onApprove={(id) => review(id, "approve")}
+              onReject={(id, reason) => review(id, "reject", reason)}
+              onClose={() => setDetailId("")}
+            />
+          ) : null}
           <RoleOutpassHistory
             id="sister-history"
             items={history}

@@ -16,10 +16,12 @@ import {
 } from '../components/WardenIcons';
 import LoadingState from '../components/LoadingState';
 import ErrorState from '../components/ErrorState';
-import RequestReviewCard from '../components/RequestReviewCard';
+import StaffRequestTable from '../components/StaffRequestTable';
+import RequestDetailModal from '../components/RequestDetailModal';
 import { getDisplayStatus } from '../utils/outpassStatus';
 import { formatTime12Hour as formatTime } from '../utils/timeFormat';
 import '../styles/warden-dashboard.css';
+import '../styles/staff-requests.css';
 
 // Redesigned Warden Dashboard â€” reference divisions 1-4:
 // (1) desktop dashboard, (2) mobile dashboard, (3) Warden profile,
@@ -46,6 +48,9 @@ export default function WardenDashboard() {
   const [loadingId, setLoadingId] = useState('');
   const [activeRejectId, setActiveRejectId] = useState('');
   const [reasonById, setReasonById] = useState({});
+  const [detailId, setDetailId] = useState(null);
+
+  const detailItem = pendingItems.find((item) => item._id === detailId) || null;
 
   const loadHistory = useCallback(async () => {
     setLoading(true);
@@ -90,7 +95,7 @@ export default function WardenDashboard() {
 
   // Existing approval workflow — same endpoint/payload as the old dashboard
   // (PATCH /outpasses/:id/warden). Only the presentation changed.
-  const review = async (id, action) => {
+  const review = async (id, action, reasonOverride) => {
     if (reviewBusy) return;
     setReviewError('');
     setReviewBusy(true);
@@ -98,7 +103,8 @@ export default function WardenDashboard() {
     try {
       await api.patch(`/outpasses/${id}/warden`, {
         action,
-        rejectionReason: action === 'reject' ? reasonById[id] : undefined,
+        rejectionReason:
+          action === 'reject' ? (reasonOverride || reasonById[id] || '') : undefined,
       });
       setLoadingId('');
       setActiveRejectId('');
@@ -151,6 +157,7 @@ export default function WardenDashboard() {
       view={view}
       onNavigate={(id) => {
         setSelected(null);
+        setDetailId(null);
         setView(id);
       }}
     >
@@ -295,28 +302,26 @@ export default function WardenDashboard() {
                 retryLabel="Reload queue"
               />
             ) : pendingItems.length ? (
-              <div className="wd-approvals-cards">
-                {pendingItems.map((item) => (
-                  <RequestReviewCard
-                    key={item._id}
-                    item={item}
-                    variant="slip"
-                    approveLabel="Approve"
-                    rejectLabel="Reject"
-                    activeRejectId={activeRejectId}
-                    setActiveRejectId={setActiveRejectId}
-                    reasonById={reasonById}
-                    setReasonById={setReasonById}
-                    loadingId={loadingId}
-                    onApprove={(id) => review(id, 'approve')}
-                    onReject={(id) => review(id, 'reject')}
-                  />
-                ))}
-              </div>
+              <StaffRequestTable
+                items={pendingItems}
+                onView={(item) => setDetailId(item._id)}
+                emptyMessage="No pending requests for Warden review."
+              />
             ) : (
               <div className="wd-empty">No pending requests for Warden review.</div>
             )}
           </section>
+
+          {detailItem ? (
+            <RequestDetailModal
+              request={detailItem}
+              role="warden"
+              busy={loadingId === detailItem._id}
+              onApprove={(id) => review(id, 'approve')}
+              onReject={(id, reason) => review(id, 'reject', reason)}
+              onClose={() => setDetailId(null)}
+            />
+          ) : null}
 
           <WardenOutpassHistory
             items={items}

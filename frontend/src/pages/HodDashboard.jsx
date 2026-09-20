@@ -6,6 +6,8 @@ import AlertBanner from '../components/AlertBanner';
 import LoadingState from '../components/LoadingState';
 import ErrorState from '../components/ErrorState';
 import RequestReviewCard from '../components/RequestReviewCard';
+import StaffRequestTable from '../components/StaffRequestTable';
+import RequestDetailModal from '../components/RequestDetailModal';
 import WardenProfile from '../components/WardenProfile';
 import RoleOutpassHistory from '../components/RoleOutpassHistory';
 import { IconUsers, IconClock, IconCheck, IconAlert } from '../components/WardenIcons';
@@ -14,6 +16,7 @@ import '../styles/dashboard.css';
 import '../styles/student.css';
 import '../styles/warden.css';
 import '../styles/sister-dashboard.css';
+import '../styles/staff-requests.css';
 
 export default function HodDashboard() {
   const { user } = useAuth();
@@ -27,6 +30,9 @@ export default function HodDashboard() {
   const [loadingId, setLoadingId] = useState('');
   const [activeRejectId, setActiveRejectId] = useState('');
   const [reasonById, setReasonById] = useState({});
+  const [detailId, setDetailId] = useState(null);
+
+  const detailItem = items.find((item) => item._id === detailId) || null;
 
   const firstName = (user?.name || 'HOD').split(' ')[0];
 
@@ -55,7 +61,7 @@ export default function HodDashboard() {
     loadHistory();
   }, []);
 
-  const review = async (id, action) => {
+  const review = async (id, action, reasonOverride) => {
     setError('');
     setSuccess('');
     setLoadingId(id);
@@ -63,7 +69,7 @@ export default function HodDashboard() {
     try {
       await api.patch(`/outpasses/${id}/hod`, {
       action,
-      rejectionReason: reasonById[id] || '',
+      rejectionReason: reasonById[id] || reasonOverride || '',
     });
       setReasonById((current) => ({ ...current, [id]: '' }));
       setActiveRejectId('');
@@ -128,71 +134,25 @@ export default function HodDashboard() {
             retryLabel="Reload queue"
           />
         ) : items.length ? (
-          <>
-            <div className="warden-approvals-cards">
-              {items.map((item) => (
-                <RequestReviewCard
-                  key={item._id}
-                  item={item}
-                  approveLabel="Approve"
-                  rejectLabel="Reject"
-                  activeRejectId={activeRejectId}
-                  setActiveRejectId={setActiveRejectId}
-                  reasonById={reasonById}
-                  setReasonById={setReasonById}
-                  loadingId={loadingId}
-                  onApprove={(id) => review(id, 'approve')}
-                  onReject={(id) => review(id, 'reject')}
-                />
-              ))}
-            </div>
-
-            <div className="table-wrap warden-table-wrap">
-              <table className="warden-table">
-                <thead>
-                  <tr>
-                    <th scope="col">Student</th>
-                    <th scope="col">Request</th>
-                    <th scope="col">Date</th>
-                    <th scope="col">Time</th>
-                    <th scope="col">Reason</th>
-                    <th scope="col">Status</th>
-                    <th scope="col">Action</th>
-                  </tr>
-                </thead>
-                <tbody>
-                  {items.map((item) => (
-                    <tr key={item._id}>
-                      <td>
-                        <strong>{item.studentName}</strong>
-                        <small>{item.department} · Year {item.year}</small>
-                      </td>
-                      <td>{item.requestType}</td>
-                      <td>{new Date(item.date).toLocaleDateString()}</td>
-                      <td>{formatTime(item.outTime)}–{formatTime(item.returnTime)}</td>
-                      <td className="warden-reason-cell">{item.reason}</td>
-                      <td>
-                        <span className={`status-badge status-${String(item.status).toLowerCase()}`}>{item.status}</span>
-                      </td>
-                      <td>
-                        <button
-                          className="secondary-button warden-review-btn"
-                          type="button"
-                          disabled={loadingId === item._id}
-                          onClick={() => review(item._id, 'approve')}
-                        >
-                          {loadingId === item._id ? 'Processing...' : 'Review'}
-                        </button>
-                      </td>
-                    </tr>
-                  ))}
-                </tbody>
-              </table>
-            </div>
-          </>
+          <StaffRequestTable
+            items={items}
+            onView={(item) => setDetailId(item._id)}
+            emptyMessage="No pending outpass requests for HOD review."
+          />
         ) : (
           <div className="empty-state">No pending Outpass requests for HOD review.</div>
         )}
+
+        {detailItem ? (
+          <RequestDetailModal
+            request={detailItem}
+            role="hod"
+            busy={loadingId === detailItem._id}
+            onApprove={(id) => review(id, 'approve')}
+            onReject={(id, reason) => review(id, 'reject', reason)}
+            onClose={() => setDetailId(null)}
+          />
+        ) : null}
       </section>
       <RoleOutpassHistory
         id="hod-history"

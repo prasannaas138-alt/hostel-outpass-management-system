@@ -9,7 +9,6 @@ export default function ApplyOutpassForm({
   saving,
   error,
   success,
-  isOutgoingWeekendValid,
   selectedRequest,
   onCancelEdit,
 }) {
@@ -102,16 +101,13 @@ export default function ApplyOutpassForm({
             />
           </label>
         </div>
-        {form.requestType === 'Outing' && form.date && !isOutgoingWeekendValid ? (
-          <div className="inline-note inline-note--warning">Outing requests are allowed only on weekends.</div>
-        ) : null}
       </fieldset>
 
       <AlertBanner type="error" message={error} />
       <AlertBanner type="success" message={success} />
 
       <div className="button-row apply-actions">
-        <button className="primary-button" type="submit" disabled={saving || !isOutgoingWeekendValid}>
+        <button className="primary-button" type="submit" disabled={saving}>
           {saving ? 'Submitting...' : selectedRequest ? 'Reapply Request' : 'Submit Request'}
         </button>
         {selectedRequest ? (

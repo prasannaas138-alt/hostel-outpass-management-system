@@ -30,15 +30,6 @@ const emptyForm = {
   reason: '',
 };
 
-const isWeekend = (value) => {
-  if (!value) {
-    return false;
-  }
-
-  const day = new Date(value).getDay();
-  return day === 0 || day === 6;
-};
-
 export default function StudentDashboard() {
   const { user, updateUser } = useAuth();
   const [requests, setRequests] = useState([]);
@@ -66,7 +57,6 @@ export default function StudentDashboard() {
   }, []);
 
   const selectedRequest = useMemo(() => requests.find((item) => item._id === selectedId) || null, [requests, selectedId]);
-  const isOutgoingWeekendValid = form.requestType !== 'Outing' || !form.date || isWeekend(form.date);
   const firstName = (user?.name || 'Student').split(' ')[0];
 
   // My Requests: only ACTIVE outpasses — Pending, Approved and Rejected.
@@ -189,11 +179,6 @@ export default function StudentDashboard() {
     setError('');
     setSuccess('');
 
-    if (!isOutgoingWeekendValid) {
-      setError('Outing requests are allowed only on weekends.');
-      return;
-    }
-
     setSaving(true);
 
     try {
@@ -288,7 +273,6 @@ export default function StudentDashboard() {
               saving={saving}
               error={error}
               success={success}
-              isOutgoingWeekendValid={isOutgoingWeekendValid}
               selectedRequest={selectedRequest}
               onCancelEdit={() => setSelectedId(null)}
             />

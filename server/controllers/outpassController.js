@@ -1,6 +1,5 @@
 ﻿import Outpass from '../models/Outpass.js';
 import User from '../models/User.js';
-import { isWeekend } from '../utils/date.js';
 import { createOutpassPdf } from '../utils/pdf.js';
 import { notifyNewOutpass, markOutpassNotificationsRead } from '../services/notificationService.js';
 
@@ -105,7 +104,9 @@ const buildApprovedByEntry = (role, userId) => ({
 const resetForReapply = (outpass) => {
   outpass.status = 'Pending';
   outpass.hodStatus = outpass.requestType === 'Home' ? 'Pending' : 'NotRequired';
-  outpass.sisterStatus = 'NotRequired';
+  // Outing: Sister is the FIRST reviewer (Student -> Sister -> Warden).
+  // Home: Sister only enters the chain after the HOD approves.
+  outpass.sisterStatus = outpass.requestType === 'Outing' ? 'Pending' : 'NotRequired';
   outpass.wardenStatus = 'Pending';
   outpass.rejectionReason = '';
   outpass.approvedBy = [];
@@ -122,10 +123,6 @@ export const createOutpass = async (req, res, next) => {
 
     if (!requestType || !date || !returnDate || !outTime || !returnTime || !reason) {
       return res.status(400).json({ message: 'All fields are required' });
-    }
-
-    if (requestType === 'Outing' && !isWeekend(date)) {
-      return res.status(400).json({ message: 'Outing requests are allowed only on weekends' });
     }
 
     const existingActiveRequest = await Outpass.findOne({
@@ -158,10 +155,10 @@ export const createOutpass = async (req, res, next) => {
       destination: (destination || '').trim(),
       reason,
       hodStatus: requestType === 'Home' ? 'Pending' : 'NotRequired',
-      // Sister only enters the approval chain after the HOD approves a Home
-      // request (hodReviewOutpass flips this to 'Pending'). Outing requests
-      // skip HOD/Sister entirely and go straight to the Warden.
-      sisterStatus: 'NotRequired',
+      // Outing: Sister is the FIRST reviewer (Student -> Sister -> Warden).
+      // Home: Sister only enters the chain after the HOD approves
+      // (hodReviewOutpass flips this to 'Pending').
+      sisterStatus: requestType === 'Outing' ? 'Pending' : 'NotRequired',
       wardenStatus: 'Pending',
       expiresAt: buildExpiresAt(date, returnDate, returnTime),
     });
@@ -204,10 +201,6 @@ export const updateOutpass = async (req, res, next) => {
     outpass.year = req.user.year;
     outpass.studentName = req.user.name;
     outpass.expiresAt = buildExpiresAt(outpass.date, outpass.returnDate, outpass.returnTime);
-
-    if (outpass.requestType === 'Outing' && !isWeekend(outpass.date)) {
-      return res.status(400).json({ message: 'Outing requests are allowed only on weekends' });
-    }
 
     resetForReapply(outpass);
     await outpass.save();
@@ -274,11 +267,16 @@ export const getPendingHodRequests = async (req, res, next) => {
 export const getPendingSisterRequests = async (req, res, next) => {
   try {
     await refreshExpiredOutpasses();
+    // Sister queue — TWO entry paths:
+    //   Outing: Sister is the FIRST reviewer (Student -> Sister -> Warden).
+    //   Home:   Sister reviews after the HOD approves.
     const outpasses = await Outpass.find({
-      requestType: 'Home',
-      hodStatus: 'Approved',
-      sisterStatus: 'Pending',
       status: 'Pending',
+      sisterStatus: 'Pending',
+      $or: [
+        { requestType: 'Outing' },
+        { requestType: 'Home', hodStatus: 'Approved' },
+      ],
     }).sort({ createdAt: -1 }).populate('studentId', STUDENT_POPULATE).lean();
 
     res.json(outpasses.map(enrichOutpass));
@@ -291,21 +289,14 @@ export const getPendingWardenRequests = async (req, res, next) => {
   try {
     await refreshExpiredOutpasses();
     await rejectExpiredWardenOutpasses();
+    // Warden sees every PENDING request immediately — visibility and the
+    // final-action authority are separate (Warden override). The sequence
+    // itself is still enforced inside wardenReviewOutpass:
+    //   Outing -> Warden may act at any time (override authority)
+    //   Home   -> HOD + Sister must approve first
     const outpasses = await Outpass.find({
-      status: { $in: ACTIVE_STATUSES },
+      status: 'Pending',
       wardenStatus: 'Pending',
-      $or: [
-        {
-          requestType: 'Outing',
-          hodStatus: 'NotRequired',
-          sisterStatus: 'NotRequired',
-        },
-        {
-          requestType: 'Home',
-          hodStatus: 'Approved',
-          sisterStatus: 'Approved',
-        },
-      ],
     }).sort({ createdAt: -1 })
       // Populated so the Warden review UI can show the student's real
       // register number, room number, phone, parent/guardian number, and
@@ -356,7 +347,17 @@ export const sisterReviewOutpass = async (req, res, next) => {
     const { action, rejectionReason } = req.body;
     const outpass = await Outpass.findById(req.params.id);
 
-    if (!outpass || outpass.requestType !== 'Home' || outpass.hodStatus !== 'Approved' || outpass.sisterStatus !== 'Pending' || isExpiredNow(outpass)) {
+    // Sister reviews: Outing directly (she is the first reviewer) and
+    // Home requests after the HOD has approved them.
+    const allowedForSister =
+      outpass &&
+      outpass.status === 'Pending' &&
+      outpass.sisterStatus === 'Pending' &&
+      !isExpiredNow(outpass) &&
+      (outpass.requestType === 'Outing' ||
+        (outpass.requestType === 'Home' && outpass.hodStatus === 'Approved'));
+
+    if (!allowedForSister) {
       return res.status(400).json({ message: 'Request is not available for Sister review' });
     }
 
@@ -396,6 +397,18 @@ export const wardenReviewOutpass = async (req, res, next) => {
 
     if (!allowedForWarden) {
       return res.status(400).json({ message: 'Request is not available for Warden review' });
+    }
+
+    // Approval sequence (backend-enforced, not just UI):
+    //   Outing -> Warden override: may approve/reject at any time.
+    //   Home   -> HOD and Sister must both approve before Warden acts.
+    if (
+      outpass.requestType === 'Home' &&
+      (outpass.hodStatus !== 'Approved' || outpass.sisterStatus !== 'Approved')
+    ) {
+      return res.status(400).json({
+        message: 'Warden can review a Home request only after HOD and Sister approval',
+      });
     }
 
     if (action === 'approve') {
@@ -566,8 +579,6 @@ export const getSisterStats = async (req, res, next) => {
       User.countDocuments({ role: 'Student' }),
       Outpass.countDocuments({
         status: 'Pending',
-        requestType: 'Home',
-        hodStatus: 'Approved',
         sisterStatus: 'Pending',
       }),
       Outpass.countDocuments({
