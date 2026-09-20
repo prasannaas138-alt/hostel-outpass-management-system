@@ -259,11 +259,15 @@ export default function SisterDashboard() {
           <section className="wd-greet ss-welcome">
             <div>
               <p className="wd-greet-eyebrow">Sister Dashboard</p>
-              <h1>Hello, {firstName}</h1>
+              <h1>Hello, {firstName}<picture>
+  <source srcset="https://fonts.gstatic.com/s/e/notoemoji/latest/1f44b/512.webp" type="image/webp"/>
+  <img src="https://fonts.gstatic.com/s/e/notoemoji/latest/1f44b/512.gif" alt="👋" width="32" height="32"/>
+</picture></h1>
               <p>
-                Review HOD-approved Home Outpass requests and track their
-                status.
-              </p>
+                Welcome back.Have a great day!<picture>
+  <source srcset="https://fonts.gstatic.com/s/e/notoemoji/latest/1f525/512.webp" type="image/webp"/>
+  <img src="https://fonts.gstatic.com/s/e/notoemoji/latest/1f525/512.gif" alt="🔥" width="32" height="32"/>
+</picture></p>
             </div>
             <span className="wd-date-chip">{today}</span>
           </section>
@@ -281,11 +285,14 @@ export default function SisterDashboard() {
           </div>
           <section className="wd-panel" id="sister-pending">
             <div>
-              <p className="wd-greet-eyebrow">Pending review</p>
-              <h2 className="wd-panel-title">HOME Outpass Requests</h2>
-              <p className="wd-panel-sub">
-                Requests waiting for Sister review.
-              </p>
+              <p className="wd-greet-eyebrow">Pending reviewreview<picture>
+  <source srcset="https://fonts.gstatic.com/s/e/notoemoji/latest/231b/512.webp" type="image/webp"/>
+  <img src="https://fonts.gstatic.com/s/e/notoemoji/latest/231b/512.gif" alt="⌛" width="32" height="32"/>
+</picture></p>
+              <h2 className="wd-panel-title">Outpass Requests <picture>
+  <source srcset="https://fonts.gstatic.com/s/e/notoemoji/latest/1f195/512.webp" type="image/webp"/>
+  <img src="https://fonts.gstatic.com/s/e/notoemoji/latest/1f195/512.gif" alt="🆕" width="27" height="27"/>
+</picture> </h2>
             </div>
             <AlertBanner type="error" message={error} />
             <AlertBanner type="success" message={success} />

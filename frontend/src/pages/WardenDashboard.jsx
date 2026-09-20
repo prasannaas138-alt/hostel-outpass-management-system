@@ -248,8 +248,14 @@ export default function WardenDashboard() {
           <section className="wd-greet">
             <div>
               <p className="wd-greet-eyebrow">Good {daypart},</p>
-              <h1>{userName}</h1>
-              <p className="wd-greet-p">Here's an overview of the hostel outpass requests and recent activity.</p>
+              <h1>Hello! {userName} <picture>
+  <source srcset="https://fonts.gstatic.com/s/e/notoemoji/latest/1f44b/512.webp" type="image/webp"/>
+  <img src="https://fonts.gstatic.com/s/e/notoemoji/latest/1f44b/512.gif" alt="👋" width="32" height="32"/>
+</picture></h1>
+              <p className="wd-greet-p">Welcome back.Have a great day!<picture>
+  <source srcset="https://fonts.gstatic.com/s/e/notoemoji/latest/1f525/512.webp" type="image/webp"/>
+  <img src="https://fonts.gstatic.com/s/e/notoemoji/latest/1f525/512.gif" alt="🔥" width="32" height="32"/>
+</picture></p>
             </div>
             <div className="wd-greet-tools">
               <span className="wd-date-chip"><IconCalendar size={16} /> {todayLabel}</span>
@@ -270,9 +276,14 @@ export default function WardenDashboard() {
           <section className="wd-panel" aria-label="Pending review">
             <div className="wd-panel-head wd-panel-head--single">
               <div>
-                <p className="wd-greet-eyebrow">Pending review</p>
-                <h2 className="wd-panel-title">Outpass Requests</h2>
-                <p className="wd-panel-sub">Requests waiting for Warden approval.</p>
+                <p className="wd-greet-eyebrow">Pending review<picture>
+  <source srcset="https://fonts.gstatic.com/s/e/notoemoji/latest/231b/512.webp" type="image/webp"/>
+  <img src="https://fonts.gstatic.com/s/e/notoemoji/latest/231b/512.gif" alt="⌛" width="32" height="32"/>
+</picture></p>
+                <h2 className="wd-panel-title">New Requests <picture>
+  <source srcset="https://fonts.gstatic.com/s/e/notoemoji/latest/1f195/512.webp" type="image/webp"/>
+  <img src="https://fonts.gstatic.com/s/e/notoemoji/latest/1f195/512.gif" alt="🆕" width="25" height="25"/>
+</picture></h2>
               </div>
             </div>
             {pendingLoading ? (

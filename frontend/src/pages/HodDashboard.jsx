@@ -82,8 +82,14 @@ export default function HodDashboard() {
       {view === 'profile' ? <section className="wd-panel"><WardenProfile /></section> : <>
       <section className="warden-hero" aria-label="Welcome">
         <p className="eyebrow">St. Joseph University · Hostel Office</p>
-        <h2>Hello, {firstName}!</h2>
-        <p>Review the Home requests from your department and move them to the Sister queue, or reject them with a reason.</p>
+        <h2>Hello, {firstName}! <picture>
+  <source srcset="https://fonts.gstatic.com/s/e/notoemoji/latest/1f44b/512.webp" type="image/webp"/>
+  <img src="https://fonts.gstatic.com/s/e/notoemoji/latest/1f44b/512.gif" alt="👋" width="27" height="27"/>
+</picture></h2>
+        <p>Welcome back.Have a great day!<picture>
+  <source srcset="https://fonts.gstatic.com/s/e/notoemoji/latest/1f525/512.webp" type="image/webp"/>
+  <img src="https://fonts.gstatic.com/s/e/notoemoji/latest/1f525/512.gif" alt="🔥" width="27" height="27"/>
+</picture></p>
       </section>
 
       <div className="wd-cards">
@@ -98,8 +104,14 @@ export default function HodDashboard() {
       <section id="pending-home-requests" className="panel">
         <div className="panel-heading">
           <div>
-            <p className="eyebrow">Pending review</p>
-            <h2>Home requests</h2>
+            <p className="eyebrow">Pending review<picture>
+  <source srcset="https://fonts.gstatic.com/s/e/notoemoji/latest/231b/512.webp" type="image/webp"/>
+  <img src="https://fonts.gstatic.com/s/e/notoemoji/latest/231b/512.gif" alt="⌛" width="32" height="32"/>
+</picture></p>
+            <h2>New requests<picture>
+  <source srcset="https://fonts.gstatic.com/s/e/notoemoji/latest/1f195/512.webp" type="image/webp"/>
+  <img src="https://fonts.gstatic.com/s/e/notoemoji/latest/1f195/512.gif" alt="🆕" width="27" height="27"/>
+</picture></h2>
           </div>
           {!loading && !error && !loadError ? <span className="mini-summary">{items.length} awaiting review</span> : null}
         </div>

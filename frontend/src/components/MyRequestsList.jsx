@@ -65,7 +65,10 @@ export default function MyRequestsList(props) {
           ))}
         </div>
       ) : (
-        <div className="empty-state">No requests match this view. Try another filter or apply for a new outpass.</div>
+        <div className="empty-state">👉 🎟️ Apply & Grab Your New Outpass!<picture>
+  <source srcset="https://fonts.gstatic.com/s/e/notoemoji/latest/1f483_1f3fb/512.webp" type="image/webp"/>
+  <img src="https://fonts.gstatic.com/s/e/notoemoji/latest/1f483_1f3fb/512.gif" alt="💃" width="32" height="32"/>
+</picture></div>
       )}
     </div>
   );

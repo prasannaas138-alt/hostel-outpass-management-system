@@ -249,8 +249,15 @@ export default function StudentDashboard() {
         <>
       <section id="dashboard" className="student-hero">
         <p className="eyebrow">St. Joseph University · H.O.M.S</p>
-        <h2>Hello, {firstName}!</h2>
-        <p>Welcome back.Manage your outpass applications, track approvals, and view your outpass history all in one place.</p>
+              <h1>Hello, {firstName} <picture>
+  <source srcset="https://fonts.gstatic.com/s/e/notoemoji/latest/1f44b/512.webp" type="image/webp"/>
+  <img src="https://fonts.gstatic.com/s/e/notoemoji/latest/1f44b/512.gif" alt="👋" width="27" height="27"/>
+</picture></h1>
+              <p>
+                Welcome back.Have a great day! <picture>
+  <source srcset="https://fonts.gstatic.com/s/e/notoemoji/latest/1f525/512.webp" type="image/webp"/>
+  <img src="https://fonts.gstatic.com/s/e/notoemoji/latest/1f525/512.gif" alt="🔥" width="27" height="27"/>
+</picture></p>
       </section>
 
       {loadError ? (
@@ -267,7 +274,10 @@ export default function StudentDashboard() {
             <div className="panel-heading">
               <div>
                 <p className="eyebrow">Apply new outpass</p>
-                <h2>{selectedRequest ? 'Edit rejected request' : 'New outpass application'}</h2>
+                <h2>{selectedRequest ? 'Edit rejected request' : 'New outpass application'}<picture>
+  <source srcset="https://fonts.gstatic.com/s/e/notoemoji/latest/1f195/512.webp" type="image/webp"/>
+  <img src="https://fonts.gstatic.com/s/e/notoemoji/latest/1f195/512.gif" alt="🆕" width="27" height="27"/>
+</picture></h2>
               </div>
             </div>
 
@@ -289,7 +299,10 @@ export default function StudentDashboard() {
             <div className="panel-heading">
               <div>
                 <p className="eyebrow">My requests</p>
-                <h2>Recent requests</h2>
+                <h2>Recent requests<picture>
+  <source srcset="https://fonts.gstatic.com/s/e/notoemoji/latest/1f195/512.webp" type="image/webp"/>
+  <img src="https://fonts.gstatic.com/s/e/notoemoji/latest/1f195/512.gif" alt="🆕" width="27" height="27"/>
+</picture></h2>
               </div>
             </div>
 
@@ -314,7 +327,10 @@ export default function StudentDashboard() {
             <div className="panel-heading">
               <div>
                 <p className="eyebrow">Outpass history</p>
-                <h2>Expired outpasses</h2>
+                <h2>Expired outpasses<picture>
+  <source srcset="https://fonts.gstatic.com/s/e/notoemoji/latest/1f47b/512.webp" type="image/webp"/>
+  <img src="https://fonts.gstatic.com/s/e/notoemoji/latest/1f47b/512.gif" alt="👻" width="32" height="32"/>
+</picture></h2>
               </div>
             </div>
 
