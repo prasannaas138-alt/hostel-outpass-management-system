@@ -423,18 +423,10 @@ export const wardenReviewOutpass = async (req, res, next) => {
       return res.status(400).json({ message: 'Request is not available for Warden review' });
     }
 
-    // Approval sequence (backend-enforced, not just UI):
-    //   Outing -> Warden override: may approve/reject at any time.
-    //   Home   -> HOD and Sister must both approve before Warden acts.
-    if (
-      outpass.requestType === 'Home' &&
-      (outpass.hodStatus !== 'Approved' || outpass.sisterStatus !== 'Approved')
-    ) {
-      return res.status(400).json({
-        message: 'Warden can review a Home request only after HOD and Sister approval',
-      });
-    }
-
+    // Warden override authority (backend-enforced): the Warden may approve or
+    // reject at any time while the request is pending his action — regardless
+    // of HOD/Sister approval status. His action alone decides the final
+    // status; HOD/Sister statuses are NOT modified by his decision.
     if (action === 'approve') {
       outpass.wardenStatus = 'Approved';
       outpass.status = 'Approved';

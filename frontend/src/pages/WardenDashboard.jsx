@@ -115,7 +115,10 @@ export default function WardenDashboard() {
     } catch (error) {
       setReviewError(error.response?.data?.message || 'Failed to review request.');
     } finally {
+      // Always restore the button, even when the action fails — the loading
+      // state used to stay on "Processing..." forever after a failed PATCH.
       setReviewBusy(false);
+      setLoadingId('');
     }
   };
 
