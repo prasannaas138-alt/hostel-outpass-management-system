@@ -285,16 +285,15 @@ export const getPendingHodRequests = async (req, res, next) => {
 export const getPendingSisterRequests = async (req, res, next) => {
   try {
     await refreshExpiredOutpasses();
-    // Sister queue — TWO entry paths:
+    // Sister queue — Sister approval is REQUIRED for BOTH request types:
     //   Outing: Sister is the FIRST reviewer (Student -> Sister -> Warden).
-    //   Home:   Sister reviews after the HOD approves.
+    //   Home:   HOD and Sister both review; the Warden (not this query)
+    //           enforces that both approvals happened before his action.
+    // A request appears here whenever it is pending and Sister has not
+    // approved/rejected it yet — regardless of Home or Outing.
     const outpasses = await Outpass.find({
       status: 'Pending',
       sisterStatus: 'Pending',
-      $or: [
-        { requestType: 'Outing' },
-        { requestType: 'Home', hodStatus: 'Approved' },
-      ],
     }).sort({ createdAt: -1 }).populate('studentId', STUDENT_POPULATE).lean();
 
     res.json(outpasses.map(enrichOutpass));
@@ -365,15 +364,13 @@ export const sisterReviewOutpass = async (req, res, next) => {
     const { action, rejectionReason } = req.body;
     const outpass = await Outpass.findById(req.params.id);
 
-    // Sister reviews: Outing directly (she is the first reviewer) and
-    // Home requests after the HOD has approved them.
+    // Sister reviews: her approval is required for BOTH request types. The
+    // only conditions are: still pending, Sister undecided, not expired.
     const allowedForSister =
       outpass &&
       outpass.status === 'Pending' &&
       outpass.sisterStatus === 'Pending' &&
-      !isExpiredNow(outpass) &&
-      (outpass.requestType === 'Outing' ||
-        (outpass.requestType === 'Home' && outpass.hodStatus === 'Approved'));
+      !isExpiredNow(outpass);
 
     if (!allowedForSister) {
       return res.status(400).json({ message: 'Request is not available for Sister review' });
@@ -598,10 +595,6 @@ export const getSisterStats = async (req, res, next) => {
       Outpass.countDocuments({
         status: 'Pending',
         sisterStatus: 'Pending',
-        $or: [
-          { requestType: 'Outing' },
-          { requestType: 'Home', hodStatus: 'Approved' },
-        ],
       }),
       Outpass.countDocuments({
         'approvedBy.role': 'Sister',
