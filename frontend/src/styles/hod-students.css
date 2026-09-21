@@ -396,3 +396,44 @@
     min-width: 640px;
   }
 }
+
+/* ---------------------------------------------------------------------------
+   HOD student profile card — spacious read-only view.
+   Scoped under .hod-student-sections / .hod-student-modal so the shared
+   StudentProfileModal (Sister/Warden) styling is NOT affected. Specificity is
+   raised (2 classes) so these rules win over the shared .student-profile-grid
+   rules in student.css / student-profile-modal.css regardless of bundle order.
+   ------------------------------------------------------------------------- */
+.student-profile-modal.hod-student-modal {
+  max-width: min(980px, calc(100vw - 2rem));
+}
+
+/* One clean row per field: label on its own line, value below it. */
+.hod-student-sections .student-profile-grid {
+  grid-template-columns: minmax(0, 1fr);
+  gap: 0.4rem;
+}
+
+.hod-student-sections .student-profile-field {
+  padding: 0.7rem 0.85rem;
+  border-radius: 10px;
+}
+
+.hod-student-sections .student-profile-field span {
+  font-size: 0.66rem;
+}
+
+/* Keep short values (phones, register number, batch) on one line; long
+   values (hostel name, email) wrap naturally only when truly needed. */
+.hod-student-sections .student-profile-field strong {
+  font-size: 0.9rem;
+  line-height: 1.4;
+  overflow-wrap: break-word;
+  word-break: normal;
+}
+
+/* Comfortable, even spacing between the three sections. */
+.hod-student-sections {
+  gap: 1rem;
+  align-items: start;
+}

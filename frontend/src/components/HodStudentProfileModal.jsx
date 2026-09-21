@@ -184,7 +184,7 @@ export default function HodStudentProfileModal({ studentId, onClose, onSaved }) 
 
   return (
     <div className="student-profile-overlay" role="dialog" aria-modal="true" aria-labelledby="hod-student-profile-title">
-      <div className="student-profile-modal">
+      <div className="student-profile-modal hod-student-modal">
         <div className="student-profile-head">
           <span className="student-profile-avatar" aria-hidden="true">{initial}</span>
           <div className="student-profile-heading">
