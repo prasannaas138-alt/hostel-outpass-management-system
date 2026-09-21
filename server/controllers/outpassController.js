@@ -285,16 +285,24 @@ export const getPendingHodRequests = async (req, res, next) => {
 export const getPendingSisterRequests = async (req, res, next) => {
   try {
     await refreshExpiredOutpasses();
-    // Sister queue — Sister approval is REQUIRED for BOTH request types:
-    //   Outing: Sister is the FIRST reviewer (Student -> Sister -> Warden).
-    //   Home:   HOD and Sister both review; the Warden (not this query)
-    //           enforces that both approvals happened before his action.
+    // Sister queue — Sister approval is REQUIRED for BOTH request types.
     // A request appears here whenever it is pending and Sister has not
     // approved/rejected it yet — regardless of Home or Outing.
+    // 'NotRequired' is the legacy initial value written by the pre-fix
+    // creation code; pending records carrying it are still undecided, so
+    // they must be reviewable too. HOD-rejected records are excluded by
+    // their status ('Rejected'), never by this condition.
     const outpasses = await Outpass.find({
       status: 'Pending',
-      sisterStatus: 'Pending',
+      sisterStatus: { $in: ['Pending', 'NotRequired'] },
     }).sort({ createdAt: -1 }).populate('studentId', STUDENT_POPULATE).lean();
+
+    // TEMP-DEBUG (remove after verifying): confirms what the Sister queue
+    // API actually returns for the currently pending records.
+    console.log(
+      `[TEMP-DEBUG] sister pending queue -> ${outpasses.length} request(s):`,
+      outpasses.map((o) => `${o.outpassId || o._id} type=${o.requestType} status=${o.status} sister=${o.sisterStatus} hod=${o.hodStatus} warden=${o.wardenStatus}`).join(' | ') || '(none)'
+    );
 
     res.json(outpasses.map(enrichOutpass));
   } catch (error) {
@@ -366,10 +374,11 @@ export const sisterReviewOutpass = async (req, res, next) => {
 
     // Sister reviews: her approval is required for BOTH request types. The
     // only conditions are: still pending, Sister undecided, not expired.
+    // Legacy 'NotRequired' counts as undecided (see the Sister queue query).
     const allowedForSister =
       outpass &&
       outpass.status === 'Pending' &&
-      outpass.sisterStatus === 'Pending' &&
+      (outpass.sisterStatus === 'Pending' || outpass.sisterStatus === 'NotRequired') &&
       !isExpiredNow(outpass);
 
     if (!allowedForSister) {
@@ -594,7 +603,7 @@ export const getSisterStats = async (req, res, next) => {
       User.countDocuments({ role: 'Student' }),
       Outpass.countDocuments({
         status: 'Pending',
-        sisterStatus: 'Pending',
+        sisterStatus: { $in: ['Pending', 'NotRequired'] },
       }),
       Outpass.countDocuments({
         'approvedBy.role': 'Sister',
