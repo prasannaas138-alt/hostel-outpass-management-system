@@ -12,7 +12,8 @@ import WardenProfile from '../components/WardenProfile';
 import RoleOutpassHistory from '../components/RoleOutpassHistory';
 import ProfileChangeRequests from '../components/ProfileChangeRequests';
 import HodStudentsProfile from '../components/HodStudentsProfile';
-import { IconUsers, IconClock, IconCheck, IconAlert } from '../components/WardenIcons';
+import HodDownloads from './HodDownloads';
+import { IconUsers, IconClock, IconCheck, IconAlert, IconDownload } from '../components/WardenIcons';
 import { formatTime12Hour as formatTime } from '../utils/timeFormat';
 import '../styles/dashboard.css';
 import '../styles/student.css';
@@ -25,6 +26,7 @@ import '../styles/hod-students.css';
 const HOD_NAV = [
   WARDEN_NAV[0], // Dashboard
   WARDEN_NAV[1], // Outpass History
+  { id: 'downloads', label: 'Downloads', icon: IconDownload },
   { id: 'students', label: 'Students Profile', icon: IconUsers },
   WARDEN_NAV[2], // Profile
 ];
@@ -127,6 +129,7 @@ export default function HodDashboard() {
     <WardenLayout view={view} onNavigate={setView} navItems={HOD_NAV}>
       {view === 'profile' ? <section className="wd-panel"><WardenProfile /></section>
         : view === 'students' ? <HodStudentsProfile />
+        : view === 'downloads' ? <HodDownloads />
         : <>
       <section className="warden-hero" aria-label="Welcome">
         <p className="eyebrow">HOD Portal</p>
