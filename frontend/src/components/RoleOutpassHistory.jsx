@@ -196,8 +196,6 @@ export default function RoleOutpassHistory({
             </table>
           </div>
 
-          <Pagination page={currentPage} totalPages={totalPages} onChange={setPage} />
-
           <div className="wd-list">
             {pageItems.map((item) => {
               const status = statusMeta(item);
@@ -236,10 +234,19 @@ export default function RoleOutpassHistory({
               );
             })}
           </div>
-
-          <Pagination page={currentPage} totalPages={totalPages} onChange={setPage} />
         </>
       )}
+
+      {/* The pagination footer is ALWAYS rendered (even a single page or an
+          empty list) — it shows the current record range plus the controls. */}
+      {!loading ? (
+        <Pagination
+          page={currentPage}
+          totalPages={totalPages}
+          onChange={setPage}
+          total={sortedVisible.length}
+        />
+      ) : null}
 
       {profileItem ? (
         <StudentProfileModal

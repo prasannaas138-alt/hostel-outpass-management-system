@@ -1,19 +1,20 @@
-// Pagination — compact page control for long lists (Outpass History).
-// Windowed page numbers (1 2 3 … 10) so hundreds of pages never render
-// hundreds of buttons. Pages are dynamic: page N simply slices the current
-// newest-first sorted list — nothing is stored on the records.
+﻿// Pagination footer for long lists (Outpass History) - ALWAYS visible.
+// Left: "Showing X - Y of N outpasses" (computed from the current page).
+// Right: compact prev/pages/next controls (windowed numbers, e.g. 1 2 3 ... 10).
+// Pages are dynamic - page N simply slices the current newest-first sorted
+// list (30 per page); nothing is stored on the records.
+const PAGE_SIZE = 30;
+
 const buildPageList = (page, total) => {
   if (total <= 7) {
     return Array.from({ length: total }, (_, index) => index + 1);
   }
   const wanted = new Set([1, 2, total - 1, total, page - 1, page, page + 1]);
-  const sorted = [...wanted]
-    .filter((p) => p >= 1 && p <= total)
-    .sort((a, b) => a - b);
+  const sorted = [...wanted].filter((p) => p >= 1 && p <= total).sort((a, b) => a - b);
   const list = [];
   let previous = 0;
   for (const p of sorted) {
-    if (p - previous > 1) list.push('…');
+    if (p - previous > 1) list.push('...');
     list.push(p);
     previous = p;
   }
@@ -24,43 +25,48 @@ export default function Pagination({
   page,
   totalPages,
   onChange,
+  total = 0,
   label = 'Outpass history pages',
 }) {
-  if (!totalPages || totalPages <= 1) return null;
+  // Never hidden - even a single page (or zero records) shows the footer.
+  const pages = Math.max(1, Math.ceil(Number(totalPages) || 0));
+  const displayStart = total === 0 ? 0 : (page - 1) * PAGE_SIZE + 1;
+  const displayEnd = Math.min(page * PAGE_SIZE, total);
 
   const go = (next) => {
-    const clamped = Math.min(Math.max(1, next), totalPages);
+    const clamped = Math.min(Math.max(1, next), pages);
     if (clamped !== page) onChange(clamped);
   };
 
   return (
-    <nav className="history-pagination" aria-label={label}>
-      <button type="button" disabled={page <= 1} onClick={() => go(page - 1)}>
-        ‹ Previous
-      </button>
-      {buildPageList(page, totalPages).map((entry, index) =>
-        entry === '…' ? (
-          <span
-            key={`gap-${index}`}
-            className="history-pagination__ellipsis"
-            aria-hidden="true"
-          >
-            …
-          </span>
-        ) : (
-          <button
-            key={entry}
-            type="button"
-            aria-current={entry === page ? 'page' : undefined}
-            onClick={() => go(entry)}
-          >
-            {entry}
-          </button>
-        )
-      )}
-      <button type="button" disabled={page >= totalPages} onClick={() => go(page + 1)}>
-        Next ›
-      </button>
-    </nav>
+    <div className="history-pagination">
+      <p className="history-pagination__info">
+        Showing {displayStart} - {displayEnd} of {total} outpasses
+      </p>
+      <nav className="history-pagination__pages" aria-label={label}>
+        <button type="button" disabled={page <= 1} onClick={() => go(page - 1)} aria-label="Previous page">
+          {'<'}
+        </button>
+        {buildPageList(page, pages).map((entry, index) =>
+          entry === '...' ? (
+            <span key={`gap-${index}`} className="history-pagination__ellipsis" aria-hidden="true">
+              ...
+            </span>
+          ) : (
+            <button
+              key={entry}
+              type="button"
+              aria-current={entry === page ? 'page' : undefined}
+              onClick={() => go(entry)}
+            >
+              {entry}
+            </button>
+          )
+        )}
+        <button type="button" disabled={page >= pages} onClick={() => go(page + 1)} aria-label="Next page">
+          {'>'}
+        </button>
+      </nav>
+    </div>
   );
 }

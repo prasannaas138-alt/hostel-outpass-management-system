@@ -119,12 +119,21 @@ export default function OutpassHistory(props) {
               </tbody>
             </table>
           </div>
-
-          <Pagination page={currentPage} totalPages={totalPages} onChange={setPage} />
         </>
       ) : (
         <div className="empty-state">No historical outpasses match this view.</div>
       )}
+
+      {/* The pagination footer is ALWAYS rendered (even a single page or an
+          empty list) — it shows the current record range plus the controls. */}
+      {!loading ? (
+        <Pagination
+          page={currentPage}
+          totalPages={totalPages}
+          onChange={setPage}
+          total={sorted.length}
+        />
+      ) : null}
     </div>
   );
 }
