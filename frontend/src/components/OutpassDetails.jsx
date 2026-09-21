@@ -126,7 +126,7 @@ export default function OutpassDetails({ request, user, onBack, onEdit }) {
 
   const approvals = [
     { label: 'HOD', value: request.hodStatus, icon: <ForwardIcon /> },
-    { label: 'Sister', value: request.sisterStatus, icon: <PersonIcon /> },
+    { label: 'Sister', value: request.sisterStatus === 'NotRequired' ? 'Pending' : request.sisterStatus, icon: <PersonIcon /> },
     { label: 'Warden', value: request.wardenStatus, icon: <ShieldIcon /> },
   ];
 

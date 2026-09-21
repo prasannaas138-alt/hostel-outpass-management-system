@@ -107,9 +107,8 @@ const buildApprovedByEntry = (role, userId) => ({
 const resetForReapply = (outpass) => {
   outpass.status = 'Pending';
   outpass.hodStatus = outpass.requestType === 'Home' ? 'Pending' : 'NotRequired';
-  // Outing: Sister is the FIRST reviewer (Student -> Sister -> Warden).
-  // Home: Sister only enters the chain after the HOD approves.
-  outpass.sisterStatus = outpass.requestType === 'Outing' ? 'Pending' : 'NotRequired';
+  // Both request types require Sister approval (see createOutpass).
+  outpass.sisterStatus = 'Pending';
   outpass.wardenStatus = 'Pending';
   outpass.rejectionReason = '';
   outpass.approvedBy = [];
@@ -158,10 +157,11 @@ export const createOutpass = async (req, res, next) => {
       destination: (destination || '').trim(),
       reason,
       hodStatus: requestType === 'Home' ? 'Pending' : 'NotRequired',
-      // Outing: Sister is the FIRST reviewer (Student -> Sister -> Warden).
-      // Home: Sister only enters the chain after the HOD approves
-      // (hodReviewOutpass flips this to 'Pending').
-      sisterStatus: requestType === 'Outing' ? 'Pending' : 'NotRequired',
+      // BOTH request types require Sister approval. Outing: she is the FIRST
+      // reviewer (Student -> Sister -> Warden). Home: she is the SECOND — the
+      // request shows NOT APPROVED from creation, but sisterReviewOutpass only
+      // allows her to act once the HOD has approved it.
+      sisterStatus: 'Pending',
       wardenStatus: 'Pending',
       expiresAt: buildExpiresAt(date, returnDate, returnTime),
     });
@@ -583,6 +583,10 @@ export const getSisterStats = async (req, res, next) => {
       Outpass.countDocuments({
         status: 'Pending',
         sisterStatus: 'Pending',
+        $or: [
+          { requestType: 'Outing' },
+          { requestType: 'Home', hodStatus: 'Approved' },
+        ],
       }),
       Outpass.countDocuments({
         'approvedBy.role': 'Sister',

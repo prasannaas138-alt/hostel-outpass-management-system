@@ -38,7 +38,11 @@ const buildIndicators = (request, role) => {
     list.push({ label: 'HOD Approval', value: request.hodStatus });
   }
   if (role !== 'hod') {
-    list.push({ label: 'Sister Approval', value: request.sisterStatus });
+    // Sister approval is required for BOTH Home and Outing outpasses, so the
+    // indicator must never read "NOT NEEDED" here. Legacy records created
+    // before that rule (sisterStatus === 'NotRequired') are displayed as
+    // NOT APPROVED (pending) instead.
+    list.push({ label: 'Sister Approval', value: request.sisterStatus === 'NotRequired' ? 'Pending' : request.sisterStatus });
   }
   if (role === 'warden') {
     list.push({ label: 'Warden Approval', value: request.wardenStatus });

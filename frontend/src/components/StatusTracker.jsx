@@ -55,7 +55,7 @@ export default function StatusTracker({ request }) {
 
   const steps = [
     { label: 'HOD', value: request.hodStatus },
-    { label: 'Sister', value: request.sisterStatus },
+    { label: 'Sister', value: request.sisterStatus === 'NotRequired' ? 'Pending' : request.sisterStatus },
     { label: 'Warden', value: request.wardenStatus },
   ];
 
