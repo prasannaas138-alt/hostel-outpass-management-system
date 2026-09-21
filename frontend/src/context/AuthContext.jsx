@@ -1,4 +1,5 @@
-import { createContext, useContext, useState } from 'react';
+import { createContext, useContext, useEffect, useState } from 'react';
+import api from '../services/api';
 import { clearAuth, getInitialAuth, setStoredAuth } from '../utils/auth';
 
 const AuthContext = createContext(null);
@@ -28,6 +29,35 @@ export const AuthProvider = ({ children }) => {
       return next;
     });
   };
+
+  // ---------------------------------------------------------------------------
+  // Profile-data sync: localStorage holds the LOGIN-TIME snapshot, so profile
+  // changes applied elsewhere (HOD direct edit, approved ProfileChangeRequest)
+  // would never reach a logged-in student until they logged out and back in.
+  // On every app start (with a valid token), re-read the official user record
+  // via the existing GET /auth/me (protect loads it fresh from MongoDB) and
+  // merge it into state + storage. Network failures keep the current session
+  // untouched; a rejected token is cleared by the api 401 interceptor.
+  // ---------------------------------------------------------------------------
+  useEffect(() => {
+    if (!token) return undefined;
+    let active = true;
+    api
+      .get('/auth/me')
+      .then((response) => {
+        if (active && response.data?.user) {
+          updateUser(response.data.user);
+        }
+      })
+      .catch(() => {
+        // Server unreachable or transient error — keep the restored session
+        // as-is instead of logging the user out.
+      });
+    return () => {
+      active = false;
+    };
+    // eslint-disable-next-line react-hooks/exhaustive-deps
+  }, []);
 
   return <AuthContext.Provider value={{ token, user, login, logout, updateUser }}>{children}</AuthContext.Provider>;
 };
