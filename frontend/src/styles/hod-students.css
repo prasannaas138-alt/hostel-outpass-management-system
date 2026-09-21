@@ -193,9 +193,34 @@
   gap: 0.9rem;
 }
 
-.hod-students-table td,
+/* Fixed layout + explicit column widths so the header and every body row
+   share EXACTLY the same column structure, and no cell can ever spill into
+   its neighbour. Long values (name, department, hostel) wrap inside their
+   own column instead of overflowing. */
+.hod-students-table {
+  table-layout: fixed;
+  width: 100%;
+}
+
+.hod-students-table th:nth-child(1) { width: 44px; }   /* #        */
+.hod-students-table th:nth-child(2) { width: 24%; }    /* Name     */
+.hod-students-table th:nth-child(3) { width: 13%; }    /* Dept     */
+.hod-students-table th:nth-child(4) { width: 10%; }    /* Year     */
+.hod-students-table th:nth-child(5) { width: 12%; }    /* Batch    */
+.hod-students-table th:nth-child(6) { width: 25%; }    /* Hostel   */
+.hod-students-table th:nth-child(7) { width: 92px; }   /* Profile  */
+
+/* Headers are short — keep them on one line. */
 .hod-students-table th {
   white-space: nowrap;
+}
+
+/* Body cells wrap inside their own column; nothing overflows a neighbour. */
+.hod-students-table td {
+  white-space: normal;
+  overflow-wrap: anywhere;
+  word-break: normal;
+  vertical-align: middle;
 }
 
 .hod-student-name {
@@ -203,11 +228,14 @@
   align-items: center;
   gap: 0.6rem;
   min-width: 0;
+  max-width: 100%;
 }
 
 .hod-student-name strong {
   font-size: 0.88rem;
   color: #0f172a;
+  overflow-wrap: anywhere;
+  min-width: 0;
 }
 
 .hod-students-foot {

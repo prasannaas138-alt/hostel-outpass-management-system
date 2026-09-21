@@ -1,9 +1,19 @@
-import { useMemo, useState } from 'react';
+import { useEffect, useMemo, useState } from 'react';
 import '../styles/warden-dashboard.css';
 import { IconEye, IconSearch } from './WardenIcons';
 import StudentProfileModal from './StudentProfileModal';
+import Pagination from './Pagination';
 import { getDisplayStatus } from '../utils/outpassStatus';
 import { formatTime12Hour } from '../utils/timeFormat';
+
+// Outpass History pagination — exactly 30 records per page, newest first.
+// Pages are computed dynamically from the current sorted history; no page
+// number is ever stored on an outpass record.
+const PAGE_SIZE = 30;
+
+const byNewestFirst = (a, b) =>
+  String(b.createdAt || '').localeCompare(String(a.createdAt || '')) ||
+  String(b.date || '').localeCompare(String(a.date || ''));
 
 const statusMeta = (item) => {
   const display = getDisplayStatus(item);
@@ -43,6 +53,7 @@ export default function RoleOutpassHistory({
 }) {
   const [search, setSearch] = useState('');
   const [filter, setFilter] = useState('All');
+  const [page, setPage] = useState(1);
   const [profileItem, setProfileItem] = useState(null);
 
   const visible = useMemo(() => {
@@ -53,6 +64,21 @@ export default function RoleOutpassHistory({
       return statusMeta(item).label === filter;
     });
   }, [items, search, filter]);
+
+  // Newest -> oldest, computed dynamically from the current filtered list.
+  const sortedVisible = useMemo(() => [...visible].sort(byNewestFirst), [visible]);
+
+  // Changing the search/filter always returns to Page 1.
+  useEffect(() => {
+    setPage(1);
+  }, [search, filter]);
+
+  const totalPages = Math.max(1, Math.ceil(sortedVisible.length / PAGE_SIZE));
+  const currentPage = Math.min(page, totalPages);
+  const pageItems = useMemo(
+    () => sortedVisible.slice((currentPage - 1) * PAGE_SIZE, currentPage * PAGE_SIZE),
+    [sortedVisible, currentPage]
+  );
 
   const countFor = (chip) =>
     chip === 'All'
@@ -135,7 +161,7 @@ export default function RoleOutpassHistory({
                 </tr>
               </thead>
               <tbody>
-                {visible.map((item) => {
+                {pageItems.map((item) => {
                   const status = statusMeta(item);
                   const studentId = getStudentId(item);
                   return (
@@ -170,8 +196,10 @@ export default function RoleOutpassHistory({
             </table>
           </div>
 
+          <Pagination page={currentPage} totalPages={totalPages} onChange={setPage} />
+
           <div className="wd-list">
-            {visible.map((item) => {
+            {pageItems.map((item) => {
               const status = statusMeta(item);
               const studentId = getStudentId(item);
               return (
@@ -208,6 +236,8 @@ export default function RoleOutpassHistory({
               );
             })}
           </div>
+
+          <Pagination page={currentPage} totalPages={totalPages} onChange={setPage} />
         </>
       )}
 

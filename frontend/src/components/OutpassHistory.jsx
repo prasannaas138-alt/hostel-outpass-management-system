@@ -1,8 +1,18 @@
+import { useEffect, useMemo, useState } from 'react';
 import AlertBanner from './AlertBanner';
 import LoadingState from './LoadingState';
 import StudentRequestCard from './StudentRequestCard';
 import StatusBadge from './StatusBadge';
+import Pagination from './Pagination';
 import { formatDate, formatTime12Hour as formatTime } from '../utils/timeFormat';
+
+// Outpass History pagination — exactly 30 records per page, newest first.
+// Pages are computed dynamically from the currently filtered list.
+const PAGE_SIZE = 30;
+
+const byNewestFirst = (a, b) =>
+  String(b.createdAt || '').localeCompare(String(a.createdAt || '')) ||
+  String(b.date || '').localeCompare(String(a.date || ''));
 
 export default function OutpassHistory(props) {
   const {
@@ -16,6 +26,23 @@ export default function OutpassHistory(props) {
     onSearchChange,
     onViewDetails,
   } = props;
+
+  const [page, setPage] = useState(1);
+
+  // Newest -> oldest, computed dynamically from the currently filtered list.
+  const sorted = useMemo(() => [...requests].sort(byNewestFirst), [requests]);
+
+  // Changing the type filter or search always returns to Page 1.
+  useEffect(() => {
+    setPage(1);
+  }, [typeFilter, search]);
+
+  const totalPages = Math.max(1, Math.ceil(sorted.length / PAGE_SIZE));
+  const currentPage = Math.min(page, totalPages);
+  const pageRequests = useMemo(
+    () => sorted.slice((currentPage - 1) * PAGE_SIZE, currentPage * PAGE_SIZE),
+    [sorted, currentPage]
+  );
 
   return (
     <div className="history-wrap">
@@ -52,7 +79,7 @@ export default function OutpassHistory(props) {
       ) : requests.length ? (
         <>
           <div className="history-cards">
-            {requests.map((request) => (
+            {pageRequests.map((request) => (
               <StudentRequestCard
                 key={request._id}
                 request={request}
@@ -75,7 +102,7 @@ export default function OutpassHistory(props) {
                 </tr>
               </thead>
               <tbody>
-                {requests.map((request) => (
+                {pageRequests.map((request) => (
                   <tr key={request._id}>
                     <td><strong>{request.requestType}</strong></td>
                     <td>{formatDate(request.date)}</td>
@@ -92,6 +119,8 @@ export default function OutpassHistory(props) {
               </tbody>
             </table>
           </div>
+
+          <Pagination page={currentPage} totalPages={totalPages} onChange={setPage} />
         </>
       ) : (
         <div className="empty-state">No historical outpasses match this view.</div>

@@ -499,3 +499,43 @@ label {
 .alert-close:hover {
   background: rgba(15, 23, 42, 0.06);
 }
+
+/* ---- Outpass History pagination (shared: Student/HOD/Sister/Warden) ---- */
+.history-pagination {
+  display: flex;
+  align-items: center;
+  flex-wrap: wrap;
+  gap: 0.35rem;
+  margin-top: 1rem;
+}
+.history-pagination button {
+  min-width: 36px;
+  height: 34px;
+  padding: 0 0.6rem;
+  border: 1px solid #e2e8f0;
+  border-radius: 8px;
+  background: #fff;
+  color: #334155;
+  font-size: 0.82rem;
+  font-weight: 600;
+  cursor: pointer;
+}
+.history-pagination button:hover:not(:disabled) {
+  background: #f2f5fb;
+}
+.history-pagination button:disabled {
+  opacity: 0.45;
+  cursor: not-allowed;
+}
+.history-pagination button[aria-current='page'] {
+  background: #1d4ed8;
+  border-color: #1d4ed8;
+  color: #fff;
+}
+.history-pagination__ellipsis {
+  min-width: 22px;
+  text-align: center;
+  color: #94a3b8;
+  font-weight: 700;
+}
+
