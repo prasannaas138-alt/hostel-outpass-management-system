@@ -1,6 +1,10 @@
 import AlertBanner from './AlertBanner';
 import TimeField12 from './TimeField12';
 
+// Manually selected weekdays — the student picks the day; it is never
+// derived from the selected date (no UTC/getDay conversion anywhere).
+const WEEKDAY_OPTIONS = ['Sunday', 'Monday', 'Tuesday', 'Wednesday', 'Thursday', 'Friday', 'Saturday'];
+
 export default function ApplyOutpassForm({
   user,
   form,
@@ -52,8 +56,29 @@ export default function ApplyOutpassForm({
             <input name="date" type="date" value={form.date} onChange={onChange} required disabled={saving} />
           </label>
           <label>
+            Out Day
+            {/* Manually selected weekday — never derived from the date. */}
+            <select name="outDay" value={form.outDay || ''} onChange={onChange} required disabled={saving}>
+              <option value="" disabled>Select day</option>
+              {WEEKDAY_OPTIONS.map((day) => (
+                <option key={day} value={day}>{day}</option>
+              ))}
+            </select>
+          </label>
+        </div>
+        <div className="apply-grid apply-grid--2">
+          <label>
             Return Date
             <input name="returnDate" type="date" value={form.returnDate || ''} onChange={onChange} required disabled={saving} />
+          </label>
+          <label>
+            Return Day
+            <select name="returnDay" value={form.returnDay || ''} onChange={onChange} required disabled={saving}>
+              <option value="" disabled>Select day</option>
+              {WEEKDAY_OPTIONS.map((day) => (
+                <option key={day} value={day}>{day}</option>
+              ))}
+            </select>
           </label>
         </div>
         <div className="apply-grid apply-grid--2">

@@ -182,10 +182,24 @@ export default function OutpassDetails({ request, user, onBack, onEdit }) {
               </span>
             </div>
             <div className="info-row">
+              <span className="info-row__icon info-row__icon--out"><ClockIcon /></span>
+              <span className="info-row__text">
+                <em>Out Day</em>
+                <strong>{request.outDay || '--'}</strong>
+              </span>
+            </div>
+            <div className="info-row">
               <span className="info-row__icon info-row__icon--return"><ClockIcon /></span>
               <span className="info-row__text">
                 <em>Return Date</em>
                 <strong>{formatOutpassDate(request.returnDate || request.date)}</strong>
+              </span>
+            </div>
+            <div className="info-row">
+              <span className="info-row__icon info-row__icon--return"><ClockIcon /></span>
+              <span className="info-row__text">
+                <em>Return Day</em>
+                <strong>{request.returnDay || '--'}</strong>
               </span>
             </div>
             <div className="info-row">

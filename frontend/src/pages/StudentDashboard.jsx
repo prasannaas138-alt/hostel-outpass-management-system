@@ -23,7 +23,9 @@ import { useAuth } from '../context/AuthContext';
 const emptyForm = {
   requestType: 'Outing',
   date: '',
+  outDay: '',
   returnDate: '',
+  returnDay: '',
   destination: '',
   outTime: '',
   returnTime: '',
@@ -144,7 +146,9 @@ export default function StudentDashboard() {
       setForm({
         requestType: selectedRequest.requestType,
         date: selectedRequest.date.slice(0, 10),
+        outDay: selectedRequest.outDay || '',
         returnDate: (selectedRequest.returnDate || selectedRequest.date || '').slice(0, 10),
+        returnDay: selectedRequest.returnDay || '',
         destination: selectedRequest.destination || '',
         outTime: selectedRequest.outTime,
         returnTime: selectedRequest.returnTime,

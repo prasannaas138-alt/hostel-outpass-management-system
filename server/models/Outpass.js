@@ -107,6 +107,19 @@ const outpassSchema = new mongoose.Schema(
       type: Date,
       default: null,
     },
+    // Manually selected weekdays (student picks them in the form). Stored
+    // verbatim — never derived from the date, so no UTC/timezone conversion
+    // can ever produce the wrong day. Empty for legacy outpasses.
+    outDay: {
+      type: String,
+      trim: true,
+      default: '',
+    },
+    returnDay: {
+      type: String,
+      trim: true,
+      default: '',
+    },
     destination: {
       type: String,
       trim: true,

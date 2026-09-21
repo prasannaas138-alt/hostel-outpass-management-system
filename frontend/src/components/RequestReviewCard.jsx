@@ -58,8 +58,10 @@ export default function RequestReviewCard({
           {renderDetail('Parent/Guardian', item.parentPhone || '-'+'-')}
           {renderDetail('Hostel', item.hostelName || '-'+'-')}
           {renderDetail('Request/Out Date', item.date ? new Date(item.date).toLocaleDateString() : '-'+'-')}
-          {renderDetail('Return Date', item.returnDate ? new Date(item.returnDate).toLocaleDateString() : (item.date ? new Date(item.date).toLocaleDateString() : '-'+'-'))}
+          {renderDetail('Out Day', item.outDay || '-'+'-')}
           {renderDetail('Out Time', item.outTime ? formatTime(item.outTime) : '-'+'-')}
+          {renderDetail('Return Date', item.returnDate ? new Date(item.returnDate).toLocaleDateString() : (item.date ? new Date(item.date).toLocaleDateString() : '-'+'-'))}
+          {renderDetail('Return Day', item.returnDay || '-'+'-')}
           {renderDetail('Return Time', item.returnTime ? formatTime(item.returnTime) : '-'+'-')}
           {renderDetail('Destination', item.destination || '-'+'-')}
           {renderDetail('Reason', item.reason)}
@@ -84,7 +86,9 @@ export default function RequestReviewCard({
           <span>Parent/Guardian: {item.parentPhone || '—'}</span>
           <span>Hostel: {item.hostelName || '—'}</span>
           <span>Request/Out Date: {item.date ? new Date(item.date).toLocaleDateString() : '—'}</span>
+          <span>Out Day: {item.outDay || '—'}</span>
           <span>Return Date: {item.returnDate ? new Date(item.returnDate).toLocaleDateString() : (item.date ? new Date(item.date).toLocaleDateString() : '—')}</span>
+          <span>Return Day: {item.returnDay || '—'}</span>
           <span>Time: {item.outTime ? formatTime(item.outTime) : '-'+'-'} - {item.returnTime ? formatTime(item.returnTime) : '-'+'-'}</span>
           <span>Destination: {item.destination || '—'}</span>
           <span>Reason: {item.reason}</span>

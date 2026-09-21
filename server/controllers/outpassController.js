@@ -104,6 +104,10 @@ const buildApprovedByEntry = (role, userId) => ({
   date: new Date(),
 });
 
+// The seven weekday options the student manually selects. Values are stored
+// verbatim — never derived from the date (no UTC/getDay conversion).
+const WEEKDAYS = ['Sunday', 'Monday', 'Tuesday', 'Wednesday', 'Thursday', 'Friday', 'Saturday'];
+
 const resetForReapply = (outpass) => {
   outpass.status = 'Pending';
   outpass.hodStatus = outpass.requestType === 'Home' ? 'Pending' : 'NotRequired';
@@ -121,10 +125,16 @@ export const createOutpass = async (req, res, next) => {
       return res.status(403).json({ message: 'Only students can apply for outpass' });
     }
 
-    const { requestType, date, returnDate, outTime, returnTime, reason, destination } = req.body;
+    const { requestType, date, returnDate, outDay, returnDay, outTime, returnTime, reason, destination } = req.body;
 
-    if (!requestType || !date || !returnDate || !outTime || !returnTime || !reason) {
-      return res.status(400).json({ message: 'All fields are required' });
+    if (!requestType || !date || !returnDate || !outDay || !returnDay || !outTime || !returnTime || !reason) {
+      return res.status(400).json({ message: 'All fields are required, including Out Day and Return Day' });
+    }
+
+    // The weekday must be one of the seven options the form offers. The
+    // selected value itself is stored verbatim — never recalculated.
+    if (!WEEKDAYS.includes(outDay) || !WEEKDAYS.includes(returnDay)) {
+      return res.status(400).json({ message: 'Out Day and Return Day must be a valid weekday' });
     }
 
     const existingActiveRequest = await Outpass.findOne({
@@ -152,6 +162,8 @@ export const createOutpass = async (req, res, next) => {
       requestType,
       date,
       returnDate,
+      outDay,
+      returnDay,
       outTime,
       returnTime,
       destination: (destination || '').trim(),
@@ -191,11 +203,14 @@ export const updateOutpass = async (req, res, next) => {
       return res.status(400).json({ message: 'Only rejected requests can be edited and reapplied' });
     }
 
-    const { requestType, date, returnDate, outTime, returnTime, reason, destination } = req.body;
+    const { requestType, date, returnDate, outDay, returnDay, outTime, returnTime, reason, destination } = req.body;
 
     outpass.requestType = requestType || outpass.requestType;
     outpass.date = date || outpass.date;
     outpass.returnDate = returnDate || outpass.returnDate || outpass.date;
+    // Reapply: store the manually selected weekdays verbatim when provided.
+    if (outDay) outpass.outDay = outDay;
+    if (returnDay) outpass.returnDay = returnDay;
     if (typeof destination === 'string') outpass.destination = destination.trim();
     outpass.outTime = outTime || outpass.outTime;
     outpass.returnTime = returnTime || outpass.returnTime;
