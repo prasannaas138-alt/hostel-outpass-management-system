@@ -1,3 +1,4 @@
+import { useState } from 'react';
 import AlertBanner from './AlertBanner';
 import TimeField12 from './TimeField12';
 import { todayIST } from '../utils/timeFormat';
@@ -26,8 +27,45 @@ export default function ApplyOutpassForm({
   const minReturnDate =
     form.date && form.date > minOutDate ? form.date : minOutDate;
 
+  // Current time-of-day in IST as minutes since midnight (same +05:30 shift
+  // used everywhere else in the app — never a raw UTC comparison).
+  const minutesOfDayIST = () => {
+    const ist = new Date(Date.now() + 5.5 * 60 * 60 * 1000);
+    return ist.getUTCHours() * 60 + ist.getUTCMinutes();
+  };
+
+  const [validationError, setValidationError] = useState('');
+
+  // Finished-time / past-date validation: an outpass whose Out Date is today
+  // and whose Out Time has already passed cannot be submitted, and neither
+  // can one with a past Out Date (the calendar blocks both in the UI — this
+  // is the submit-time safety net with a clear message).
+  const handleSubmit = (event) => {
+    const outDate = form.date;
+
+    if (outDate && outDate < minOutDate) {
+      event.preventDefault();
+      setValidationError('Out Date cannot be in the past.');
+      return;
+    }
+
+    if (outDate === minOutDate && form.outTime) {
+      const [outHour, outMinute] = String(form.outTime).split(':').map(Number);
+      const outMinutes = outHour * 60 + outMinute;
+      if (!Number.isNaN(outMinutes) && outMinutes < minutesOfDayIST()) {
+        event.preventDefault();
+        setValidationError('You cannot apply outpass for finished time.');
+        return;
+      }
+    }
+
+    setValidationError('');
+    onSubmit(event);
+  };
+
   const handleOutDateChange = (event) => {
     onChange(event);
+    setValidationError('');
     // Keep Return Date >= Out Date when the Out Date moves forward.
     const outDate = event.target.value;
     if (outDate && form.returnDate && form.returnDate < outDate) {
@@ -36,7 +74,7 @@ export default function ApplyOutpassForm({
   };
 
   return (
-    <form className="apply-form" onSubmit={onSubmit}>
+    <form className="apply-form" onSubmit={handleSubmit}>
       <fieldset className="apply-fieldset">
         <legend>Student details</legend>
         <div className="apply-grid apply-grid--2">
@@ -125,7 +163,10 @@ export default function ApplyOutpassForm({
               name="outTime"
               label="Out Time"
               value={form.outTime}
-              onChange={onChange}
+              onChange={(event) => {
+                setValidationError('');
+                onChange(event);
+              }}
               required
               disabled={saving}
             />
@@ -163,7 +204,7 @@ export default function ApplyOutpassForm({
         </div>
       </fieldset>
 
-      <AlertBanner type="error" message={error} />
+      <AlertBanner type="error" message={validationError || error} />
       <AlertBanner type="success" message={success} />
 
       <div className="button-row apply-actions">
