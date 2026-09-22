@@ -121,6 +121,13 @@ export default function RequestDetailModal({ request, role, busy, error, onAppro
             <div className="staff-tile">
               <span className="staff-tile__icon staff-tile__icon--blue">🕐</span>
               <div>
+                <em>Out Day</em>
+                <strong>{request.outDay || '--'}</strong>
+              </div>
+            </div>
+            <div className="staff-tile">
+              <span className="staff-tile__icon staff-tile__icon--blue">🕐</span>
+              <div>
                 <em>Out Time</em>
                 <strong>{request.outTime ? formatTime(request.outTime) : '—'}</strong>
               </div>
@@ -130,6 +137,13 @@ export default function RequestDetailModal({ request, role, busy, error, onAppro
               <div>
                 <em>Return Date</em>
                 <strong>{formatShortDate(request.returnDate || request.date)}</strong>
+              </div>
+            </div>
+            <div className="staff-tile">
+              <span className="staff-tile__icon staff-tile__icon--blue">🕐</span>
+              <div>
+                <em>Return Day</em>
+                <strong>{request.returnDay || '--'}</strong>
               </div>
             </div>
             <div className="staff-tile">
@@ -155,8 +169,10 @@ export default function RequestDetailModal({ request, role, busy, error, onAppro
               <div className="staff-field"><span>Hostel</span><strong>{request.hostelName || '--'}</strong></div>
               <div className="staff-field"><span>Room</span><strong>{request.roomNumber || '--'}</strong></div>
               <div className="staff-field"><span>Request/Out Date</span><strong>{formatShortDate(request.date)}</strong></div>
+              <div className="staff-field"><span>Out Day</span><strong>{request.outDay || '--'}</strong></div>
               <div className="staff-field"><span>Out Time</span><strong>{request.outTime ? formatTime(request.outTime) : '--'}</strong></div>
               <div className="staff-field"><span>Return Date</span><strong>{formatShortDate(request.returnDate || request.date)}</strong></div>
+              <div className="staff-field"><span>Return Day</span><strong>{request.returnDay || '--'}</strong></div>
               <div className="staff-field"><span>Return Time</span><strong>{request.returnTime ? formatTime(request.returnTime) : '--'}</strong></div>
               <div className="staff-field"><span>Destination</span><strong>{request.destination || '--'}</strong></div>
               <div className="staff-field"><span>Department / Year</span><strong>{request.department || '--'}{request.year ? ` · Year ${request.year}` : ''}</strong></div>

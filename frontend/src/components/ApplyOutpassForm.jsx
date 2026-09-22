@@ -34,6 +34,19 @@ export default function ApplyOutpassForm({
     return ist.getUTCHours() * 60 + ist.getUTCMinutes();
   };
 
+  // Actual calendar weekday (0=Sunday..6=Saturday) of a "YYYY-MM-DD" date.
+  // Computed from the calendar date itself (UTC-anchored at noon, so the
+  // weekday is the same in every timezone) — never from the student's
+  // selected day value.
+  const weekdayOfDate = (dateStr) => {
+    const m = /^(\d{4})-(\d{1,2})-(\d{1,2})$/.exec(String(dateStr || ''));
+    if (!m) return null;
+    const d = new Date(Date.UTC(Number(m[1]), Number(m[2]) - 1, Number(m[3]), 12));
+    return Number.isNaN(d.getTime()) ? null : d.getUTCDay();
+  };
+
+  const WEEKDAY_INDEX = { Sunday: 0, Monday: 1, Tuesday: 2, Wednesday: 3, Thursday: 4, Friday: 5, Saturday: 6 };
+
   const [validationError, setValidationError] = useState('');
 
   // Finished-time / past-date validation: an outpass whose Out Date is today
@@ -55,6 +68,26 @@ export default function ApplyOutpassForm({
       if (!Number.isNaN(outMinutes) && outMinutes < minutesOfDayIST()) {
         event.preventDefault();
         setValidationError('You cannot apply outpass for finished time.');
+        return;
+      }
+    }
+
+    // Day/date validation — Out Date + Out Day and Return Date + Return Day
+    // are each validated independently against the ACTUAL calendar weekday.
+    // A mismatched selection blocks the submission until corrected.
+    if (outDate && form.outDay) {
+      const actualWeekday = weekdayOfDate(outDate);
+      if (actualWeekday !== null && WEEKDAY_INDEX[form.outDay] !== actualWeekday) {
+        event.preventDefault();
+        setValidationError('Select the correct day/date');
+        return;
+      }
+    }
+    if (form.returnDate && form.returnDay) {
+      const actualWeekday = weekdayOfDate(form.returnDate);
+      if (actualWeekday !== null && WEEKDAY_INDEX[form.returnDay] !== actualWeekday) {
+        event.preventDefault();
+        setValidationError('Select the correct day/date');
         return;
       }
     }
@@ -123,7 +156,7 @@ export default function ApplyOutpassForm({
           <label>
             Out Day
             {/* Manually selected weekday — never derived from the date. */}
-            <select name="outDay" value={form.outDay || ''} onChange={onChange} required disabled={saving}>
+            <select name="outDay" value={form.outDay || ''} onChange={(event) => { setValidationError(''); onChange(event); }} required disabled={saving}>
               <option value="" disabled>Select day</option>
               {WEEKDAY_OPTIONS.map((day) => (
                 <option key={day} value={day}>{day}</option>
@@ -146,7 +179,7 @@ export default function ApplyOutpassForm({
           </label>
           <label>
             Return Day
-            <select name="returnDay" value={form.returnDay || ''} onChange={onChange} required disabled={saving}>
+            <select name="returnDay" value={form.returnDay || ''} onChange={(event) => { setValidationError(''); onChange(event); }} required disabled={saving}>
               <option value="" disabled>Select day</option>
               {WEEKDAY_OPTIONS.map((day) => (
                 <option key={day} value={day}>{day}</option>
