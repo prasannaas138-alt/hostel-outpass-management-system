@@ -50,6 +50,32 @@ export const formatTimeRange = (outTime, returnTime) => {
  */
 export const formatTime = (value) => value || '—';
 
+/**
+ * Normalizes any time value that may be stored in MongoDB ("HH:MM",
+ * "HH:MM:SS", or a legacy 12-hour string such as "9:47 AM") to the
+ * 24-hour "HH:MM" format the outpass form and backend expect.
+ * Returns "" when the value cannot be understood, so the student must
+ * re-pick the time instead of silently submitting an invalid one.
+ */
+export const normalizeTo24Hour = (value) => {
+  const s = String(value || '').trim();
+  if (!s) return '';
+  const m = s.match(/^(\d{1,2})(?::(\d{1,2}))?(?::(\d{1,2}))?\s*(am|pm)?$/i);
+  if (!m) return '';
+  let hour = parseInt(m[1], 10);
+  const minute = m[2] !== undefined ? String(parseInt(m[2], 10)).padStart(2, '0') : '00';
+  const period = (m[4] || '').toLowerCase();
+  if (Number.isNaN(hour) || parseInt(minute, 10) > 59) return '';
+  if (period) {
+    if (hour < 1 || hour > 12) return '';
+    if (period === 'pm' && hour !== 12) hour += 12;
+    if (period === 'am' && hour === 12) hour = 0;
+  } else if (hour > 23) {
+    return '';
+  }
+  return `${String(hour).padStart(2, '0')}:${minute}`;
+};
+
 export const formatDate = (value) => {
   if (!value) return '—';
   const parsed = new Date(value);

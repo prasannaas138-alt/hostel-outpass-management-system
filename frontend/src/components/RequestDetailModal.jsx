@@ -63,15 +63,13 @@ const formatShortDate = (value) => {
   return parsed.toLocaleDateString('en-GB', { day: '2-digit', month: 'short', year: 'numeric' });
 };
 
-export default function RequestDetailModal({ request, role, busy, onApprove, onReject, onClose }) {
-  const [rejecting, setRejecting] = useState(false);
+export default function RequestDetailModal({ request, role, busy, error, onApprove, onReject, onClose }) {
   const [reason, setReason] = useState('');
 
   const indicators = buildIndicators(request, role);
   const isBusy = Boolean(busy);
 
   const close = () => {
-    setRejecting(false);
     setReason('');
     onClose();
   };
@@ -184,62 +182,54 @@ export default function RequestDetailModal({ request, role, busy, onApprove, onR
             })}
           </div>
 
-          {rejecting ? (
-            <div className="staff-reject-box">
-              <label htmlFor="staff-reject-reason">Rejection reason</label>
-              <textarea
-                id="staff-reject-reason"
-                value={reason}
-                onChange={(event) => setReason(event.target.value)}
-                rows={2}
-                placeholder="Reason for rejection (shared with the student)"
-              />
-              <div className="staff-reject-box__actions">
-                <button
-                  className="staff-btn staff-btn--danger"
-                  type="button"
-                  disabled={isBusy}
-                  onClick={() => onReject(request._id, reason)}
-                >
-                  {isBusy ? 'Processing...' : 'Confirm Reject'}
-                </button>
-                <button
-                  className="staff-btn staff-btn--ghost"
-                  type="button"
-                  disabled={isBusy}
-                  onClick={() => setRejecting(false)}
-                >
-                  Cancel
-                </button>
-              </div>
+          {error ? (
+            <div className="staff-rejection-note" role="alert">
+              <span>Action failed</span>
+              <p>{error}</p>
             </div>
-          ) : (
-            <div className="staff-modal__buttons">
-              <button
-                className="staff-btn staff-btn--approve"
-                type="button"
-                disabled={isBusy}
-                onClick={() => onApprove(request._id)}
-              >
-                <svg viewBox="0 0 24 24" width="15" height="15" fill="none" stroke="currentColor" strokeWidth="2.4" aria-hidden="true">
-                  <polyline points="20 6.5 9.5 17 4 11.5" />
-                </svg>
-                {isBusy ? 'Processing...' : 'Approve'}
-              </button>
-              <button
-                className="staff-btn staff-btn--danger"
-                type="button"
-                disabled={isBusy}
-                onClick={() => setRejecting(true)}
-              >
-                <svg viewBox="0 0 24 24" width="15" height="15" fill="none" stroke="currentColor" strokeWidth="2.4" aria-hidden="true">
-                  <line x1="17.5" y1="6.5" x2="6.5" y2="17.5" />
-                  <line x1="6.5" y1="6.5" x2="17.5" y2="17.5" />
-                </svg>
-                Reject
-              </button>
-            </div>
-          )}
+          ) : null}
+
+          {/*
+            One click = one complete action: Reject submits immediately.
+            The reason field is optional — a default reason is recorded by the
+            backend when it is left empty, so no second confirm click is needed.
+          */}
+          <label className="staff-reject-box" htmlFor="staff-reject-reason">
+            <span>Rejection reason (optional)</span>
+            <textarea
+              id="staff-reject-reason"
+              value={reason}
+              onChange={(event) => setReason(event.target.value)}
+              rows={2}
+              placeholder="Reason for rejection (shared with the student)"
+            />
+          </label>
+
+          <div className="staff-modal__buttons">
+            <button
+              className="staff-btn staff-btn--approve"
+              type="button"
+              disabled={isBusy}
+              onClick={() => onApprove(request._id)}
+            >
+              <svg viewBox="0 0 24 24" width="15" height="15" fill="none" stroke="currentColor" strokeWidth="2.4" aria-hidden="true">
+                <polyline points="20 6.5 9.5 17 4 11.5" />
+              </svg>
+              {isBusy ? 'Processing...' : 'Approve'}
+            </button>
+            <button
+              className="staff-btn staff-btn--danger"
+              type="button"
+              disabled={isBusy}
+              onClick={() => onReject(request._id, reason)}
+            >
+              <svg viewBox="0 0 24 24" width="15" height="15" fill="none" stroke="currentColor" strokeWidth="2.4" aria-hidden="true">
+                <line x1="17.5" y1="6.5" x2="6.5" y2="17.5" />
+                <line x1="6.5" y1="6.5" x2="17.5" y2="17.5" />
+              </svg>
+              {isBusy ? 'Processing...' : 'Reject'}
+            </button>
+          </div>
         </div>
       </div>
     </div>

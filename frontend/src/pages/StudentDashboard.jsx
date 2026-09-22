@@ -14,6 +14,7 @@ import {
   isExpiredRequest,
   matchesStatusFilter,
 } from '../utils/outpassStatus';
+import { normalizeTo24Hour } from '../utils/timeFormat';
 import '../styles/dashboard.css';
 import '../styles/student.css';
 import '../styles/apply-requests.css';
@@ -150,8 +151,11 @@ export default function StudentDashboard() {
         returnDate: (selectedRequest.returnDate || selectedRequest.date || '').slice(0, 10),
         returnDay: selectedRequest.returnDay || '',
         destination: selectedRequest.destination || '',
-        outTime: selectedRequest.outTime,
-        returnTime: selectedRequest.returnTime,
+        // Legacy records may store a 12-hour string ("9:47 AM"); normalize to
+        // the 24-hour "HH:MM" the form and backend expect so Reapply can never
+        // send a value buildExpiresAt() cannot parse (the Invalid Date bug).
+        outTime: normalizeTo24Hour(selectedRequest.outTime),
+        returnTime: normalizeTo24Hour(selectedRequest.returnTime),
         reason: selectedRequest.reason,
       });
     } else {

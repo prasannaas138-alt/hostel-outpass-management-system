@@ -226,27 +226,30 @@ export default function WardenDashboard() {
             <section className="wd-review-section" aria-label="Warden action">
               <h4>Warden Action</h4>
               {reviewError ? <div className="wd-review-note wd-review-note--error">{reviewError}</div> : null}
-              {rejecting ? (
-                <label className="wd-field">
-                  <span>Rejection reason</span>
-                  <textarea
-                    className="wd-textarea"
-                    rows={3}
-                    placeholder="Explain why the request is rejected"
-                    value={reason}
-                    onChange={(event) => setReason(event.target.value)}
-                    disabled={reviewBusy}
-                  />
-                </label>
-              ) : null}
+              <label className="wd-field">
+                <span>Rejection reason (optional — a default is recorded if left empty)</span>
+                <textarea
+                  className="wd-textarea"
+                  rows={3}
+                  placeholder="Explain why the request is rejected"
+                  value={reason}
+                  onChange={(event) => setReason(event.target.value)}
+                  disabled={reviewBusy}
+                />
+              </label>
               <div className="wd-review-actions">
-                <button className="wd-btn wd-btn--reject" type="button" onClick={() => setRejecting((v) => !v)} disabled={reviewBusy}>
+                {/*
+                  One click = one complete action. The reason field below is
+                  optional — the backend records a default reason when it is
+                  left empty, so Reject submits immediately (no confirm step).
+                */}
+                <button className="wd-btn wd-btn--reject" type="button" onClick={() => review(selected._id, 'reject', reason)} disabled={reviewBusy}>
                   <IconX size={16} />
-                  {rejecting ? 'Cancel reject' : 'Reject'}
+                  {reviewBusy ? 'Processing…' : 'Reject'}
                 </button>
                 <button className="wd-btn wd-btn--approve" type="button" onClick={() => review(selected._id, 'approve')} disabled={reviewBusy}>
                   <IconCheck size={16} />
-                  {reviewBusy ? 'Processingâ€¦' : 'Approve'}
+                  {reviewBusy ? 'Processing…' : 'Approve'}
                 </button>
               </div>
             </section>
@@ -320,6 +323,7 @@ export default function WardenDashboard() {
               request={detailItem}
               role="warden"
               busy={loadingId === detailItem._id}
+              error={reviewError}
               onApprove={(id) => review(id, 'approve')}
               onReject={(id, reason) => review(id, 'reject', reason)}
               onClose={() => setDetailId(null)}

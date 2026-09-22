@@ -30,24 +30,75 @@ const enrichOutpass = (outpass) => {
   };
 };
 
+const pad2 = (value) => String(value).padStart(2, '0');
+
+// Normalizes any date shape actually stored in MongoDB ("YYYY-MM-DD",
+// full ISO string, or a Date object) to the "YYYY-MM-DD" calendar day in IST.
+const toDateOnlyString = (value) => {
+  if (!value) return '';
+  if (value instanceof Date) {
+    if (Number.isNaN(value.getTime())) return '';
+    const ist = new Date(value.getTime() + 5.5 * 60 * 60 * 1000);
+    return `${ist.getUTCFullYear()}-${pad2(ist.getUTCMonth() + 1)}-${pad2(ist.getUTCDate())}`;
+  }
+  const s = String(value).trim();
+  const iso = s.match(/^(\d{4})-(\d{1,2})-(\d{1,2})/);
+  if (iso) {
+    return `${iso[1]}-${pad2(iso[2])}-${pad2(iso[3])}`;
+  }
+  const parsed = new Date(s);
+  return Number.isNaN(parsed.getTime()) ? '' : toDateOnlyString(parsed);
+};
+
+// Normalizes the time shapes actually stored in MongoDB to 24-hour "HH:MM".
+// Handles "HH:MM", "HH:MM:SS" and legacy 12-hour strings like "9:47 AM" /
+// "12:05 pm". Returns '' when the value cannot be understood.
+const to24HourString = (value) => {
+  const s = String(value || '').trim();
+  if (!s) return '';
+  const m = s.match(/^(\d{1,2})(?::(\d{1,2}))?(?::(\d{1,2}))?\s*(am|pm)?$/i);
+  if (!m) return '';
+  let hour = Number.parseInt(m[1], 10);
+  const minute = m[2] !== undefined ? Number.parseInt(m[2], 10) : 0;
+  const period = (m[4] || '').toLowerCase();
+  if (Number.isNaN(hour) || Number.isNaN(minute) || minute > 59) return '';
+  if (period) {
+    if (hour < 1 || hour > 12) return '';
+    if (period === 'pm' && hour !== 12) hour += 12;
+    if (period === 'am' && hour === 12) hour = 0;
+  } else if (hour > 23) {
+    return '';
+  }
+  return `${pad2(hour)}:${pad2(minute)}`;
+};
+
 const buildExpiresAt = (date, returnDate, returnTime) => {
-  // Build the expiry datetime in Asia/Kolkata (IST) timezone.
-  // Construct ISO string with explicit IST offset (+05:30) so the resulting
-  // Date object represents the correct UTC instant regardless of server timezone.
-  const [returnHour, returnMinute] = String(returnTime).split(':').map(Number);
-  const dateStr = returnDate || date;
-  // Format: "YYYY-MM-DDTHH:mm:ss+05:30" (IST offset)
-  const isoString = `${dateStr}T${String(returnHour).padStart(2, '0')}:${String(returnMinute).padStart(2, '0')}:00+05:30`;
-  return new Date(isoString);
+  // Expiry = RETURN DATE + RETURN TIME in Asia/Kolkata (IST, +05:30).
+  // Constructing an ISO string with an explicit offset keeps the resulting
+  // instant correct regardless of the server timezone.
+  // Robust against legacy records: 12-hour time strings and Date objects
+  // previously produced `new Date("...T09:NaN:00+05:30")` → Invalid Date →
+  // Mongoose "expiresAt: Cast to date failed" on reapply AND a silent 500 on
+  // Warden approval. A safe fallback (end of the return day) is used instead
+  // so a save can never be rejected because of a malformed stored time.
+  const dateStr = toDateOnlyString(returnDate) || toDateOnlyString(date);
+  const time24 = to24HourString(returnTime) || '23:59';
+  if (!dateStr) {
+    const ist = new Date(Date.now() + 5.5 * 60 * 60 * 1000);
+    return new Date(
+      `${ist.getUTCFullYear()}-${pad2(ist.getUTCMonth() + 1)}-${pad2(ist.getUTCDate())}T23:59:00+05:30`
+    );
+  }
+  return new Date(`${dateStr}T${time24}:00+05:30`);
 };
 
 // Helper to compute expiry from returnDate + returnTime in IST, used as fallback
 // when expiresAt is missing or potentially incorrect.
 const computeExpiryIST = (returnDate, returnTime) => {
-  const [returnHour, returnMinute] = String(returnTime).split(':').map(Number);
-  const dateStr = returnDate;
-  const isoString = `${dateStr}T${String(returnHour).padStart(2, '0')}:${String(returnMinute).padStart(2, '0')}:00+05:30`;
-  return new Date(isoString).getTime();
+  const dateStr = toDateOnlyString(returnDate);
+  const time24 = to24HourString(returnTime);
+  if (!dateStr || !time24) return Number.POSITIVE_INFINITY; // never expire on unparsable legacy data
+  return new Date(`${dateStr}T${time24}:00+05:30`).getTime();
 };
 
 const isExpiredNow = (outpass) => {
@@ -107,8 +158,10 @@ const refreshExpiredOutpasses = async () => {
 const WARDEN_EXPIRED_REJECTION_REASON = 'Automatically rejected: outpass expired at Out Date + Out Time';
 
 const buildOutTimeExpiry = (outpass) => {
-  const [hour, minute] = String(outpass.outTime || '00:00').split(':').map(Number);
-  const expiresAt = new Date(outpass.date);
+  const time24 = to24HourString(outpass.outTime) || '00:00';
+  const [hour, minute] = time24.split(':').map(Number);
+  const dateStr = toDateOnlyString(outpass.date);
+  const expiresAt = dateStr ? new Date(`${dateStr}T00:00:00`) : new Date();
   expiresAt.setHours(hour, minute, 0, 0);
   return expiresAt;
 };
