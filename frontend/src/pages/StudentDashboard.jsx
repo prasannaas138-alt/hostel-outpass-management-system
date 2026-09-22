@@ -28,8 +28,8 @@ const emptyForm = {
   returnDate: '',
   returnDay: '',
   destination: '',
-  outTime: '',
-  returnTime: '',
+  outTime: '08:00',
+  returnTime: '08:00',
   reason: '',
 };
 
