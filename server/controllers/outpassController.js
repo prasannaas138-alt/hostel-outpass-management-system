@@ -102,21 +102,23 @@ const computeExpiryIST = (returnDate, returnTime) => {
 };
 
 const isExpiredNow = (outpass) => {
-  // First check expiresAt if available and valid
+  // Return Date + Return Time (IST) is the source of truth: current time at
+  // or past it => expired, even when a stale/incorrect expiresAt exists.
+  if (outpass.returnDate && outpass.returnTime) {
+    if (computeExpiryIST(outpass.returnDate, outpass.returnTime) <= Date.now()) {
+      return true;
+    }
+  }
+  // Fallback: backend-computed expiresAt when the return schedule is unavailable.
   if (outpass.expiresAt && new Date(outpass.expiresAt).getTime() <= Date.now()) {
     return true;
-  }
-  // Fallback: compute from returnDate + returnTime in IST
-  if (outpass.returnDate && outpass.returnTime) {
-    return computeExpiryIST(outpass.returnDate, outpass.returnTime) <= Date.now();
   }
   return false;
 };
 
 const refreshExpiredOutpasses = async () => {
-  const now = new Date();
-
-  // First, handle records with valid expiresAt
+  // Pass 1 — records whose stored expiresAt has passed (covers legacy records
+  // that have no returnDate/returnTime to recompute from).
   await Outpass.updateMany(
     {
       status: { $in: ACTIVE_STATUSES },
@@ -127,20 +129,20 @@ const refreshExpiredOutpasses = async () => {
     }
   );
 
-  // Also handle records where expiresAt is missing or potentially incorrect
-  // by computing expiry from returnDate + returnTime in IST
-  const nowTimestamp = Date.now();
-  const expiredWithoutExpiresAt = await Outpass.find({
+  // Pass 2 — Return Date + Return Time (IST) is the source of truth.
+  // Flip any ACTIVE record whose return datetime has passed EVEN IF expiresAt
+  // exists — a stale or incorrect expiresAt (legacy records) must never keep
+  // an outpass "Approved" after its return time.
+  // Rule: current IST datetime >= returnDate + returnTime => Expired.
+  const activeWithReturn = await Outpass.find({
     status: { $in: ACTIVE_STATUSES },
-    $or: [
-      { expiresAt: { $exists: false } },
-      { expiresAt: null },
-    ],
     returnDate: { $exists: true, $ne: null },
     returnTime: { $exists: true, $ne: null },
-  }).lean();
+  })
+    .select('_id returnDate returnTime')
+    .lean();
 
-  const expiredIds = expiredWithoutExpiresAt
+  const expiredIds = activeWithReturn
     .filter((outpass) => computeExpiryIST(outpass.returnDate, outpass.returnTime) <= Date.now())
     .map((outpass) => outpass._id);
 

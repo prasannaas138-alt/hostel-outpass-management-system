@@ -7,6 +7,24 @@
  * Outing flow: Waiting for Warden Approval -> Approved
  * Any approved outpass (Home or Outing) expires after Return Date + Return Time.
  */
+import { normalizeTo24Hour } from './timeFormat';
+
+// Expiry instant (ms) computed from Return Date + Return Time in IST.
+// Returns null when the record has no usable return schedule.
+// 12-hour legacy strings ("6:00 AM") are normalized via normalizeTo24Hour.
+const computeReturnExpiryMs = (request) => {
+  const returnDate = request.returnDate || request.date;
+  if (!returnDate || !request.returnTime) {
+    return null;
+  }
+  const time24 = normalizeTo24Hour(request.returnTime);
+  if (!time24) {
+    return null;
+  }
+  const dateStr = String(returnDate).slice(0, 10); // date part only
+  const expiry = new Date(`${dateStr}T${time24}:00+05:30`);
+  return Number.isNaN(expiry.getTime()) ? null : expiry.getTime();
+};
 
 // Check if an approved outpass (Home or Outing) has passed its return datetime.
 const isApprovedExpired = (request) => {
@@ -24,20 +42,18 @@ const isApprovedExpired = (request) => {
     return false;
   }
 
-  // Use backend-computed expiresAt if available
-  if (request.expiresAt) {
-    return new Date(request.expiresAt).getTime() <= Date.now();
+  // RULE: current IST datetime >= Return Date + Return Time => EXPIRED.
+  // The return schedule is the source of truth — a stale or incorrect
+  // expiresAt (legacy records) must never keep an outpass "Approved"
+  // after its return time.
+  const returnExpiryMs = computeReturnExpiryMs(request);
+  if (returnExpiryMs !== null) {
+    return returnExpiryMs <= Date.now();
   }
 
-  // Fallback: compute from Return Date + Return Time in IST (Asia/Kolkata)
-  const returnDate = request.returnDate || request.date;
-  if (returnDate && request.returnTime) {
-    const [returnHour, returnMinute] = String(request.returnTime).split(':').map(Number);
-    // Build ISO string with explicit IST offset (+05:30) for correct UTC conversion
-    const dateStr = returnDate.split('T')[0]; // Ensure we only use the date part
-    const isoString = `${dateStr}T${String(returnHour).padStart(2, '0')}:${String(returnMinute).padStart(2, '0')}:00+05:30`;
-    const expiry = new Date(isoString);
-    return expiry.getTime() <= Date.now();
+  // Fallback: backend-computed expiresAt when no return schedule is available.
+  if (request.expiresAt) {
+    return new Date(request.expiresAt).getTime() <= Date.now();
   }
 
   return false;
