@@ -76,6 +76,19 @@ export const normalizeTo24Hour = (value) => {
   return `${String(hour).padStart(2, '0')}:${minute}`;
 };
 
+/**
+ * Today's date as "YYYY-MM-DD" in Asia/Kolkata (IST, +05:30).
+ * Used as the minimum selectable date for outpass date pickers.
+ * Computed by shifting the instant +5:30 and reading UTC parts, so "today"
+ * is always the Indian calendar day — never shifted back to yesterday by a
+ * raw UTC conversion late in the Indian evening.
+ */
+export const todayIST = () => {
+  const ist = new Date(Date.now() + 5.5 * 60 * 60 * 1000);
+  const pad = (n) => String(n).padStart(2, '0');
+  return `${ist.getUTCFullYear()}-${pad(ist.getUTCMonth() + 1)}-${pad(ist.getUTCDate())}`;
+};
+
 export const formatDate = (value) => {
   if (!value) return '—';
   const parsed = new Date(value);

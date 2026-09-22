@@ -234,6 +234,17 @@ export const createOutpass = async (req, res, next) => {
       return res.status(400).json({ message: 'Out Day and Return Day must be a valid weekday' });
     }
 
+    // IST-aware guard for manually crafted requests (the calendar already
+    // blocks past dates in the UI): the Out Date cannot be in the past and
+    // the Return Date cannot be earlier than the Out Date.
+    const todayIST = toDateOnlyString(new Date());
+    if (String(date) < todayIST) {
+      return res.status(400).json({ message: 'Out Date cannot be in the past' });
+    }
+    if (String(returnDate) < String(date)) {
+      return res.status(400).json({ message: 'Return Date cannot be earlier than the Out Date' });
+    }
+
     const existingActiveRequest = await Outpass.findOne({
       studentId: req.user._id,
       requestType,
@@ -301,6 +312,17 @@ export const updateOutpass = async (req, res, next) => {
     }
 
     const { requestType, date, returnDate, outDay, returnDay, outTime, returnTime, reason, destination } = req.body;
+
+    // Same IST guard as createOutpass, applied to edited/reapplied requests.
+    const todayIST = toDateOnlyString(new Date());
+    const effectiveOut = toDateOnlyString(date || outpass.date);
+    const effectiveReturn = toDateOnlyString(returnDate || outpass.returnDate || outpass.date);
+    if (effectiveOut && effectiveOut < todayIST) {
+      return res.status(400).json({ message: 'Out Date cannot be in the past' });
+    }
+    if (effectiveOut && effectiveReturn && effectiveReturn < effectiveOut) {
+      return res.status(400).json({ message: 'Return Date cannot be earlier than the Out Date' });
+    }
 
     outpass.requestType = requestType || outpass.requestType;
     outpass.date = date || outpass.date;

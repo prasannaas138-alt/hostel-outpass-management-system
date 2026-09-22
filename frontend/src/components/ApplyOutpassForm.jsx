@@ -1,5 +1,6 @@
 import AlertBanner from './AlertBanner';
 import TimeField12 from './TimeField12';
+import { todayIST } from '../utils/timeFormat';
 
 // Manually selected weekdays — the student picks the day; it is never
 // derived from the selected date (no UTC/getDay conversion anywhere).
@@ -16,6 +17,24 @@ export default function ApplyOutpassForm({
   selectedRequest,
   onCancelEdit,
 }) {
+  // The <input type="date"> popup (the calendar in the screenshot) disables
+  // and greys out every date before its "min" value — past dates cannot be
+  // clicked, selected, or populate the input.
+  const minOutDate = todayIST();
+  // Return Date honours BOTH rules: never before today, and never before the
+  // selected Out Date (existing same-day-or-later rule preserved).
+  const minReturnDate =
+    form.date && form.date > minOutDate ? form.date : minOutDate;
+
+  const handleOutDateChange = (event) => {
+    onChange(event);
+    // Keep Return Date >= Out Date when the Out Date moves forward.
+    const outDate = event.target.value;
+    if (outDate && form.returnDate && form.returnDate < outDate) {
+      onChange({ target: { name: 'returnDate', value: outDate } });
+    }
+  };
+
   return (
     <form className="apply-form" onSubmit={onSubmit}>
       <fieldset className="apply-fieldset">
@@ -53,7 +72,15 @@ export default function ApplyOutpassForm({
         <div className="apply-grid apply-grid--2">
           <label>
             Request/Out Date
-            <input name="date" type="date" value={form.date} onChange={onChange} required disabled={saving} />
+            <input
+              name="date"
+              type="date"
+              min={minOutDate}
+              value={form.date}
+              onChange={handleOutDateChange}
+              required
+              disabled={saving}
+            />
           </label>
           <label>
             Out Day
@@ -69,7 +96,15 @@ export default function ApplyOutpassForm({
         <div className="apply-grid apply-grid--2">
           <label>
             Return Date
-            <input name="returnDate" type="date" value={form.returnDate || ''} onChange={onChange} required disabled={saving} />
+            <input
+              name="returnDate"
+              type="date"
+              min={minReturnDate}
+              value={form.returnDate || ''}
+              onChange={onChange}
+              required
+              disabled={saving}
+            />
           </label>
           <label>
             Return Day
