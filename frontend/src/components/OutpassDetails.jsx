@@ -73,9 +73,10 @@ const getExpiryMoment = (request) => {
   }
   if ((request.returnDate || request.date) && request.returnTime) {
     const [hours, minutes] = String(request.returnTime).split(':').map(Number);
-    const expiry = new Date(request.returnDate || request.date);
-    expiry.setHours(hours || 0, minutes || 0, 0, 0);
-    return expiry.getTime();
+    const dateStr = (request.returnDate || request.date).split('T')[0];
+    // Build ISO string with explicit IST offset (+05:30) for correct UTC conversion
+    const isoString = `${dateStr}T${String(hours).padStart(2, '0')}:${String(minutes).padStart(2, '0')}:00+05:30`;
+    return new Date(isoString).getTime();
   }
   return null;
 };

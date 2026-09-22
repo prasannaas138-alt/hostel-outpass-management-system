@@ -31,11 +31,14 @@ const enrichOutpass = (outpass) => {
 };
 
 const buildExpiresAt = (date, returnDate, returnTime) => {
-  // The request expires at the end of the return time on the chosen day.
+  // Build the expiry datetime in Asia/Kolkata (IST) timezone.
+  // Construct ISO string with explicit IST offset (+05:30) so the resulting
+  // Date object represents the correct UTC instant regardless of server timezone.
   const [returnHour, returnMinute] = String(returnTime).split(':').map(Number);
-  const expiresAt = new Date(returnDate || date);
-  expiresAt.setHours(returnHour, returnMinute, 0, 0);
-  return expiresAt;
+  const dateStr = returnDate || date;
+  // Format: "YYYY-MM-DDTHH:mm:ss+05:30" (IST offset)
+  const isoString = `${dateStr}T${String(returnHour).padStart(2, '0')}:${String(returnMinute).padStart(2, '0')}:00+05:30`;
+  return new Date(isoString);
 };
 
 const isExpiredNow = (outpass) => {

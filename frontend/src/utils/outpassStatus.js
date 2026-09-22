@@ -29,12 +29,14 @@ const isApprovedExpired = (request) => {
     return new Date(request.expiresAt).getTime() <= Date.now();
   }
 
-  // Fallback: compute from Return Date + Return Time
+  // Fallback: compute from Return Date + Return Time in IST (Asia/Kolkata)
   const returnDate = request.returnDate || request.date;
   if (returnDate && request.returnTime) {
     const [returnHour, returnMinute] = String(request.returnTime).split(':').map(Number);
-    const expiry = new Date(returnDate);
-    expiry.setHours(returnHour || 0, returnMinute || 0, 0, 0);
+    // Build ISO string with explicit IST offset (+05:30) for correct UTC conversion
+    const dateStr = returnDate.split('T')[0]; // Ensure we only use the date part
+    const isoString = `${dateStr}T${String(returnHour).padStart(2, '0')}:${String(returnMinute).padStart(2, '0')}:00+05:30`;
+    const expiry = new Date(isoString);
     return expiry.getTime() <= Date.now();
   }
 
