@@ -41,25 +41,64 @@ const buildExpiresAt = (date, returnDate, returnTime) => {
   return new Date(isoString);
 };
 
+// Helper to compute expiry from returnDate + returnTime in IST, used as fallback
+// when expiresAt is missing or potentially incorrect.
+const computeExpiryIST = (returnDate, returnTime) => {
+  const [returnHour, returnMinute] = String(returnTime).split(':').map(Number);
+  const dateStr = returnDate;
+  const isoString = `${dateStr}T${String(returnHour).padStart(2, '0')}:${String(returnMinute).padStart(2, '0')}:00+05:30`;
+  return new Date(isoString).getTime();
+};
+
 const isExpiredNow = (outpass) => {
-  return Boolean(outpass.expiresAt && new Date(outpass.expiresAt).getTime() <= Date.now());
+  // First check expiresAt if available and valid
+  if (outpass.expiresAt && new Date(outpass.expiresAt).getTime() <= Date.now()) {
+    return true;
+  }
+  // Fallback: compute from returnDate + returnTime in IST
+  if (outpass.returnDate && outpass.returnTime) {
+    return computeExpiryIST(outpass.returnDate, outpass.returnTime) <= Date.now();
+  }
+  return false;
 };
 
 const refreshExpiredOutpasses = async () => {
   const now = new Date();
 
-  // Only the overall status becomes Expired. The approval trail stays intact for history and PDFs.
+  // First, handle records with valid expiresAt
   await Outpass.updateMany(
     {
       status: { $in: ACTIVE_STATUSES },
-      expiresAt: { $lte: now },
+      expiresAt: { $exists: true, $ne: null, $lte: new Date() },
     },
     {
-      $set: {
-        status: 'Expired',
-      },
+      $set: { status: 'Expired' },
     }
   );
+
+  // Also handle records where expiresAt is missing or potentially incorrect
+  // by computing expiry from returnDate + returnTime in IST
+  const nowTimestamp = Date.now();
+  const expiredWithoutExpiresAt = await Outpass.find({
+    status: { $in: ACTIVE_STATUSES },
+    $or: [
+      { expiresAt: { $exists: false } },
+      { expiresAt: null },
+    ],
+    returnDate: { $exists: true, $ne: null },
+    returnTime: { $exists: true, $ne: null },
+  }).lean();
+
+  const expiredIds = expiredWithoutExpiresAt
+    .filter((outpass) => computeExpiryIST(outpass.returnDate, outpass.returnTime) <= Date.now())
+    .map((outpass) => outpass._id);
+
+  if (expiredIds.length > 0) {
+    await Outpass.updateMany(
+      { _id: { $in: expiredIds } },
+      { $set: { status: 'Expired' } }
+    );
+  }
 };
 
 // Auto-rejects pending Warden outpasses whose Out Date + Out Time has passed.
