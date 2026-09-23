@@ -7,6 +7,20 @@ import { todayIST } from '../utils/timeFormat';
 // derived from the selected date (no UTC/getDay conversion anywhere).
 const WEEKDAY_OPTIONS = ['Sunday', 'Monday', 'Tuesday', 'Wednesday', 'Thursday', 'Friday', 'Saturday'];
 
+// ---------------------------------------------------------------------------
+// CHANGE 1 — Outing Out Pass Out Time window: 8:00 AM .. 6:00 PM inclusive.
+// Values arrive as 24-hour "HH:MM" from TimeField12 / normalizeTo24Hour, so
+// the check is a plain minutes comparison on the ACTUAL submitted value (it
+// never trusts the picker UI). Home Outpass is intentionally NOT restricted.
+// ---------------------------------------------------------------------------
+const OUTING_WINDOW_ERROR = 'Outing outpass only allowed on 8:00 AM TO 6:00 PM';
+const isOutingOutTimeAllowed = (time) => {
+  const match = /^(\d{1,2}):(\d{2})/.exec(String(time || '').trim());
+  if (!match) return false;
+  const minutes = Number(match[1]) * 60 + Number(match[2]);
+  return minutes >= 8 * 60 && minutes <= 18 * 60; // 08:00 (480) .. 18:00 (1080)
+};
+
 export default function ApplyOutpassForm({
   user,
   form,
@@ -92,6 +106,15 @@ export default function ApplyOutpassForm({
       }
     }
 
+    // Outing window re-checked at submit time so a manually edited picker
+    // can never bypass the immediate Out Time validation. Gated on Outing,
+    // so Home Outpass keeps its existing time rules untouched.
+    if (form.requestType === 'Outing' && !isOutingOutTimeAllowed(form.outTime)) {
+      event.preventDefault();
+      setValidationError(OUTING_WINDOW_ERROR);
+      return;
+    }
+
     setValidationError('');
     onSubmit(event);
   };
@@ -103,6 +126,28 @@ export default function ApplyOutpassForm({
     const outDate = event.target.value;
     if (outDate && form.returnDate && form.returnDate < outDate) {
       onChange({ target: { name: 'returnDate', value: outDate } });
+    }
+  };
+
+  // Immediate Outing-window feedback: the exact message appears the moment
+  // an Out Time outside 8:00 AM - 6:00 PM is picked while Outing is selected.
+  const handleOutTimeChange = (event) => {
+    onChange(event);
+    if (form.requestType === 'Outing' && !isOutingOutTimeAllowed(event.target.value)) {
+      setValidationError(OUTING_WINDOW_ERROR);
+    } else {
+      setValidationError('');
+    }
+  };
+
+  // Switching type re-evaluates the window right away: picking Outing with
+  // an out-of-window time shows the message immediately, and switching to
+  // Home clears it (Home never gets the Outing restriction).
+  const handleRequestTypeChange = (event) => {
+    onChange(event);
+    setValidationError('');
+    if (event.target.value === 'Outing' && !isOutingOutTimeAllowed(form.outTime)) {
+      setValidationError(OUTING_WINDOW_ERROR);
     }
   };
 
@@ -127,7 +172,7 @@ export default function ApplyOutpassForm({
           </label>
           <label>
             Request Type
-            <select name="requestType" value={form.requestType} onChange={onChange} required disabled={saving}>
+            <select name="requestType" value={form.requestType} onChange={handleRequestTypeChange} required disabled={saving}>
               <option value="Outing">Outing</option>
               <option value="Home">Home</option>
             </select>
@@ -196,10 +241,7 @@ export default function ApplyOutpassForm({
               name="outTime"
               label="Out Time"
               value={form.outTime}
-              onChange={(event) => {
-                setValidationError('');
-                onChange(event);
-              }}
+              onChange={handleOutTimeChange}
               required
               disabled={saving}
             />

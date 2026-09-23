@@ -305,6 +305,12 @@
 
 .outpass-card__final--approved .outpass-card__glyph {
   background: var(--green-600);
+  /* Approved tick pulse: the green circle breathes normal -> larger ->
+     normal while its glow brightens, repeating continuously. transform/
+     box-shadow only, so the tick stays centered, the banner size never
+     shifts, and the APPROVED text below is never covered. */
+  transform-origin: center;
+  animation: approved-tick-pulse 1.6s ease-in-out infinite;
 }
 
 .outpass-card__final--approved strong {
@@ -452,16 +458,43 @@
   0%,
   100% {
     box-shadow: 0 0 0 0 transparent;
+    transform: scale(1);
+    opacity: 0.45;
   }
   50% {
-    box-shadow: 0 0 16px 2px;
+    /* Much more visible glow: wider, brighter, and the ring itself
+       expands outward before easing back — a soft security-status pulse. */
+    box-shadow: 0 0 22px 6px currentColor;
+    transform: scale(1.07);
+    opacity: 0.95;
+  }
+}
+
+/* Approved tick: normal -> clearly larger (1.15x) -> normal, continuously,
+   with an expanding green glow that brightens then fades. 1.15x keeps the
+   circle inside the banner's vertical gap, so it never overlaps the
+   APPROVED text or "You are allowed to go out." line below it. */
+@keyframes approved-tick-pulse {
+  0%,
+  100% {
+    transform: scale(1);
+    box-shadow:
+      0 0 0 8px rgba(255, 255, 255, 0.55),
+      0 0 10px 2px rgba(22, 163, 74, 0.3);
+  }
+  50% {
+    transform: scale(1.15);
+    box-shadow:
+      0 0 0 9px rgba(255, 255, 255, 0.75),
+      0 0 26px 7px rgba(22, 163, 74, 0.9);
   }
 }
 
 /* Respect users who prefer less motion — the static ring stays visible. */
 @media (prefers-reduced-motion: reduce) {
   .outpass-status-word::before,
-  .outpass-status-word::after {
+  .outpass-status-word::after,
+  .outpass-card__final--approved .outpass-card__glyph {
     animation: none;
   }
 }
