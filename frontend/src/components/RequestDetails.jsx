@@ -16,7 +16,10 @@ export function MyRequestsTable({ requests, onViewDetails, onEdit }) {
               <td><strong>{request.requestType}</strong></td>
               <td>{formatDate(request.date)}</td>
               <td>{formatTime(request.outTime)}-{formatTime(request.returnTime)}</td>
-              <td className="requests-reason-cell">{request.reason}</td>
+              {/* Rejected requests show the reviewer's rejection reason; every other status keeps the student's own reason. */}
+              <td className="requests-reason-cell">
+                {request.status === 'Rejected' && request.rejectionReason ? request.rejectionReason : request.reason}
+              </td>
               <td><span className={`status-badge status-${getStatusClass(request)}`}>{getDisplayStatus(request)}</span></td>
               <td>
                 <div className="table-actions">
