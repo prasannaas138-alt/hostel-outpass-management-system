@@ -36,18 +36,31 @@ const demoUsers = [
   {
     name: 'Demo HOD',
     email: 'hod@demo.com',
+    // Non-empty placeholders for the three conditionally-required student
+    // fields: mongoose 9 enforces them at create() time, and the staff
+    // migration below $unset-s them from every HOD/Sister/Warden account in
+    // this same run — so staff accounts never retain student-only data.
+    registerNumber: 'N/A',
+    department: 'N/A',
+    roomNumber: 'N/A',
     password: process.env.DEMO_HOD_PASSWORD,
     role: 'HOD',
   },
   {
     name: 'Demo Sister',
     email: 'sister@demo.com',
+    registerNumber: 'N/A',
+    department: 'N/A',
+    roomNumber: 'N/A',
     password: process.env.DEMO_SISTER_PASSWORD,
     role: 'Sister',
   },
   {
     name: 'Demo Warden',
     email: 'warden@demo.com',
+    registerNumber: 'N/A',
+    department: 'N/A',
+    roomNumber: 'N/A',
     password: process.env.DEMO_WARDEN_PASSWORD,
     role: 'Warden',
   },
