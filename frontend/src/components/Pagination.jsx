@@ -1,4 +1,4 @@
-﻿// Pagination footer for long lists (Outpass History) - ALWAYS visible.
+// Pagination footer for long lists (Outpass History) - ALWAYS visible.
 // Left: "Showing X - Y of N outpasses" (computed from the current page).
 // Right: compact prev/pages/next controls (windowed numbers, e.g. 1 2 3 ... 10).
 // Pages are dynamic - page N simply slices the current newest-first sorted
@@ -26,12 +26,15 @@ export default function Pagination({
   totalPages,
   onChange,
   total = 0,
+  // Records per page for the Showing X - Y range. Defaults to 30
+  // (student history); the redesigned Outpass History passes 15.
+  pageSize = PAGE_SIZE,
   label = 'Outpass history pages',
 }) {
   // Never hidden - even a single page (or zero records) shows the footer.
   const pages = Math.max(1, Math.ceil(Number(totalPages) || 0));
-  const displayStart = total === 0 ? 0 : (page - 1) * PAGE_SIZE + 1;
-  const displayEnd = Math.min(page * PAGE_SIZE, total);
+  const displayStart = total === 0 ? 0 : (page - 1) * pageSize + 1;
+  const displayEnd = Math.min(page * pageSize, total);
 
   const go = (next) => {
     const clamped = Math.min(Math.max(1, next), pages);

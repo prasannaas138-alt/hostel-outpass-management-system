@@ -331,10 +331,7 @@ export default function WardenDashboard() {
           ) : null}
 
           <WardenOutpassHistory
-            items={items}
-            loading={loading}
-            loadError={loadError}
-            onRetry={loadHistory}
+            endpoint="/outpasses/warden/history"
           />
         </>
       )}

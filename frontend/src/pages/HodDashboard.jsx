@@ -210,9 +210,7 @@ export default function HodDashboard() {
       </section>
       <RoleOutpassHistory
         id="hod-history"
-        items={history}
-        subtitle="Students who received or requested a Home Outpass."
-        emptyMessage="No Home Outpass history is available."
+        endpoint="/outpasses/history/hod"
       />
       </>}
     </WardenLayout>

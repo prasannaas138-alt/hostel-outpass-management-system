@@ -50,6 +50,24 @@ const toDateOnlyString = (value) => {
   return Number.isNaN(parsed.getTime()) ? '' : toDateOnlyString(parsed);
 };
 
+// Optional ?date=YYYY-MM-DD filter for the three Outpass History endpoints.
+// A record matches when the selected IST calendar day equals its Out Date OR
+// its Return Date (the redesigned history page needs both meanings). Uses the
+// existing toDateOnlyString convention, so every stored shape (Date object,
+// "YYYY-MM-DD", full ISO string) compares as the same Indian calendar day --
+// never a raw UTC or browser-local comparison. Without the parameter the
+// response is the full history exactly as before, so existing callers,
+// authorization and role checks are untouched.
+const filterBySelectedDate = (outpasses, req) => {
+  const selectedDate = String(req.query?.date || '').trim();
+  if (!selectedDate) return outpasses;
+  return outpasses.filter(
+    (outpass) =>
+      toDateOnlyString(outpass.date) === selectedDate ||
+      toDateOnlyString(outpass.returnDate) === selectedDate
+  );
+};
+
 // Normalizes the time shapes actually stored in MongoDB to 24-hour "HH:MM".
 // Handles "HH:MM", "HH:MM:SS" and legacy 12-hour strings like "9:47 AM" /
 // "12:05 pm". Returns '' when the value cannot be understood.
@@ -614,7 +632,7 @@ export const getHodHistory = async (req, res, next) => {
         { status: { $in: ['Approved', 'Rejected', 'Expired'] } },
       ],
     }).sort({ createdAt: -1 }).populate('studentId', STUDENT_POPULATE).lean();
-    res.json(outpasses.map(enrichOutpass));
+    res.json(filterBySelectedDate(outpasses, req).map(enrichOutpass));
   } catch (error) {
     next(error);
   }
@@ -629,7 +647,7 @@ export const getSisterHistory = async (req, res, next) => {
         { status: { $in: ['Approved', 'Rejected', 'Expired'] } },
       ],
     }).sort({ createdAt: -1 }).populate('studentId', STUDENT_POPULATE).lean();
-    res.json(outpasses.map(enrichOutpass));
+    res.json(filterBySelectedDate(outpasses, req).map(enrichOutpass));
   } catch (error) {
     next(error);
   }
@@ -651,7 +669,7 @@ export const getWardenHistory = async (req, res, next) => {
       .lean();
 
     res.json(
-      outpasses.map((outpass) => ({
+      filterBySelectedDate(outpasses, req).map((outpass) => ({
         ...outpass,
         registerNumber: outpass.registerNumber || outpass.studentId?.registerNumber || '',
         roomNumber: outpass.roomNumber || outpass.studentId?.roomNumber || '',

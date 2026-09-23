@@ -333,9 +333,7 @@ export default function SisterDashboard() {
           ) : null}
           <RoleOutpassHistory
             id="sister-history"
-            items={history}
-            subtitle="Home Outpass requests reviewed by Sister."
-            emptyMessage="No Home Outpass history matches this view."
+            endpoint="/outpasses/history/sister"
           />
         </main>
         <nav className="wd-bottomnav" aria-label="Sister mobile navigation">

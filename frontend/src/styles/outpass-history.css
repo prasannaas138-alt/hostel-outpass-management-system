@@ -1,0 +1,294 @@
+/* ==========================================================================
+   Outpass History redesign (HOD / Sister / Warden) - selected-date view.
+   Top: calendar + summary counts for the SELECTED day.
+   Full-width vertical stack: OUTING OUTPASS first, then HOME OUTPASS below
+   it; the Home card holds two sub-sections (Going Home / Returning Home)
+   each with its own table and pagination. Layout/visuals only - status,
+   expiry and approval logic stay in the existing utilities and backend.
+   ========================================================================== */
+
+/* The panel becomes an explicit grid so every block (head, summary, chips,
+   columns) gets consistent spacing regardless of the base .wd-panel rule. */
+.role-outpass-history {
+  display: grid;
+  gap: 1rem;
+  min-width: 0;
+}
+
+.role-outpass-history > * {
+  min-width: 0;
+}
+
+/* ---------------------------------------------------------- date picker -- */
+/* Same native <input type="date"> calendar the Student Apply Outpass form
+   uses, wrapped in an H.O.M.S. pill with the existing calendar icon. */
+.oh-datepick {
+  display: inline-flex;
+  align-items: center;
+  gap: 0.55rem;
+  justify-self: start;
+  min-height: 44px;
+  padding: 0 0.85rem;
+  border: 1px solid #e2e7f1;
+  border-radius: 12px;
+  background: #fff;
+  color: var(--wd-muted);
+  cursor: pointer;
+}
+
+.oh-datepick input[type="date"] {
+  border: 0;
+  outline: none;
+  background: transparent;
+  font: inherit;
+  font-size: 0.92rem;
+  font-weight: 800;
+  color: var(--wd-ink);
+  min-width: 0;
+}
+
+/* --------------------------------------------------- selected-date summary */
+.oh-summary {
+  display: grid;
+  grid-template-columns: repeat(3, minmax(0, 1fr));
+  gap: 0.75rem;
+}
+
+.oh-stat {
+  display: flex;
+  align-items: center;
+  gap: 0.75rem;
+  min-width: 0;
+  padding: 0.85rem 1rem;
+  border: 1px solid #e6eaf3;
+  border-radius: 14px;
+  background: #fff;
+}
+
+.oh-stat__icon {
+  display: grid;
+  place-items: center;
+  flex: none;
+  width: 42px;
+  height: 42px;
+  border-radius: 50%;
+  font-size: 1.15rem;
+}
+
+.oh-stat__icon--green { background: #dcfce7; }
+.oh-stat__icon--blue { background: #dbeafe; }
+.oh-stat__icon--purple { background: #ede9fe; }
+
+.oh-stat__body { min-width: 0; }
+
+.oh-stat__label {
+  margin: 0;
+  font-size: 0.78rem;
+  font-weight: 700;
+  color: var(--wd-muted);
+}
+
+.oh-stat__value {
+  margin: 0.15rem 0 0;
+  font-size: 1.5rem;
+  font-weight: 800;
+  line-height: 1.1;
+}
+
+.oh-stat__value--green { color: #16a34a; }
+.oh-stat__value--blue { color: #2563eb; }
+.oh-stat__value--purple { color: #7c3aed; }
+
+/* ------------------------------------------------------- stacked sections */
+/* Full-width vertical stack only - NO left/right columns: OUTING OUTPASS
+   occupies the full content width, HOME OUTPASS sits below it at full width
+   (DOM order already matches: Outing, Home, Going, Returning). */
+.oh-columns {
+  display: grid;
+  grid-template-columns: minmax(0, 1fr);
+  gap: 1.1rem;
+  align-items: start;
+  min-width: 0;
+}
+
+.oh-column {
+  display: grid;
+  gap: 0.85rem;
+  align-content: start;
+  min-width: 0;
+  padding: 1rem;
+  border: 1px solid #e6eaf3;
+  border-radius: 16px;
+  background: #fff;
+}
+
+.oh-col-head {
+  display: flex;
+  align-items: center;
+  gap: 0.7rem;
+  min-width: 0;
+}
+
+.oh-col-icon {
+  display: grid;
+  place-items: center;
+  flex: none;
+  width: 40px;
+  height: 40px;
+  border-radius: 50%;
+  font-size: 1.2rem;
+}
+
+.oh-col-icon--outing,
+.oh-col-icon--home { background: #dbeafe; }
+
+.oh-col-head h3 {
+  margin: 0;
+  font-size: 1rem;
+  color: var(--wd-ink);
+}
+
+.oh-col-head p {
+  margin: 0.15rem 0 0;
+  font-size: 0.78rem;
+  color: var(--wd-muted);
+}
+
+/* The search bar always fills its own column (wd-search is 300px only on
+   wide screens; inside a column it must stretch, never overlap). */
+.oh-column .wd-search {
+  width: 100%;
+}
+
+/* ------------------------------------------------------ home sub-sections */
+.oh-subsection {
+  display: grid;
+  gap: 0.65rem;
+  min-width: 0;
+  padding: 0.75rem;
+  border: 1px solid #e6eaf3;
+  border-radius: 14px;
+  background: #fff;
+}
+
+.oh-subhead {
+  display: flex;
+  flex-wrap: wrap;
+  align-items: center;
+  gap: 0.55rem;
+  min-width: 0;
+  padding: 0.6rem 0.75rem;
+  border-radius: 12px;
+}
+
+.oh-subhead h4 {
+  margin: 0;
+  flex: 1 1 12rem;
+  min-width: 0;
+  font-size: 0.86rem;
+}
+
+/* Going Home = green visual style (reference + spec). */
+.oh-subhead--going {
+  background: #f0fdf4;
+  border: 1px solid #bbf7d0;
+  color: #15803d;
+}
+
+/* Returning Home = red / return-oriented visual style (spec). */
+.oh-subhead--returning {
+  background: #fef2f2;
+  border: 1px solid #fecaca;
+  color: #b91c1c;
+}
+
+.oh-sub-icon {
+  display: grid;
+  place-items: center;
+  flex: none;
+  width: 32px;
+  height: 32px;
+  border-radius: 50%;
+  font-size: 1rem;
+  background: #dcfce7;
+}
+
+.oh-subhead--returning .oh-sub-icon { background: #fee2e2; }
+
+.oh-date-chip {
+  margin-left: auto;
+  padding: 0.25rem 0.65rem;
+  border-radius: 999px;
+  background: #fff;
+  border: 1px solid #bbf7d0;
+  color: #15803d;
+  font-size: 0.72rem;
+  font-weight: 800;
+  white-space: nowrap;
+}
+
+.oh-subhead--returning .oh-date-chip {
+  border-color: #fecaca;
+  color: #b91c1c;
+}
+
+/* ---------------------------------------------------------------- tables -- */
+/* Tables stay visible at EVERY screen size on this page and scroll
+   horizontally instead of squeezing columns until they overlap (spec). */
+.role-outpass-history .wd-table-wrap {
+  display: block;
+  max-width: 100%;
+  overflow-x: auto;
+}
+
+.role-outpass-history .wd-table {
+  table-layout: fixed;
+  font-size: 0.78rem;
+}
+
+.role-outpass-history .wd-table th {
+  white-space: normal; /* headers like OUTING DATE wrap onto two lines */
+  padding: 0.55rem 0.4rem;
+}
+
+.role-outpass-history .wd-table td {
+  padding: 0.6rem 0.4rem;
+}
+
+/* Min-widths guarantee no date/time/status/button text is clipped; below
+   that width the wrapper scrolls cleanly instead of overlapping. */
+.oh-table--outing { min-width: 640px; }
+.oh-table--home { min-width: 410px; }
+
+/* Outing columns: S.NO | NAME | OUTING DATE | RETURN DATE | OUT TIME |
+   RETURN TIME | STATUS | PROFILE  (sums to 100%) */
+.oh-col-no { width: 6%; }
+.oh-col-name { width: 23%; }
+.oh-col-date { width: 13%; }
+.oh-col-time { width: 8.5%; }
+.oh-col-status { width: 13%; }
+.oh-col-profile { width: 15%; }
+
+/* Home columns: S.NO | NAME | OUT/RETURN DATE | STATUS | PROFILE */
+.oh-hcol-no { width: 7%; }
+.oh-hcol-name { width: 36%; }
+.oh-hcol-date { width: 19%; }
+.oh-hcol-status { width: 17%; }
+.oh-hcol-profile { width: 21%; }
+
+/* ------------------------------------------------------------- responsive */
+@media (min-width: 980px) {
+  /* Panel head becomes title (left) + calendar (right), as in reference. */
+  .role-outpass-history .wd-panel-head {
+    align-items: center;
+  }
+
+  .oh-datepick { justify-self: end; }
+}
+
+@media (max-width: 700px) {
+  /* Summary stacks; the calendar stretches but stays fully usable. */
+  .oh-summary { grid-template-columns: minmax(0, 1fr); }
+  .oh-datepick { width: 100%; }
+  .oh-datepick input[type="date"] { flex: 1; }
+}
