@@ -9,6 +9,7 @@ import { MyRequestsTable } from '../components/RequestDetails';
 import OutpassDetails from '../components/OutpassDetails';
 import LoadingState from '../components/LoadingState';
 import ErrorState from '../components/ErrorState';
+import QrScanSheet from '../components/QrScanSheet';
 import {
   getDisplayStatus,
   isExpiredRequest,
@@ -19,6 +20,7 @@ import '../styles/dashboard.css';
 import '../styles/student.css';
 import '../styles/apply-requests.css';
 import '../styles/history-profile.css';
+import '../styles/qr-scan.css';
 import { useAuth } from '../context/AuthContext';
 
 const emptyForm = {
@@ -48,6 +50,7 @@ export default function StudentDashboard() {
   const [historySearch, setHistorySearch] = useState('');
   const [detailId, setDetailId] = useState(null);
   const [profileViewActive, setProfileViewActive] = useState(false);
+  const [qrScannerOpen, setQrScannerOpen] = useState(false);
 
   // A minute-ticker forces the expiry filters to re-evaluate so an
   // approved outpass flips from My Requests to Outpass History right
@@ -252,6 +255,21 @@ export default function StudentDashboard() {
 </picture></p>
       </section>
 
+      <section className="student-hero" aria-label="Gate movement">
+        <div>
+          <p className="eyebrow">Gate movement</p>
+          <h2>Scan the hostel gate QR</h2>
+          <p>Record your campus exit or return with the permanent gate QR.</p>
+        </div>
+        <button
+          className="primary-button"
+          type="button"
+          onClick={() => setQrScannerOpen(true)}
+        >
+          QR Scan
+        </button>
+      </section>
+
       {loadError ? (
             <section className="panel" aria-label="Data unavailable">
               <ErrorState
@@ -339,6 +357,14 @@ export default function StudentDashboard() {
           </section>
         </>
       )}
+
+      {qrScannerOpen ? (
+        <QrScanSheet
+          open
+          onClose={() => setQrScannerOpen(false)}
+          onScanComplete={loadRequests}
+        />
+      ) : null}
 
       {profileViewActive ? (
         <div

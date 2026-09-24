@@ -1,0 +1,262 @@
+/* Student gate-QR scanner — full-screen overlay, mobile-first.
+   Follows the existing H.O.M.S. overlay/button conventions
+   (profile-modal-overlay, logout-confirm-overlay, primary/secondary-button). */
+
+.qrscan-overlay {
+  position: fixed;
+  inset: 0;
+  z-index: 120;
+  display: flex;
+  align-items: stretch;
+  justify-content: center;
+  padding: 0;
+  background: rgba(15, 23, 42, 0.72);
+  backdrop-filter: blur(2px);
+}
+
+.qrscan-card {
+  width: 100%;
+  max-width: 560px;
+  max-height: 100dvh;
+  overflow-y: auto;
+  background: var(--surface);
+  border: 1px solid var(--border);
+  border-radius: 0;
+  box-shadow: var(--shadow-md);
+  padding: 1rem 1rem 1.25rem;
+  display: grid;
+  gap: 0.9rem;
+  align-content: start;
+}
+
+.qrscan-header {
+  display: flex;
+  align-items: flex-start;
+  justify-content: space-between;
+  gap: 1rem;
+}
+
+.qrscan-header h2 {
+  margin: 0.2rem 0 0;
+  font-size: var(--text-xl);
+  color: var(--text);
+}
+
+.qrscan-close {
+  min-width: 48px;
+  min-height: 48px;
+  padding: 0.4rem 0.8rem;
+  font-size: 1.5rem;
+  line-height: 1;
+}
+
+.qrscan-hint {
+  margin: 0;
+}
+
+.qrscan-viewport {
+  position: relative;
+  width: 100%;
+  aspect-ratio: 1;
+  max-height: 62dvh;
+  overflow: hidden;
+  border-radius: var(--radius-lg);
+  background: #0f172a;
+  border: 1px solid var(--border-strong);
+}
+
+.qrscan-region {
+  position: absolute;
+  inset: 0;
+}
+
+.qrscan-region video {
+  width: 100% !important;
+  height: 100% !important;
+  object-fit: cover;
+  border-radius: 0 !important;
+}
+
+.qrscan-region canvas {
+  display: none;
+}
+
+.qrscan-frame {
+  position: absolute;
+  inset: 0;
+  pointer-events: none;
+  display: block;
+}
+
+.qrscan-corner {
+  position: absolute;
+  width: 44px;
+  height: 44px;
+  border: 4px solid #fff;
+  border-radius: 6px;
+  filter: drop-shadow(0 1px 3px rgba(0, 0, 0, 0.6));
+}
+
+.qrscan-corner--tl { top: 12%; left: 12%; border-right: 0; border-bottom: 0; }
+.qrscan-corner--tr { top: 12%; right: 12%; border-left: 0; border-bottom: 0; }
+.qrscan-corner--bl { bottom: 12%; left: 12%; border-right: 0; border-top: 0; }
+.qrscan-corner--br { bottom: 12%; right: 12%; border-left: 0; border-top: 0; }
+
+.qrscan-notice {
+  display: grid;
+  gap: 0.4rem;
+  padding: 0.9rem 1rem;
+  border-radius: var(--radius-md);
+  background: var(--blue-50);
+  border: 1px solid #bfdbfe;
+  color: var(--navy-800);
+}
+
+.qrscan-notice p {
+  margin: 0;
+}
+
+.qrscan-notice--error {
+  background: var(--red-50);
+  border-color: #fecaca;
+  color: var(--red-700);
+}
+
+.qrscan-spinner {
+  width: 28px;
+  height: 28px;
+  border-radius: 50%;
+  border: 3px solid #bfdbfe;
+  border-top-color: var(--blue-600);
+  animation: qrscan-spin 0.9s linear infinite;
+}
+
+@keyframes qrscan-spin {
+  to { transform: rotate(360deg); }
+}
+
+.qrscan-success {
+  display: grid;
+  justify-items: center;
+  gap: 0.45rem;
+  text-align: center;
+  padding: 0.6rem 0.25rem 0.2rem;
+}
+
+.qrscan-success-ring {
+  width: 120px;
+  height: 120px;
+}
+
+.qrscan-success-svg {
+  width: 100%;
+  height: 100%;
+}
+
+.qrscan-success-circle {
+  stroke: #16a34a;
+  stroke-width: 3;
+  stroke-dasharray: 151;
+  stroke-dashoffset: 151;
+  animation: qrscan-ring 0.7s ease-out forwards;
+}
+
+.qrscan-success-check {
+  stroke: #16a34a;
+  stroke-width: 4;
+  stroke-linecap: round;
+  stroke-linejoin: round;
+  stroke-dasharray: 40;
+  stroke-dashoffset: 40;
+  animation: qrscan-check 0.45s ease-out 0.55s forwards;
+}
+
+@keyframes qrscan-ring {
+  to { stroke-dashoffset: 0; }
+}
+
+@keyframes qrscan-check {
+  to { stroke-dashoffset: 0; }
+}
+
+.qrscan-success-title {
+  margin: 0.3rem 0 0;
+  font-size: 1.6rem;
+  letter-spacing: 0.04em;
+  color: #15803d;
+}
+
+.qrscan-success-subtitle {
+  margin: 0;
+  font-weight: 700;
+  color: var(--text);
+}
+
+.qrscan-success-time {
+  margin: 0.35rem 0 0;
+  display: grid;
+  gap: 0.15rem;
+}
+
+.qrscan-success-time span {
+  font-size: var(--text-xs);
+  text-transform: uppercase;
+  letter-spacing: 0.08em;
+  color: var(--muted);
+}
+
+.qrscan-success-time strong {
+  font-size: var(--text-lg);
+  color: var(--navy-900);
+}
+
+.qrscan-late {
+  margin: 0.3rem 0 0;
+  padding: 0.5rem 0.9rem;
+  border-radius: 999px;
+  background: #fef3c7;
+  border: 1px solid #fcd34d;
+  color: #92400e;
+  font-weight: 800;
+}
+
+.qrscan-outpass {
+  margin: 0;
+  font-size: var(--text-sm);
+}
+
+.qrscan-actions {
+  display: flex;
+  gap: 0.75rem;
+  flex-wrap: wrap;
+}
+
+.qrscan-actions .primary-button,
+.qrscan-actions .secondary-button {
+  flex: 1 1 140px;
+  min-height: 52px;
+}
+
+@media (min-width: 640px) {
+  .qrscan-overlay {
+    align-items: center;
+    padding: 1rem;
+  }
+
+  .qrscan-card {
+    border-radius: var(--radius-lg);
+    padding: 1.25rem 1.25rem 1.5rem;
+  }
+}
+
+@media (prefers-reduced-motion: reduce) {
+  .qrscan-spinner {
+    animation-duration: 0.01ms;
+  }
+
+  .qrscan-success-circle,
+  .qrscan-success-check {
+    animation-duration: 0.01ms;
+    stroke-dashoffset: 0;
+  }
+}

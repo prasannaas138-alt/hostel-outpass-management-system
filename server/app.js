@@ -5,6 +5,8 @@ import path from 'path';
 import { fileURLToPath } from 'url';
 import authRoutes from './routes/authRoutes.js';
 import outpassRoutes from './routes/outpassRoutes.js';
+import gateRoutes from './routes/gateRoutes.js';
+import movementRoutes from './routes/movementRoutes.js';
 import notificationRoutes from './routes/notificationRoutes.js';
 import monthlyDownloadRoutes from './routes/monthlyDownloadRoutes.js';
 import { notFound, errorHandler } from './middleware/errorHandler.js';
@@ -58,6 +60,8 @@ app.get('/', (req, res) => {
 
 app.use('/api/auth', authRoutes);
 app.use('/api/outpasses', outpassRoutes);
+app.use('/api/gates', gateRoutes);
+app.use('/api/movements', movementRoutes);
 app.use('/api/notifications', notificationRoutes);
 app.use('/api/monthly-outpasses', monthlyDownloadRoutes);
 

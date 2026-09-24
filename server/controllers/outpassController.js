@@ -1,6 +1,10 @@
 ﻿import Outpass from '../models/Outpass.js';
 import User from '../models/User.js';
 import { createOutpassPdf } from '../utils/pdf.js';
+// IST schedule helpers (shared): the day/time parsing rules and the explicit
+// +05:30 instant construction live in ONE module, so the existing expiry checks
+// and the movement schedule resolver can never disagree about an instant.
+import { buildIstInstant, toDateOnlyString, to24HourString } from '../utils/ist.js';
 import { notifyNewOutpass, markOutpassNotificationsRead } from '../services/notificationService.js';
 
 const ACTIVE_STATUSES = ['Pending', 'Approved'];
@@ -32,23 +36,9 @@ const enrichOutpass = (outpass) => {
 
 const pad2 = (value) => String(value).padStart(2, '0');
 
-// Normalizes any date shape actually stored in MongoDB ("YYYY-MM-DD",
-// full ISO string, or a Date object) to the "YYYY-MM-DD" calendar day in IST.
-const toDateOnlyString = (value) => {
-  if (!value) return '';
-  if (value instanceof Date) {
-    if (Number.isNaN(value.getTime())) return '';
-    const ist = new Date(value.getTime() + 5.5 * 60 * 60 * 1000);
-    return `${ist.getUTCFullYear()}-${pad2(ist.getUTCMonth() + 1)}-${pad2(ist.getUTCDate())}`;
-  }
-  const s = String(value).trim();
-  const iso = s.match(/^(\d{4})-(\d{1,2})-(\d{1,2})/);
-  if (iso) {
-    return `${iso[1]}-${pad2(iso[2])}-${pad2(iso[3])}`;
-  }
-  const parsed = new Date(s);
-  return Number.isNaN(parsed.getTime()) ? '' : toDateOnlyString(parsed);
-};
+// toDateOnlyString (the IST calendar day of any stored date shape) now lives in
+// server/utils/ist.js, so the existing expiry logic and the movement resolver
+// share one parsing rule instead of two copies that could drift apart.
 
 // Optional ?date=YYYY-MM-DD filter for the three Outpass History endpoints.
 // A record matches when the selected IST calendar day equals its Out Date OR
@@ -68,27 +58,8 @@ const filterBySelectedDate = (outpasses, req) => {
   );
 };
 
-// Normalizes the time shapes actually stored in MongoDB to 24-hour "HH:MM".
-// Handles "HH:MM", "HH:MM:SS" and legacy 12-hour strings like "9:47 AM" /
-// "12:05 pm". Returns '' when the value cannot be understood.
-const to24HourString = (value) => {
-  const s = String(value || '').trim();
-  if (!s) return '';
-  const m = s.match(/^(\d{1,2})(?::(\d{1,2}))?(?::(\d{1,2}))?\s*(am|pm)?$/i);
-  if (!m) return '';
-  let hour = Number.parseInt(m[1], 10);
-  const minute = m[2] !== undefined ? Number.parseInt(m[2], 10) : 0;
-  const period = (m[4] || '').toLowerCase();
-  if (Number.isNaN(hour) || Number.isNaN(minute) || minute > 59) return '';
-  if (period) {
-    if (hour < 1 || hour > 12) return '';
-    if (period === 'pm' && hour !== 12) hour += 12;
-    if (period === 'am' && hour === 12) hour = 0;
-  } else if (hour > 23) {
-    return '';
-  }
-  return `${pad2(hour)}:${pad2(minute)}`;
-};
+// to24HourString (24-hour "HH:MM" of any stored time shape, legacy 12-hour
+// strings included) now lives in server/utils/ist.js for the same reason.
 
 const buildExpiresAt = (date, returnDate, returnTime) => {
   // Expiry = RETURN DATE + RETURN TIME in Asia/Kolkata (IST, +05:30).
@@ -177,13 +148,26 @@ const refreshExpiredOutpasses = async () => {
 // with the exact reason before they are shown or reviewed.
 const WARDEN_EXPIRED_REJECTION_REASON = 'Automatically rejected: outpass expired at Out Date + Out Time';
 
+// Out Date + Out Time in IST (Asia/Kolkata).
+//
+// FIXED: this used to be built with `new Date(`${dateStr}T00:00:00`)` and then
+// `expiresAt.setHours(hour, minute)`. Both interpret the value in the SERVER's
+// local timezone, so on a UTC host (production) the boundary came out 5h30m
+// LATER than the real IST out time - 09:00 IST was treated as 09:00 UTC, which
+// is 14:30 IST. It is now constructed with an explicit +05:30 offset, the same
+// convention buildExpiresAt() and computeExpiryIST() already use, so
+// "Out Date + Out Time" means the same absolute moment on every host. On an
+// IST-configured machine the result is unchanged; on a UTC machine it is
+// corrected.
+//
+// The contract is preserved: the helper still ALWAYS returns a Date (never null
+// and it cannot throw), so isWardenOutpassExpired() keeps working unchanged. The
+// only fallback kept is the old "assume today" one, now taken as the IST
+// calendar day, and '00:00' for an unparsable out time.
 const buildOutTimeExpiry = (outpass) => {
   const time24 = to24HourString(outpass.outTime) || '00:00';
-  const [hour, minute] = time24.split(':').map(Number);
-  const dateStr = toDateOnlyString(outpass.date);
-  const expiresAt = dateStr ? new Date(`${dateStr}T00:00:00`) : new Date();
-  expiresAt.setHours(hour, minute, 0, 0);
-  return expiresAt;
+  const dateStr = toDateOnlyString(outpass.date) || toDateOnlyString(new Date());
+  return buildIstInstant(dateStr, time24) || new Date();
 };
 
 const isWardenOutpassExpired = (outpass) => {
