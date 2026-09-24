@@ -117,8 +117,15 @@ export default function LiveMovementsView() {
     connectMovementSocket();
     unsubscribe = subscribeToMovementUpdates((event) => {
       if (!active || !movementKey(event)) return;
-      bufferedEvents.current.set(movementKey(event), event);
-      setMovements((current) => mergeByMovementId(current, [event]));
+      // The existing event calls the authoritative state `movementState`,
+      // while the initial snapshot and row renderer use `state`. Normalize
+      // the same event into the existing row shape before reconciling it.
+      const realtimeMovement = {
+        ...event,
+        state: event.state ?? event.movementState,
+      };
+      bufferedEvents.current.set(movementKey(realtimeMovement), realtimeMovement);
+      setMovements((current) => mergeByMovementId(current, [realtimeMovement]));
     });
     loadSnapshot();
 
