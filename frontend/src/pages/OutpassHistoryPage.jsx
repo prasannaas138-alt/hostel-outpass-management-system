@@ -12,16 +12,19 @@ const rolePaths = {
     dashboard: '/hod-dashboard',
     history: '/hod/history',
     gates: '/hod/gates',
+    endpoint: '/outpasses/history/hod',
   },
   Sister: {
     dashboard: '/sister-dashboard',
     history: '/sister/history',
     gates: '/sister/gates',
+    endpoint: '/outpasses/history/sister',
   },
   Warden: {
     dashboard: '/warden-dashboard',
     history: '/warden/history',
     gates: '/warden/gates',
+    endpoint: '/outpasses/warden/history',
   },
 };
 
@@ -38,7 +41,7 @@ export default function OutpassHistoryPage({ role = 'Warden' }) {
     <WardenLayout view="history" navItems={navItems}>
       <RoleOutpassHistory
         id={`${role.toLowerCase()}-history`}
-        endpoint={`/outpasses/history/${role.toLowerCase()}`}
+        endpoint={paths.endpoint}
       />
     </WardenLayout>
   );
