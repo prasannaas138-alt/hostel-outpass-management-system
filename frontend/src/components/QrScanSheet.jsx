@@ -251,7 +251,11 @@ export default function QrScanSheet({ open, onClose, onScanComplete }) {
         ) : null}
 
         {isSuccess ? (
-          <div className="qrscan-success" role="status" aria-live="polite">
+          <div
+            className={`qrscan-success ${isReturn ? 'qrscan-success--return' : 'qrscan-success--exit'}`}
+            role="status"
+            aria-live="polite"
+          >
             <img
               className="qrscan-verification-logo"
               src="/st-joseph-logo.png"
@@ -262,7 +266,11 @@ export default function QrScanSheet({ open, onClose, onScanComplete }) {
             <div className="qrscan-success-ring" aria-hidden="true">
               <svg viewBox="0 0 52 52" className="qrscan-success-svg">
                 <circle className="qrscan-success-circle" cx="26" cy="26" r="24" fill="none" />
-                <path className="qrscan-success-check" fill="none" d="M14 27l8 8 16-16" />
+                {isReturn ? (
+                  <path className="qrscan-verification-icon" fill="none" d="M17 18l9 9 9-9M26 27v15" />
+                ) : (
+                  <path className="qrscan-verification-icon" fill="none" d="M17 34l9-9 9 9M26 25V10" />
+                )}
               </svg>
             </div>
             <p className="qrscan-success-status">APPROVED</p>
