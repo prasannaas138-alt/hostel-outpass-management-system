@@ -46,7 +46,7 @@ const mergeByMovementId = (rows, incoming) => {
   return [...next.values()];
 };
 
-const MovementTable = ({ rows, emptyMessage }) => (
+const MovementTable = ({ rows, emptyMessage, canEditReport, onEditReport }) => (
   <div className="table-wrap">
     <table>
       <thead>
@@ -58,6 +58,7 @@ const MovementTable = ({ rows, emptyMessage }) => (
           <th>Expected return</th>
           <th>Actual return</th>
           <th>Status</th>
+          <th>Report</th>
         </tr>
       </thead>
       <tbody>
@@ -79,6 +80,22 @@ const MovementTable = ({ rows, emptyMessage }) => (
                 {statusLabel(movement.state)}
               </span>
             </td>
+            <td>
+              <span className="movement-report-value">{movement.report || '—'}</span>
+              {canEditReport ? (
+                <button
+                  className="movement-report-edit"
+                  type="button"
+                  aria-label="Edit report"
+                  onClick={() => onEditReport(movement)}
+                >
+                  <svg viewBox="0 0 24 24" width="14" height="14" fill="none" stroke="currentColor" strokeWidth="2" aria-hidden="true">
+                    <path d="M12 20h9" />
+                    <path d="M16.5 3.5a2.1 2.1 0 0 1 3 3L8 18l-4 1 1-4Z" />
+                  </svg>
+                </button>
+              ) : null}
+            </td>
           </tr>
         ))}
       </tbody>
@@ -87,11 +104,15 @@ const MovementTable = ({ rows, emptyMessage }) => (
   </div>
 );
 
-export default function LiveMovementsView() {
+export default function LiveMovementsView({ role = 'Warden' }) {
   const [movements, setMovements] = useState([]);
   const [selectedDate, setSelectedDate] = useState(todayIST());
   const [loading, setLoading] = useState(true);
   const [loadError, setLoadError] = useState('');
+  const [reportMovement, setReportMovement] = useState(null);
+  const [reportValue, setReportValue] = useState('');
+  const [reportSaving, setReportSaving] = useState(false);
+  const [reportError, setReportError] = useState('');
   const bufferedEvents = useRef(new Map());
 
   useEffect(() => {
@@ -136,6 +157,30 @@ export default function LiveMovementsView() {
     };
   }, []);
 
+  const openReportEditor = (movement) => {
+    setReportMovement(movement);
+    setReportValue(movement.report || '');
+    setReportError('');
+  };
+
+  const saveReport = async () => {
+    if (!reportMovement || !['Returned', 'Not Returned'].includes(reportValue)) return;
+    setReportSaving(true);
+    setReportError('');
+    try {
+      const { data } = await api.patch(`/movements/${movementKey(reportMovement)}/report`, { report: reportValue });
+      setMovements((current) => mergeByMovementId(current, [{
+        ...reportMovement,
+        report: data.report,
+      }]));
+      setReportMovement(null);
+    } catch (error) {
+      setReportError(error.response?.data?.message || 'Unable to save report.');
+    } finally {
+      setReportSaving(false);
+    }
+  };
+
   const visible = useMemo(() => movements.filter((movement) => {
     const actualExitDate = dateOnlyIST(movement.actualExitAt);
     const actualReturnDate = dateOnlyIST(movement.actualReturnAt);
@@ -178,7 +223,7 @@ export default function LiveMovementsView() {
           </div>
           <span className="lm-card__count">{outing.length}</span>
         </div>
-        <MovementTable rows={outing} emptyMessage="No outing movement records for this date." />
+        <MovementTable rows={outing} emptyMessage="No outing movement records for this date." canEditReport={role === 'Warden'} onEditReport={openReportEditor} />
       </section>
 
       <section className="lm-card lm-card--home">
@@ -203,7 +248,7 @@ export default function LiveMovementsView() {
               <span className="lm-card__count">{homeGoing.length}</span>
             </div>
           </div>
-          <MovementTable rows={homeGoing} emptyMessage="No students are going home on this date." />
+          <MovementTable rows={homeGoing} emptyMessage="No students are going home on this date." canEditReport={role === 'Warden'} onEditReport={openReportEditor} />
         </section>
 
         <section className="lm-subsection lm-subsection--return">
@@ -217,9 +262,45 @@ export default function LiveMovementsView() {
               <span className="lm-card__count">{homeNeedReturn.length}</span>
             </div>
           </div>
-          <MovementTable rows={homeNeedReturn} emptyMessage="No students need to return home on this date." />
+          <MovementTable rows={homeNeedReturn} emptyMessage="No students need to return home on this date." canEditReport={role === 'Warden'} onEditReport={openReportEditor} />
         </section>
       </section>
+
+      {reportMovement ? (
+        <div className="movement-report-overlay" role="dialog" aria-modal="true" aria-label="Edit report">
+          <div className="movement-report-modal">
+            <h3>Edit Report</h3>
+            <p>Set the Warden verification for this movement.</p>
+            <label>
+              <input
+                type="radio"
+                name="movement-report"
+                value="Returned"
+                checked={reportValue === 'Returned'}
+                onChange={(event) => setReportValue(event.target.value)}
+              />
+              Returned
+            </label>
+            <label>
+              <input
+                type="radio"
+                name="movement-report"
+                value="Not Returned"
+                checked={reportValue === 'Not Returned'}
+                onChange={(event) => setReportValue(event.target.value)}
+              />
+              Not Returned
+            </label>
+            {reportError ? <p className="movement-report-error" role="alert">{reportError}</p> : null}
+            <div className="movement-report-actions">
+              <button type="button" className="secondary-button" onClick={() => setReportMovement(null)} disabled={reportSaving}>Cancel</button>
+              <button type="button" className="primary-button" onClick={saveReport} disabled={reportSaving || !reportValue}>
+                {reportSaving ? 'Saving…' : 'Save'}
+              </button>
+            </div>
+          </div>
+        </div>
+      ) : null}
     </section>
   );
 }

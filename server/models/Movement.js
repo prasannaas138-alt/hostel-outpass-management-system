@@ -153,6 +153,15 @@ const movementSchema = new mongoose.Schema(
       type: Boolean,
       default: null,
     },
+    // Warden's manual verification of the physical movement. This is
+    // intentionally separate from `state`, which remains the server-derived
+    // EXIT/RETURN status. A report can say "Not Returned" while the movement
+    // state is still RETURNED, so the two concepts never overwrite each other.
+    report: {
+      type: String,
+      enum: ['Returned', 'Not Returned'],
+      default: null,
+    },
     // Cross references to the append-only audit entries that produced the two
     // successful scans (server/models/ScanLog.js).
     exitScan: {

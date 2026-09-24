@@ -1,6 +1,7 @@
 ﻿import { useCallback, useEffect, useMemo, useState } from 'react';
 import api from '../services/api';
 import { useAuth } from '../context/AuthContext';
+import { connectMovementSocket, disconnectMovementSocket, subscribeToOutpassUpdates } from '../services/movementSocket';
 import WardenLayout from '../components/WardenLayout';
 import WardenProfile from '../components/WardenProfile';
 import {
@@ -91,6 +92,23 @@ export default function WardenDashboard() {
     loadStats();
     loadPending();
   }, [loadHistory, loadStats, loadPending]);
+
+  useEffect(() => {
+    connectMovementSocket();
+    const unsubscribe = subscribeToOutpassUpdates((event) => {
+      if (!event?.outpassObjectId) return;
+    setItems((current) => current.map((item) => (
+      String(item._id) === String(event.outpassObjectId) ? { ...item, ...event } : item
+    )));
+    setPendingItems((current) => current.map((item) => (
+      String(item._id) === String(event.outpassObjectId) ? { ...item, ...event } : item
+    )));
+    });
+    return () => {
+      unsubscribe();
+      disconnectMovementSocket();
+    };
+  }, []);
 
   // Existing approval workflow — same endpoint/payload as the old dashboard
   // (PATCH /outpasses/:id/warden). Only the presentation changed.

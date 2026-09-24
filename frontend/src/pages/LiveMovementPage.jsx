@@ -18,5 +18,5 @@ export default function LiveMovementPage({ role = 'Warden' }) {
     { id: 'profile', label: 'Profile', icon: IconUser, path: paths.dashboard },
   ];
 
-  return <WardenLayout view="live" navItems={navItems}><LiveMovementsView /></WardenLayout>;
+  return <WardenLayout view="live" navItems={navItems}><LiveMovementsView role={role} /></WardenLayout>;
 }

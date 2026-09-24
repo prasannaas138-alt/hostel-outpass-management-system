@@ -3,6 +3,7 @@ import api from './api';
 import { getStoredAuth } from '../utils/auth';
 
 const STAFF_ROLES = new Set(['HOD', 'Sister', 'Warden']);
+const OUTPASS_EVENT = 'outpass:updated';
 const MOVEMENT_EVENT = 'movement:updated';
 
 let movementSocket = null;
@@ -22,7 +23,7 @@ const getSocketUrl = () => {
 export const connectMovementSocket = () => {
   const { token, user } = getStoredAuth();
 
-  if (!token || !STAFF_ROLES.has(user?.role)) return null;
+  if (!token || !STAFF_ROLES.has(user?.role) && user?.role !== 'Student') return null;
 
   if (movementSocket && activeToken === token) return movementSocket;
   if (movementSocket) disconnectMovementSocket();
@@ -52,6 +53,18 @@ export const subscribeToMovementUpdates = (callback) => {
   socket.on(MOVEMENT_EVENT, callback);
   return () => {
     socket.off(MOVEMENT_EVENT, callback);
+  };
+};
+
+export const subscribeToOutpassUpdates = (callback) => {
+  if (typeof callback !== 'function') return () => {};
+
+  const socket = connectMovementSocket();
+  if (!socket) return () => {};
+
+  socket.on(OUTPASS_EVENT, callback);
+  return () => {
+    socket.off(OUTPASS_EVENT, callback);
   };
 };
 

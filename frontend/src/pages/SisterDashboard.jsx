@@ -2,6 +2,7 @@ import { useNavigate } from "react-router-dom";
 import { useEffect, useMemo, useState } from "react";
 import api from "../services/api";
 import { useAuth } from "../context/AuthContext";
+import { connectMovementSocket, disconnectMovementSocket, subscribeToOutpassUpdates } from "../services/movementSocket";
 import WardenProfile from "../components/WardenProfile";
 import StaffRequestTable from "../components/StaffRequestTable";
 import RequestDetailModal from "../components/RequestDetailModal";
@@ -105,6 +106,23 @@ export default function SisterDashboard() {
     loadItems();
     loadHistory();
     loadStats();
+  }, []);
+
+  useEffect(() => {
+    connectMovementSocket();
+    const unsubscribe = subscribeToOutpassUpdates((event) => {
+      if (!event?.outpassObjectId) return;
+    setItems((current) => current.map((item) => (
+      String(item._id) === String(event.outpassObjectId) ? { ...item, ...event } : item
+    )));
+    setHistory((current) => current.map((item) => (
+      String(item._id) === String(event.outpassObjectId) ? { ...item, ...event } : item
+    )));
+    });
+    return () => {
+      unsubscribe();
+      disconnectMovementSocket();
+    };
   }, []);
 
   const review = async (id, action, reasonOverride) => {

@@ -14,6 +14,7 @@ import HodStudentsProfile from '../components/HodStudentsProfile';
 import HodDownloads from './HodDownloads';
 import { IconUsers, IconClock, IconCheck, IconAlert, IconDownload, IconBuilding, IconHistory } from '../components/WardenIcons';
 import { formatTime12Hour as formatTime } from '../utils/timeFormat';
+import { connectMovementSocket, disconnectMovementSocket, subscribeToOutpassUpdates } from '../services/movementSocket';
 import '../styles/dashboard.css';
 import '../styles/student.css';
 import '../styles/warden.css';
@@ -102,6 +103,23 @@ export default function HodDashboard() {
     loadItems();
     loadHistory();
     loadChangeRequests();
+  }, []);
+
+  useEffect(() => {
+    connectMovementSocket();
+    const unsubscribe = subscribeToOutpassUpdates((event) => {
+      if (!event?.outpassObjectId) return;
+    setItems((current) => current.map((item) => (
+      String(item._id) === String(event.outpassObjectId) ? { ...item, ...event } : item
+    )));
+    setHistory((current) => current.map((item) => (
+      String(item._id) === String(event.outpassObjectId) ? { ...item, ...event } : item
+    )));
+    });
+    return () => {
+      unsubscribe();
+      disconnectMovementSocket();
+    };
   }, []);
 
   const review = async (id, action, reasonOverride) => {

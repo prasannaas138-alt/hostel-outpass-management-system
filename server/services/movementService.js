@@ -551,10 +551,10 @@ export const getStaffLiveMovements = async () => {
   const movements = await Movement.find({})
     .select(
       '_id outpassId registerNumber studentName hostelName expectedExitAt expectedReturnAt ' +
-        'actualExitAt actualReturnAt state lateReturn exitGate exitGateCode ' +
+        'actualExitAt actualReturnAt state lateReturn report exitGate exitGateCode ' +
         'returnGate returnGateCode createdAt updatedAt'
     )
-    .populate('outpass', 'requestType phone')
+    .populate('outpass', 'outpassId studentId status hodStatus sisterStatus wardenStatus rejectionReason requestType phone')
     .populate('student', 'phone')
     .sort({ state: 1, updatedAt: -1, _id: -1 })
     .lean();
@@ -573,6 +573,7 @@ export const getStaffLiveMovements = async () => {
     actualReturnAt: movement.actualReturnAt,
     state: movement.state,
     lateReturn: movement.lateReturn,
+    report: movement.report,
     exitGate: movement.exitGate,
     exitGateCode: movement.exitGateCode,
     returnGate: movement.returnGate,

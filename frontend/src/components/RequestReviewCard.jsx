@@ -65,6 +65,7 @@ export default function RequestReviewCard({
           {renderDetail('Return Time', item.returnTime ? formatTime(item.returnTime) : '-'+'-')}
           {renderDetail('Destination', item.destination || '-'+'-')}
           {renderDetail('Reason', item.reason)}
+          {renderDetail('Report', item.report || '—')}
           <div className='approval-row'>
             <span>HOD Approval</span>
             {approvalDot(item.hodStatus)}
@@ -92,6 +93,7 @@ export default function RequestReviewCard({
           <span>Time: {item.outTime ? formatTime(item.outTime) : '-'+'-'} - {item.returnTime ? formatTime(item.returnTime) : '-'+'-'}</span>
           <span>Destination: {item.destination || '—'}</span>
           <span>Reason: {item.reason}</span>
+          <span>Report: {item.report || '—'}</span>
           <span>Department: {item.department}</span>
           <span>Year: {item.year}</span>
           {item.rejectionReason ? <span className="rejection">Rejection: {item.rejectionReason}</span> : null}

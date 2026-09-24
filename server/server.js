@@ -17,6 +17,7 @@ if (!process.env.JWT_SECRET) {
 
 const PORT = process.env.PORT || 5000;
 const FRONTEND_ORIGIN = 'https://hostel-outpass-management-system.vercel.app';
+const AUTHENTICATED_ROLES = new Set(['Student', 'HOD', 'Sister', 'Warden']);
 const STAFF_MOVEMENT_ROOM = 'staff:movements';
 const STAFF_ROLES = new Set(['HOD', 'Sister', 'Warden']);
 
@@ -50,9 +51,9 @@ io.use(async (socket, next) => {
       return next(new Error('Staff authentication failed'));
     }
 
-    if (!STAFF_ROLES.has(user.role)) {
-      console.warn('Staff socket rejected: role not permitted');
-      return next(new Error('Staff access required'));
+    if (!AUTHENTICATED_ROLES.has(user.role)) {
+      console.warn('Socket rejected: role not permitted');
+      return next(new Error('Authenticated access required'));
     }
 
     socket.data.user = {
@@ -70,7 +71,11 @@ io.use(async (socket, next) => {
 });
 
 io.on('connection', (socket) => {
-  socket.join(STAFF_MOVEMENT_ROOM);
+  if (STAFF_ROLES.has(socket.data.user.role)) {
+    socket.join(STAFF_MOVEMENT_ROOM);
+  } else {
+    socket.join(`student:${socket.data.user.id}`);
+  }
   console.log(`Staff socket connected: ${socket.id} (${socket.data.user.role})`);
 
   socket.on('disconnect', () => {

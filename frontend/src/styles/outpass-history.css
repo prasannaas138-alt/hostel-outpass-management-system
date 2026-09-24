@@ -267,6 +267,7 @@
 .oh-col-date { width: 13%; }
 .oh-col-time { width: 8.5%; }
 .oh-col-status { width: 13%; }
+.oh-col-report { width: 15%; }
 .oh-col-profile { width: 15%; }
 
 /* Home columns: S.NO | NAME | OUT/RETURN DATE | STATUS | PROFILE */
@@ -274,6 +275,7 @@
 .oh-hcol-name { width: 36%; }
 .oh-hcol-date { width: 19%; }
 .oh-hcol-status { width: 17%; }
+.oh-hcol-report { width: 18%; }
 .oh-hcol-profile { width: 21%; }
 
 /* ------------------------------------------------------------- responsive */

@@ -321,3 +321,13 @@
     align-items: flex-start;
   }
 }
+.movement-report-value { font-weight: 700; white-space: nowrap; }
+.movement-report-edit { margin-left: 0.4rem; padding: 0.2rem; border: 0; border-radius: 6px; background: transparent; color: var(--wd-ink, #16233f); cursor: pointer; }
+.movement-report-edit:hover, .movement-report-edit:focus-visible { background: #e8eef8; }
+.movement-report-overlay { position: fixed; inset: 0; z-index: 1000; display: grid; place-items: center; padding: 1rem; background: rgba(15, 23, 42, 0.38); }
+.movement-report-modal { width: min(100%, 22rem); padding: 1.1rem; border-radius: 16px; background: #fff; box-shadow: 0 20px 60px rgba(15, 23, 42, 0.24); }
+.movement-report-modal h3 { margin: 0; }
+.movement-report-modal p { margin: 0.45rem 0 0.9rem; color: var(--muted); font-size: var(--text-sm); }
+.movement-report-modal label { display: flex; align-items: center; gap: 0.55rem; padding: 0.65rem 0; border-bottom: 1px solid var(--border); cursor: pointer; }
+.movement-report-actions { display: flex; justify-content: flex-end; gap: 0.6rem; margin-top: 1rem; }
+.movement-report-error { color: var(--red-700) !important; }

@@ -1,4 +1,5 @@
 ﻿import Outpass from '../models/Outpass.js';
+import Movement from '../models/Movement.js';
 import User from '../models/User.js';
 import { createOutpassPdf } from '../utils/pdf.js';
 // IST schedule helpers (shared): the day/time parsing rules and the explicit
@@ -12,10 +13,60 @@ const ACTIVE_STATUSES = ['Pending', 'Approved'];
 // Student profile fields every approver (HOD / Sister / Warden) must see on review.
 const STUDENT_POPULATE = 'name registerNumber roomNumber phone parentPhone parentGuardianName hostelName department year batch';
 
+const OUTPASS_EVENT_NAME = 'outpass:updated';
+const STAFF_EVENT_ROOM = 'staff:movements';
+
+const emitOutpassUpdated = async (req, outpass) => {
+  const io = req.app?.get?.('io');
+  if (!io || !outpass) return;
+
+  try {
+    const movement = await Movement.findOne({ outpass: outpass._id })
+      .select('state report actualExitAt actualReturnAt')
+      .lean();
+    const payload = {
+      outpassObjectId: String(outpass._id),
+      outpassId: outpass.outpassId,
+      studentId: String(outpass.studentId),
+      status: outpass.status,
+      hodStatus: outpass.hodStatus,
+      sisterStatus: outpass.sisterStatus,
+      wardenStatus: outpass.wardenStatus,
+      rejectionReason: outpass.rejectionReason || '',
+      report: movement?.report || null,
+      movementState: movement?.state || null,
+      actualExitAt: movement?.actualExitAt || null,
+      actualReturnAt: movement?.actualReturnAt || null,
+    };
+
+    io.to(STAFF_EVENT_ROOM).emit(OUTPASS_EVENT_NAME, payload);
+    io.to(`student:${payload.studentId}`).emit(OUTPASS_EVENT_NAME, payload);
+  } catch {
+    console.error('Failed to emit outpass:updated event');
+  }
+};
+
 // Flattens the populated student profile onto the outpass so review screens and
 // history tables can read registerNumber / roomNumber / phone / parentPhone /
 // parentGuardianName / batch / hostelName directly from the student's LIVE
 // database values (never hardcoded).
+const withMovementInfo = async (outpass) => {
+  if (!outpass) return outpass;
+  const movement = await Movement.findOne({ outpass: outpass._id })
+    .select('state report actualExitAt actualReturnAt')
+    .lean();
+  const value = typeof outpass.toObject === 'function' ? outpass.toObject() : outpass;
+  return {
+    ...value,
+    report: movement?.report || null,
+    movementState: movement?.state || null,
+    actualExitAt: movement?.actualExitAt || null,
+    actualReturnAt: movement?.actualReturnAt || null,
+  };
+};
+
+const withMovementInfoList = (outpasses) => Promise.all(outpasses.map(withMovementInfo));
+
 const enrichOutpass = (outpass) => {
   const student = outpass.studentId || {};
   return {
@@ -290,6 +341,7 @@ export const createOutpass = async (req, res, next) => {
 
     // In-app notifications for Sister/Warden (non-blocking, never fails the request).
     await notifyNewOutpass(outpass);
+    await emitOutpassUpdated(req, outpass);
 
     res.status(201).json(outpass);
   } catch (error) {
@@ -343,6 +395,7 @@ export const updateOutpass = async (req, res, next) => {
 
     resetForReapply(outpass);
     await outpass.save();
+    await emitOutpassUpdated(req, outpass);
 
     res.json(outpass);
   } catch (error) {
@@ -353,8 +406,8 @@ export const updateOutpass = async (req, res, next) => {
 export const getMyOutpasses = async (req, res, next) => {
   try {
     await refreshExpiredOutpasses();
-    const outpasses = await Outpass.find({ studentId: req.user._id }).sort({ createdAt: -1 });
-    res.json(outpasses);
+    const outpasses = await Outpass.find({ studentId: req.user._id }).sort({ createdAt: -1 }).lean();
+    res.json(await withMovementInfoList(outpasses));
   } catch (error) {
     next(error);
   }
@@ -382,7 +435,7 @@ export const getOutpassById = async (req, res, next) => {
       await outpass.save();
     }
 
-    res.json(outpass);
+    res.json(await withMovementInfo(outpass));
   } catch (error) {
     next(error);
   }
@@ -397,7 +450,7 @@ export const getPendingHodRequests = async (req, res, next) => {
       status: 'Pending',
     }).sort({ createdAt: -1 }).populate('studentId', STUDENT_POPULATE).lean();
 
-    res.json(outpasses.map(enrichOutpass));
+    res.json(await withMovementInfoList(outpasses.map(enrichOutpass)));
   } catch (error) {
     next(error);
   }
@@ -425,7 +478,7 @@ export const getPendingSisterRequests = async (req, res, next) => {
       outpasses.map((o) => `${o.outpassId || o._id} type=${o.requestType} status=${o.status} sister=${o.sisterStatus} hod=${o.hodStatus} warden=${o.wardenStatus}`).join(' | ') || '(none)'
     );
 
-    res.json(outpasses.map(enrichOutpass));
+    res.json(await withMovementInfoList(outpasses.map(enrichOutpass)));
   } catch (error) {
     next(error);
   }
@@ -450,7 +503,7 @@ export const getPendingWardenRequests = async (req, res, next) => {
       .populate('studentId', STUDENT_POPULATE)
       .lean();
 
-    res.json(outpasses.map(enrichOutpass));
+    res.json(await withMovementInfoList(outpasses.map(enrichOutpass)));
   } catch (error) {
     next(error);
   }
@@ -471,6 +524,7 @@ export const hodReviewOutpass = async (req, res, next) => {
       outpass.sisterStatus = 'Pending';
       outpass.approvedBy.push(buildApprovedByEntry('HOD', req.user._id));
       await outpass.save();
+      await emitOutpassUpdated(req, outpass);
       return res.json(outpass);
     }
 
@@ -481,6 +535,7 @@ export const hodReviewOutpass = async (req, res, next) => {
     outpass.rejectionReason = rejectionReason || 'Rejected by HOD';
     await outpass.save();
     await markOutpassNotificationsRead(outpass._id);
+    await emitOutpassUpdated(req, outpass);
     return res.json(outpass);
   } catch (error) {
     next(error);
@@ -512,6 +567,7 @@ export const sisterReviewOutpass = async (req, res, next) => {
       outpass.approvedBy.push(buildApprovedByEntry('Sister', req.user._id));
       await outpass.save();
       await markOutpassNotificationsRead(outpass._id, 'Sister');
+      await emitOutpassUpdated(req, outpass);
       return res.json(outpass);
     }
 
@@ -521,6 +577,7 @@ export const sisterReviewOutpass = async (req, res, next) => {
     outpass.rejectionReason = rejectionReason || 'Rejected by Sister';
     await outpass.save();
     await markOutpassNotificationsRead(outpass._id);
+    await emitOutpassUpdated(req, outpass);
     return res.json(outpass);
   } catch (error) {
     next(error);
@@ -555,6 +612,7 @@ export const wardenReviewOutpass = async (req, res, next) => {
       outpass.approvedBy.push(buildApprovedByEntry('Warden', req.user._id));
       await outpass.save();
       await markOutpassNotificationsRead(outpass._id);
+      await emitOutpassUpdated(req, outpass);
       return res.json(outpass);
     }
 
@@ -563,6 +621,7 @@ export const wardenReviewOutpass = async (req, res, next) => {
     outpass.rejectionReason = rejectionReason || 'Rejected by Warden';
     await outpass.save();
     await markOutpassNotificationsRead(outpass._id);
+    await emitOutpassUpdated(req, outpass);
     return res.json(outpass);
   } catch (error) {
     next(error);
@@ -616,7 +675,8 @@ export const getHodHistory = async (req, res, next) => {
         { status: { $in: ['Approved', 'Rejected', 'Expired'] } },
       ],
     }).sort({ createdAt: -1 }).populate('studentId', STUDENT_POPULATE).lean();
-    res.json(filterBySelectedDate(outpasses, req).map(enrichOutpass));
+    const filtered = filterBySelectedDate(outpasses, req);
+    res.json(await withMovementInfoList(filtered.map(enrichOutpass)));
   } catch (error) {
     next(error);
   }
@@ -631,7 +691,8 @@ export const getSisterHistory = async (req, res, next) => {
         { status: { $in: ['Approved', 'Rejected', 'Expired'] } },
       ],
     }).sort({ createdAt: -1 }).populate('studentId', STUDENT_POPULATE).lean();
-    res.json(filterBySelectedDate(outpasses, req).map(enrichOutpass));
+    const filtered = filterBySelectedDate(outpasses, req);
+    res.json(await withMovementInfoList(filtered.map(enrichOutpass)));
   } catch (error) {
     next(error);
   }
@@ -652,16 +713,15 @@ export const getWardenHistory = async (req, res, next) => {
       .populate('studentId', STUDENT_POPULATE)
       .lean();
 
-    res.json(
-      filterBySelectedDate(outpasses, req).map((outpass) => ({
-        ...outpass,
-        registerNumber: outpass.registerNumber || outpass.studentId?.registerNumber || '',
-        roomNumber: outpass.roomNumber || outpass.studentId?.roomNumber || '',
-        phone: outpass.phone || outpass.studentId?.phone || '',
-        parentPhone: outpass.parentPhone || outpass.studentId?.parentPhone || '',
-        hostelName: outpass.hostelName || outpass.studentId?.hostelName || outpass.studentId?.hostelBlock || '',
-      }))
-    );
+    const filtered = filterBySelectedDate(outpasses, req).map((outpass) => ({
+      ...outpass,
+      registerNumber: outpass.registerNumber || outpass.studentId?.registerNumber || '',
+      roomNumber: outpass.roomNumber || outpass.studentId?.roomNumber || '',
+      phone: outpass.phone || outpass.studentId?.phone || '',
+      parentPhone: outpass.parentPhone || outpass.studentId?.parentPhone || '',
+      hostelName: outpass.hostelName || outpass.studentId?.hostelName || outpass.studentId?.hostelBlock || '',
+    }));
+    res.json(await withMovementInfoList(filtered));
   } catch (error) {
     next(error);
   }

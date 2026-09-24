@@ -54,6 +54,7 @@ export function RequestDetailsModal({ detailRequest, onCloseDetails, onEdit }) {
           <div><dt>HOD</dt><dd>{detailRequest.hodStatus || '—'}</dd></div>
           <div><dt>Sister</dt><dd>{detailRequest.sisterStatus || '—'}</dd></div>
           <div><dt>Warden</dt><dd>{detailRequest.wardenStatus || '—'}</dd></div>
+          <div><dt>Report</dt><dd>{detailRequest.report || '—'}</dd></div>
         </dl>
         <StatusTracker request={detailRequest} />
         <div className="button-row">

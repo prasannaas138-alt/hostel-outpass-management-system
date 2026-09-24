@@ -192,6 +192,12 @@ export default function OutpassDetails({ request, user, onBack, onEdit }) {
               <p>This outpass is not valid for gate exit yet.</p>
             </div>
           )}
+          {request.report ? (
+            <div className="outpass-report">
+              <span>Report</span>
+              <strong>{request.report}</strong>
+            </div>
+          ) : null}
         </div>
       </article>
     </section>

@@ -2,6 +2,7 @@ import { Router } from 'express';
 import {
   getStaffLiveMovements,
   scanGateQr,
+  updateMovementReport,
 } from '../controllers/movementController.js';
 import { authorizeRoles, protect } from '../middleware/auth.js';
 
@@ -16,5 +17,6 @@ router.post('/scan', protect, authorizeRoles('Student'), scanGateQr);
 // visibility is intentionally shared by HOD, Sister, and Warden; no hostel
 // filtering or movement mutation is added here.
 router.get('/staff/live', protect, authorizeRoles('HOD', 'Sister', 'Warden'), getStaffLiveMovements);
+router.patch('/:id/report', protect, authorizeRoles('Warden'), updateMovementReport);
 
 export default router;

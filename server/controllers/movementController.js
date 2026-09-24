@@ -64,67 +64,96 @@ const toRejectionResponse = (result) => ({
 
 const MOVEMENT_EVENT_ROOM = 'staff:movements';
 const MOVEMENT_EVENT_NAME = 'movement:updated';
+const OUTPASS_EVENT_NAME = 'outpass:updated';
+const REPORT_VALUES = new Set(['Returned', 'Not Returned']);
+
+const toMovementPayload = (movement, { action = null, eventId = null, occurredAt = null } = {}) => ({
+  eventId,
+  action,
+  movementState: movement.state,
+  occurredAt: toDateOrNull(occurredAt),
+  movementId: movement._id.toString(),
+  outpassId: movement.outpassId,
+  registerNumber: movement.registerNumber,
+  studentName: movement.studentName,
+  phone: movement.outpass?.phone || movement.student?.phone || '',
+  requestType: movement.outpass?.requestType || '',
+  hostelName: movement.hostelName,
+  expectedExitAt: toDateOrNull(movement.expectedExitAt),
+  expectedReturnAt: toDateOrNull(movement.expectedReturnAt),
+  actualExitAt: toDateOrNull(movement.actualExitAt),
+  actualReturnAt: toDateOrNull(movement.actualReturnAt),
+  lateReturn: movement.lateReturn,
+  report: movement.report,
+  exitGate: movement.exitGate?.toString() || null,
+  exitGateCode: movement.exitGateCode || null,
+  returnGate: movement.returnGate?.toString() || null,
+  returnGateCode: movement.returnGateCode || null,
+});
+
+const findMovementForEvent = (query) => Movement.findOne(query)
+  .select(
+    '_id outpassId registerNumber studentName hostelName expectedExitAt expectedReturnAt ' +
+      'actualExitAt actualReturnAt state lateReturn report exitGate exitGateCode ' +
+      'returnGate returnGateCode exitScan returnScan'
+  )
+  .populate('outpass', 'outpassId studentId status hodStatus sisterStatus wardenStatus rejectionReason requestType phone')
+  .populate('student', 'phone')
+  .lean();
+
+const emitOutpassUpdated = (req, outpass, extra = {}) => {
+  const io = req.app?.get?.('io');
+  if (!io || !outpass) return;
+
+  const payload = {
+    outpassId: outpass.outpassId,
+    studentId: String(outpass.studentId),
+    status: outpass.status,
+    hodStatus: outpass.hodStatus,
+    sisterStatus: outpass.sisterStatus,
+    wardenStatus: outpass.wardenStatus,
+    rejectionReason: outpass.rejectionReason || '',
+    report: extra.report ?? null,
+    movementState: extra.movementState || null,
+    actualExitAt: toDateOrNull(extra.actualExitAt),
+    actualReturnAt: toDateOrNull(extra.actualReturnAt),
+  };
+
+  io.to(MOVEMENT_EVENT_ROOM).emit(OUTPASS_EVENT_NAME, payload);
+  io.to(`student:${outpass.studentId}`).emit(OUTPASS_EVENT_NAME, payload);
+};
 
 const emitSuccessfulMovement = async (req, result) => {
   const io = req.app?.get?.('io');
   if (!io) return;
 
   try {
-    const movement = await Movement.findOne({ outpassId: result.outpassId })
-      .select(
-        '_id outpassId registerNumber studentName hostelName expectedExitAt expectedReturnAt ' +
-          'actualExitAt actualReturnAt state lateReturn exitGate exitGateCode ' +
-          'returnGate returnGateCode exitScan returnScan'
-      )
-      .populate('outpass', 'requestType phone')
-      .populate('student', 'phone')
-      .lean();
-
+    const movement = await findMovementForEvent({ outpassId: result.outpassId });
     if (!movement) return;
 
     const linkedScanId = result.action === 'RETURN' ? movement.returnScan : movement.exitScan;
-    let scanLog = linkedScanId
+    const scanLog = linkedScanId
       ? await ScanLog.findById(linkedScanId).select('_id occurredAt').lean()
-      : null;
+      : await ScanLog.findOne({
+          outpassId: movement.outpassId,
+          action: result.action,
+          result: 'SUCCESS',
+        }).sort({ _id: -1 }).select('_id occurredAt').lean();
 
-    if (!scanLog) {
-      scanLog = await ScanLog.findOne({
-        outpassId: movement.outpassId,
-        action: result.action,
-        result: 'SUCCESS',
-      })
-        .sort({ _id: -1 })
-        .select('_id occurredAt')
-        .lean();
-    }
-
-    const payload = {
-      eventId: scanLog?._id?.toString() || null,
+    const payload = toMovementPayload(movement, {
       action: result.action,
-      movementState: movement.state,
-      occurredAt: toDateOrNull(scanLog?.occurredAt),
-      movementId: movement._id.toString(),
-      outpassId: movement.outpassId,
-      registerNumber: movement.registerNumber,
-      studentName: movement.studentName,
-      phone: movement.outpass?.phone || movement.student?.phone || '',
-      requestType: movement.outpass?.requestType || '',
-      hostelName: movement.hostelName,
-      expectedExitAt: toDateOrNull(movement.expectedExitAt),
-      expectedReturnAt: toDateOrNull(movement.expectedReturnAt),
-      actualExitAt: toDateOrNull(movement.actualExitAt),
-      actualReturnAt: toDateOrNull(movement.actualReturnAt),
-      lateReturn: movement.lateReturn,
-      exitGate: movement.exitGate?.toString() || null,
-      exitGateCode: movement.exitGateCode || null,
-      returnGate: movement.returnGate?.toString() || null,
-      returnGateCode: movement.returnGateCode || null,
-    };
+      eventId: scanLog?._id?.toString() || null,
+      occurredAt: scanLog?.occurredAt || new Date(),
+    });
 
     io.to(MOVEMENT_EVENT_ROOM).emit(MOVEMENT_EVENT_NAME, payload);
+    emitOutpassUpdated(req, movement.outpass, {
+      report: movement.report,
+      movementState: movement.state,
+      actualExitAt: movement.actualExitAt,
+      actualReturnAt: movement.actualReturnAt,
+    });
   } catch {
-    // Realtime delivery is optional; a valid REST movement response must remain
-    // successful even if Socket.IO or the post-success lookups are unavailable.
     console.error('Failed to emit movement:updated event');
   }
 };
@@ -160,6 +189,48 @@ export const scanGateQr = async (req, res, next) => {
 // GET /api/movements/staff/live
 // Initial read-only snapshot for the staff live-movement views. Real-time
 // updates will be layered on later; this endpoint itself does not poll.
+export const updateMovementReport = async (req, res, next) => {
+  try {
+    const report = String(req.body?.report || '').trim();
+    if (!REPORT_VALUES.has(report)) {
+      return res.status(400).json({ message: 'Report must be Returned or Not Returned' });
+    }
+
+    const movement = await Movement.findById(req.params.id);
+    if (!movement) return res.status(404).json({ message: 'Movement not found' });
+
+    movement.report = report;
+    await movement.save();
+
+    const io = req.app?.get?.('io');
+    if (io) {
+      const eventMovement = await findMovementForEvent({ _id: movement._id });
+      if (eventMovement) {
+        io.to(MOVEMENT_EVENT_ROOM).emit(MOVEMENT_EVENT_NAME, toMovementPayload(eventMovement, {
+          action: 'REPORT',
+          eventId: null,
+          occurredAt: new Date(),
+        }));
+        emitOutpassUpdated(req, eventMovement.outpass, {
+          report: eventMovement.report,
+          movementState: eventMovement.state,
+          actualExitAt: eventMovement.actualExitAt,
+          actualReturnAt: eventMovement.actualReturnAt,
+        });
+      }
+    }
+
+    return res.json({
+      success: true,
+      movementId: movement._id.toString(),
+      outpassId: movement.outpassId,
+      report: movement.report,
+    });
+  } catch (error) {
+    next(error);
+  }
+};
+
 export const getStaffLiveMovements = async (req, res, next) => {
   try {
     const movements = await listStaffLiveMovements();

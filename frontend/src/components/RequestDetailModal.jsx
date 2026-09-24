@@ -176,6 +176,7 @@ export default function RequestDetailModal({ request, role, busy, error, onAppro
               <div className="staff-field"><span>Return Time</span><strong>{request.returnTime ? formatTime(request.returnTime) : '--'}</strong></div>
               <div className="staff-field"><span>Destination</span><strong>{request.destination || '--'}</strong></div>
               <div className="staff-field"><span>Department / Year</span><strong>{request.department || '--'}{request.year ? ` · Year ${request.year}` : ''}</strong></div>
+              <div className="staff-field"><span>Report</span><strong>{request.report || '—'}</strong></div>
             </div>
           </div>
 

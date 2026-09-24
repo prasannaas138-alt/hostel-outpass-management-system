@@ -6,6 +6,7 @@ import { IconCalendar, IconEye, IconSearch } from './WardenIcons';
 import StudentProfileModal from './StudentProfileModal';
 import Pagination from './Pagination';
 import { getDisplayStatus } from '../utils/outpassStatus';
+import { connectMovementSocket, disconnectMovementSocket, subscribeToOutpassUpdates } from '../services/movementSocket';
 import { formatTime12Hour, todayIST } from '../utils/timeFormat';
 
 // Shared Outpass History for HOD, Sister and Warden (WardenOutpassHistory
@@ -97,6 +98,21 @@ export default function RoleOutpassHistory({
   // day as ?date= and returns only records whose Out Date or Return Date
   // matches it; the same rule is re-checked below as a client-side
   // safeguard, so a previous date's records can never remain on screen.
+  useEffect(() => {
+    if (!endpoint) return undefined;
+    connectMovementSocket();
+    const unsubscribe = subscribeToOutpassUpdates((event) => {
+      if (!event?.outpassObjectId) return;
+      setRecords((current) => current.map((item) => (
+        String(item._id) === String(event.outpassObjectId) ? { ...item, ...event } : item
+      )));
+    });
+    return () => {
+      unsubscribe();
+      disconnectMovementSocket();
+    };
+  }, [endpoint]);
+
   useEffect(() => {
     if (!endpoint) return undefined;
     let cancelled = false;
@@ -385,6 +401,7 @@ export default function RoleOutpassHistory({
                     <col className="oh-col-time" />
                     <col className="oh-col-time" />
                     <col className="oh-col-status" />
+                    <col className="oh-col-report" />
                     <col className="oh-col-profile" />
                   </colgroup>
                   <thead>
@@ -396,6 +413,7 @@ export default function RoleOutpassHistory({
                       <th scope="col">Out Time</th>
                       <th scope="col">Return Time</th>
                       <th scope="col">Status</th>
+                      <th scope="col">Report</th>
                       <th scope="col">Profile</th>
                     </tr>
                   </thead>
@@ -423,7 +441,8 @@ export default function RoleOutpassHistory({
                               {status.label}
                             </span>
                           </td>
-                          <td>{profileButton(item)}</td>
+                           <td className="wd-nowrap">{item.report || '—'}</td>
+                           <td>{profileButton(item)}</td>
                         </tr>
                       );
                     })}
@@ -493,6 +512,7 @@ export default function RoleOutpassHistory({
                       <col className="oh-hcol-name" />
                       <col className="oh-hcol-date" />
                       <col className="oh-hcol-status" />
+                      <col className="oh-col-report" />
                       <col className="oh-hcol-profile" />
                     </colgroup>
                     <thead>
@@ -501,6 +521,7 @@ export default function RoleOutpassHistory({
                         <th scope="col">Name</th>
                         <th scope="col">Out Date</th>
                         <th scope="col">Status</th>
+                         <th scope="col">Report</th>
                         <th scope="col">Profile</th>
                       </tr>
                     </thead>
@@ -519,6 +540,7 @@ export default function RoleOutpassHistory({
                                 {status.label}
                               </span>
                             </td>
+                            <td className="wd-nowrap">{item.report || '—'}</td>
                             <td>{profileButton(item)}</td>
                           </tr>
                         );
@@ -565,15 +587,17 @@ export default function RoleOutpassHistory({
                       <col className="oh-hcol-name" />
                       <col className="oh-hcol-date" />
                       <col className="oh-hcol-status" />
+                      <col className="oh-col-report" />
                       <col className="oh-hcol-profile" />
                     </colgroup>
                     <thead>
                       <tr>
-                        <th scope="col">S.NO</th>
-                        <th scope="col">Name</th>
-                        <th scope="col">Return Date</th>
-                        <th scope="col">Status</th>
-                        <th scope="col">Profile</th>
+                         <th scope="col">S.NO</th>
+                         <th scope="col">Name</th>
+                         <th scope="col">Return Date</th>
+                         <th scope="col">Status</th>
+                         <th scope="col">Report</th>
+                         <th scope="col">Profile</th>
                       </tr>
                     </thead>
                     <tbody>
@@ -593,6 +617,7 @@ export default function RoleOutpassHistory({
                                 {status.label}
                               </span>
                             </td>
+                            <td className="wd-nowrap">{item.report || '—'}</td>
                             <td>{profileButton(item)}</td>
                           </tr>
                         );

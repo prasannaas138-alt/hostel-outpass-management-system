@@ -16,6 +16,7 @@ import {
   matchesStatusFilter,
 } from '../utils/outpassStatus';
 import { normalizeTo24Hour } from '../utils/timeFormat';
+import { connectMovementSocket, disconnectMovementSocket, subscribeToOutpassUpdates } from '../services/movementSocket';
 import '../styles/dashboard.css';
 import '../styles/student.css';
 import '../styles/apply-requests.css';
@@ -139,10 +140,24 @@ export default function StudentDashboard() {
     loadRequests();
   }, []);
 
-  // Poll every 30s so Sister/Warden changes appear without a manual refresh.
+  // Outpass updates arrive through the existing authenticated socket. The
+  // initial request remains the snapshot source; this listener only patches
+  // affected records in place.
+
   useEffect(() => {
-    const interval = setInterval(loadRequests, 30000);
-    return () => clearInterval(interval);
+    connectMovementSocket();
+    const unsubscribe = subscribeToOutpassUpdates((event) => {
+      if (!event?.outpassObjectId) return;
+      setRequests((current) => current.map((request) => (
+        String(request._id) === String(event.outpassObjectId)
+          ? { ...request, ...event }
+          : request
+      )));
+    });
+    return () => {
+      unsubscribe();
+      disconnectMovementSocket();
+    };
   }, []);
 
   useEffect(() => {
