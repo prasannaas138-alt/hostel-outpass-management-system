@@ -5,6 +5,7 @@ import StudentDashboard from './pages/StudentDashboard';
 import HodDashboard from './pages/HodDashboard';
 import SisterDashboard from './pages/SisterDashboard';
 import WardenDashboard from './pages/WardenDashboard';
+import GateAdministrationPage from './pages/GateAdministrationPage';
 import ProtectedRoute from './components/ProtectedRoute';
 import { useAuth } from './context/AuthContext';
 
@@ -68,6 +69,30 @@ export default function App() {
         }
       />
       <Route path="/warden" element={<Navigate to="/warden-dashboard" replace />} />
+      <Route
+        path="/hod/gates"
+        element={
+          <ProtectedRoute roles={["HOD"]}>
+            <GateAdministrationPage role="HOD" />
+          </ProtectedRoute>
+        }
+      />
+      <Route
+        path="/sister/gates"
+        element={
+          <ProtectedRoute roles={["Sister"]}>
+            <GateAdministrationPage role="Sister" />
+          </ProtectedRoute>
+        }
+      />
+      <Route
+        path="/warden/gates"
+        element={
+          <ProtectedRoute roles={["Warden"]}>
+            <GateAdministrationPage role="Warden" />
+          </ProtectedRoute>
+        }
+      />
 
       <Route path="*" element={<Navigate to="/" replace />} />
     </Routes>

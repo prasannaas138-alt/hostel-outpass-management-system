@@ -7,6 +7,7 @@ import {
   IconClose,
   IconHome,
   IconHistory,
+  IconBuilding,
   IconUser,
   IconLogout,
 } from './WardenIcons';
@@ -19,6 +20,7 @@ import '../styles/notifications.css';
 export const WARDEN_NAV = [
   { id: 'dashboard', label: 'Dashboard', icon: IconHome },
   { id: 'history', label: 'Outpass History', icon: IconHistory },
+  { id: 'gates', label: 'Gate Administration', icon: IconBuilding, path: '/warden/gates' },
   { id: 'profile', label: 'Profile', icon: IconUser },
 ];
 
@@ -36,6 +38,11 @@ export default function WardenLayout({ view = 'dashboard', onNavigate, navItems 
 
   const go = (id) => {
     setDrawerOpen(false);
+    const item = navItems.find((navItem) => navItem.id === id);
+    if (item?.path) {
+      navigate(item.path);
+      return;
+    }
     onNavigate?.(id);
   };
 

@@ -1,3 +1,4 @@
+import { useNavigate } from "react-router-dom";
 import { useEffect, useMemo, useState } from "react";
 import api from "../services/api";
 import { useAuth } from "../context/AuthContext";
@@ -20,6 +21,7 @@ import {
   IconClose,
   IconHistory,
   IconUser,
+  IconBuilding,
   IconLogout,
 } from "../components/WardenIcons";
 import "../styles/warden-dashboard.css";
@@ -28,6 +30,7 @@ import "../styles/staff-requests.css";
 
 export default function SisterDashboard() {
   const { user, logout } = useAuth();
+  const navigate = useNavigate();
   const [items, setItems] = useState([]);
   const [history, setHistory] = useState([]);
   const [stats, setStats] = useState({
@@ -211,6 +214,18 @@ export default function SisterDashboard() {
             <IconHistory size={18} />
             Outpass History
           </button>
+           <button
+             type="button"
+             className="wd-nav-item"
+             onClick={() => {
+               setDrawerOpen(false);
+               navigate("/sister/gates");
+             }}
+           >
+             <IconBuilding size={18} />
+             Gate Administration
+           </button>
+
           <button
             type="button"
             className="wd-nav-item"
@@ -347,6 +362,14 @@ export default function SisterDashboard() {
           >
             <IconHome size={20} />
             <span>Dashboard</span>
+          </button>
+          <button
+            type="button"
+            className="wd-bottomnav-item"
+            onClick={() => navigate("/sister/gates")}
+          >
+            <IconBuilding size={20} />
+            <span>Gates</span>
           </button>
           <button
             type="button"

@@ -14,8 +14,7 @@ import ProfileChangeRequests from '../components/ProfileChangeRequests';
 import HodStudentsProfile from '../components/HodStudentsProfile';
 import HodDownloads from './HodDownloads';
 import StaffLiveMovements from '../components/StaffLiveMovements';
-import GateQrPanel from '../components/GateQrPanel';
-import { IconUsers, IconClock, IconCheck, IconAlert, IconDownload } from '../components/WardenIcons';
+import { IconUsers, IconClock, IconCheck, IconAlert, IconDownload, IconBuilding } from '../components/WardenIcons';
 import { formatTime12Hour as formatTime } from '../utils/timeFormat';
 import '../styles/dashboard.css';
 import '../styles/student.css';
@@ -30,7 +29,8 @@ const HOD_NAV = [
   WARDEN_NAV[1], // Outpass History
   { id: 'downloads', label: 'Downloads', icon: IconDownload },
   { id: 'students', label: 'Students Profile', icon: IconUsers },
-  WARDEN_NAV[2], // Profile
+  { id: 'gates', label: 'Gate Administration', icon: IconBuilding, path: '/hod/gates' },
+  WARDEN_NAV[3], // Profile
 ];
 
 export default function HodDashboard() {
@@ -163,7 +163,6 @@ export default function HodDashboard() {
         ].map(([label, value, sub, Icon, tone]) => <article className="wd-card" key={label}><span className={`wd-card-icon ${tone}`}><Icon size={20} /></span><p className="wd-card-label">{label}</p><p className="wd-card-value">{value}</p><p className="wd-card-sub">{sub}</p></article>)}
       </div>
 
-      <GateQrPanel allowCreate />
       <StaffLiveMovements />
 
       <section id="pending-home-requests" className="panel">
