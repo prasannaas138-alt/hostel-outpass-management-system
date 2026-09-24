@@ -554,6 +554,8 @@ export const getStaffLiveMovements = async () => {
         'actualExitAt actualReturnAt state lateReturn exitGate exitGateCode ' +
         'returnGate returnGateCode createdAt updatedAt'
     )
+    .populate('outpass', 'requestType phone')
+    .populate('student', 'phone')
     .sort({ state: 1, updatedAt: -1, _id: -1 })
     .lean();
 
@@ -562,6 +564,8 @@ export const getStaffLiveMovements = async () => {
     outpassId: movement.outpassId,
     registerNumber: movement.registerNumber,
     studentName: movement.studentName,
+    phone: movement.outpass?.phone || movement.student?.phone || '',
+    requestType: movement.outpass?.requestType || '',
     hostelName: movement.hostelName,
     expectedExitAt: movement.expectedExitAt,
     expectedReturnAt: movement.expectedReturnAt,

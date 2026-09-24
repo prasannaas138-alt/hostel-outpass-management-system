@@ -9,7 +9,6 @@ import AlertBanner from "../components/AlertBanner";
 import LoadingState from "../components/LoadingState";
 import ErrorState from "../components/ErrorState";
 import NotificationBell from "../components/NotificationBell";
-import StaffLiveMovements from "../components/StaffLiveMovements";
 import {
   IconHome,
   IconClock,
@@ -213,17 +212,28 @@ export default function SisterDashboard() {
             <IconHistory size={18} />
             Outpass History
           </button>
-           <button
-             type="button"
-             className="wd-nav-item"
-             onClick={() => {
-               setDrawerOpen(false);
-               navigate("/sister/gates");
-             }}
-           >
-             <IconBuilding size={18} />
-             Gate Administration
-           </button>
+          <button
+            type="button"
+            className="wd-nav-item"
+            onClick={() => {
+              setDrawerOpen(false);
+              navigate("/sister/gates");
+            }}
+          >
+            <IconBuilding size={18} />
+            Gate Administration
+          </button>
+          <button
+            type="button"
+            className="wd-nav-item"
+            onClick={() => {
+              setDrawerOpen(false);
+              navigate("/sister/movement");
+            }}
+          >
+            <IconClock size={18} />
+            Live Movement
+          </button>
 
           <button
             type="button"
@@ -303,8 +313,6 @@ export default function SisterDashboard() {
               </article>
             ))}
           </div>
-           <StaffLiveMovements />
-
           <section className="wd-panel" id="sister-pending">
             <div>
               <p className="wd-greet-eyebrow">Pending reviewreview<picture>
@@ -365,6 +373,14 @@ export default function SisterDashboard() {
           >
             <IconBuilding size={20} />
             <span>Gates</span>
+          </button>
+          <button
+            type="button"
+            className="wd-bottomnav-item"
+            onClick={() => navigate("/sister/movement")}
+          >
+            <IconClock size={20} />
+            <span>Live</span>
           </button>
           <button
             type="button"

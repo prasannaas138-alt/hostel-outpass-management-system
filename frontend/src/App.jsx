@@ -7,6 +7,7 @@ import SisterDashboard from './pages/SisterDashboard';
 import WardenDashboard from './pages/WardenDashboard';
 import GateAdministrationPage from './pages/GateAdministrationPage';
 import OutpassHistoryPage from './pages/OutpassHistoryPage';
+import LiveMovementPage from './pages/LiveMovementPage';
 import ProtectedRoute from './components/ProtectedRoute';
 import { useAuth } from './context/AuthContext';
 
@@ -116,6 +117,31 @@ export default function App() {
         element={
           <ProtectedRoute roles={["Warden"]}>
             <OutpassHistoryPage role="Warden" />
+          </ProtectedRoute>
+        }
+      />
+
+      <Route
+        path="/hod/movement"
+        element={
+          <ProtectedRoute roles={["HOD"]}>
+            <LiveMovementPage role="HOD" />
+          </ProtectedRoute>
+        }
+      />
+      <Route
+        path="/sister/movement"
+        element={
+          <ProtectedRoute roles={["Sister"]}>
+            <LiveMovementPage role="Sister" />
+          </ProtectedRoute>
+        }
+      />
+      <Route
+        path="/warden/movement"
+        element={
+          <ProtectedRoute roles={["Warden"]}>
+            <LiveMovementPage role="Warden" />
           </ProtectedRoute>
         }
       />

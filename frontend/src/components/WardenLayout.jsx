@@ -8,6 +8,7 @@ import {
   IconHome,
   IconHistory,
   IconBuilding,
+  IconClock,
   IconUser,
   IconLogout,
 } from './WardenIcons';
@@ -21,6 +22,7 @@ export const WARDEN_NAV = [
   { id: 'dashboard', label: 'Dashboard', icon: IconHome },
   { id: 'history', label: 'Outpass History', icon: IconHistory, path: '/warden/history' },
   { id: 'gates', label: 'Gate Administration', icon: IconBuilding, path: '/warden/gates' },
+  { id: 'live', label: 'Live Movement', icon: IconClock, path: '/warden/movement' },
   { id: 'profile', label: 'Profile', icon: IconUser },
 ];
 

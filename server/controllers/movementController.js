@@ -76,6 +76,8 @@ const emitSuccessfulMovement = async (req, result) => {
           'actualExitAt actualReturnAt state lateReturn exitGate exitGateCode ' +
           'returnGate returnGateCode exitScan returnScan'
       )
+      .populate('outpass', 'requestType phone')
+      .populate('student', 'phone')
       .lean();
 
     if (!movement) return;
@@ -105,6 +107,8 @@ const emitSuccessfulMovement = async (req, result) => {
       outpassId: movement.outpassId,
       registerNumber: movement.registerNumber,
       studentName: movement.studentName,
+      phone: movement.outpass?.phone || movement.student?.phone || '',
+      requestType: movement.outpass?.requestType || '',
       hostelName: movement.hostelName,
       expectedExitAt: toDateOrNull(movement.expectedExitAt),
       expectedReturnAt: toDateOrNull(movement.expectedReturnAt),
