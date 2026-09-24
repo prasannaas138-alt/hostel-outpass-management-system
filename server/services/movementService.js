@@ -3,6 +3,7 @@ import Movement from '../models/Movement.js';
 import Outpass from '../models/Outpass.js';
 import ScanLog from '../models/ScanLog.js';
 import { resolveExpectedInstants } from '../utils/ist.js';
+import { hasManualReport, resolveEffectiveReport } from '../utils/movementReport.js';
 
 // ---------------------------------------------------------------------------
 // Movement scan service - EXIT + RETURN on the same permanent gate QR.
@@ -551,7 +552,7 @@ export const getStaffLiveMovements = async () => {
   const movements = await Movement.find({})
     .select(
       '_id outpassId registerNumber studentName hostelName expectedExitAt expectedReturnAt ' +
-        'actualExitAt actualReturnAt state lateReturn report exitGate exitGateCode ' +
+        'actualExitAt actualReturnAt state lateReturn report reportManuallySet exitGate exitGateCode ' +
         'returnGate returnGateCode createdAt updatedAt'
     )
     .populate('outpass', 'outpassId studentId status hodStatus sisterStatus wardenStatus rejectionReason requestType phone')
@@ -573,7 +574,8 @@ export const getStaffLiveMovements = async () => {
     actualReturnAt: movement.actualReturnAt,
     state: movement.state,
     lateReturn: movement.lateReturn,
-    report: movement.report,
+    report: resolveEffectiveReport(movement, movement.outpass),
+    reportManuallySet: hasManualReport(movement),
     exitGate: movement.exitGate,
     exitGateCode: movement.exitGateCode,
     returnGate: movement.returnGate,

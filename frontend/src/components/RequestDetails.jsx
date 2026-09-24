@@ -2,13 +2,13 @@ import StatusTracker from './StatusTracker';
 import { formatDate, formatTime12Hour as formatTime } from '../utils/timeFormat';
 import { getDisplayStatus, getStatusClass } from '../utils/outpassStatus';
 
-export function MyRequestsTable({ requests, onViewDetails, onEdit }) {
+export function MyRequestsTable({ requests }) {
   if (!requests.length) return null;
   return (
     <div className="table-wrap requests-table-wrap">
       <table className="requests-table">
         <thead>
-          <tr><th scope="col">Type</th><th scope="col">Date</th><th scope="col">Time</th><th scope="col">Reason</th><th scope="col">Status</th><th scope="col">Actions</th></tr>
+          <tr><th scope="col">Type</th><th scope="col">Date</th><th scope="col">Time</th><th scope="col">Reason</th><th scope="col">Status</th><th scope="col">Report</th></tr>
         </thead>
         <tbody>
           {requests.map((request) => (
@@ -21,12 +21,7 @@ export function MyRequestsTable({ requests, onViewDetails, onEdit }) {
                 {request.status === 'Rejected' && request.rejectionReason ? request.rejectionReason : request.reason}
               </td>
               <td><span className={`status-badge status-${getStatusClass(request)}`}>{getDisplayStatus(request)}</span></td>
-              <td>
-                <div className="table-actions">
-                  <button className="link-button" type="button" onClick={() => onViewDetails(request._id)}>Outpass</button>
-                  {request.status === 'Rejected' ? (<button className="link-button" type="button" onClick={() => onEdit(request._id)}>Edit</button>) : null}
-                </div>
-              </td>
+              <td><span className="status-badge status-report">{request.report || getDisplayStatus(request)}</span></td>
             </tr>
           ))}
         </tbody>
@@ -54,7 +49,7 @@ export function RequestDetailsModal({ detailRequest, onCloseDetails, onEdit }) {
           <div><dt>HOD</dt><dd>{detailRequest.hodStatus || '—'}</dd></div>
           <div><dt>Sister</dt><dd>{detailRequest.sisterStatus || '—'}</dd></div>
           <div><dt>Warden</dt><dd>{detailRequest.wardenStatus || '—'}</dd></div>
-          <div><dt>Report</dt><dd>{detailRequest.report || '—'}</dd></div>
+          <div><dt>Report</dt><dd>{detailRequest.report || getDisplayStatus(detailRequest)}</dd></div>
         </dl>
         <StatusTracker request={detailRequest} />
         <div className="button-row">

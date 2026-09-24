@@ -162,6 +162,13 @@ const movementSchema = new mongoose.Schema(
       enum: ['Returned', 'Not Returned'],
       default: null,
     },
+    // False/null means the displayed Report follows the authoritative movement
+    // state. The Warden endpoint sets this to true when persisting a manual
+    // verification, allowing status changes and manual Report to diverge.
+    reportManuallySet: {
+      type: Boolean,
+      default: false,
+    },
     // Cross references to the append-only audit entries that produced the two
     // successful scans (server/models/ScanLog.js).
     exitScan: {

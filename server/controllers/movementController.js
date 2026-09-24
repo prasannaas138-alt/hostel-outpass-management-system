@@ -4,6 +4,7 @@ import {
 } from '../services/movementService.js';
 import Movement from '../models/Movement.js';
 import ScanLog from '../models/ScanLog.js';
+import { hasManualReport, resolveEffectiveReport } from '../utils/movementReport.js';
 
 // ---------------------------------------------------------------------------
 // Movement scan controller - HTTP glue only.
@@ -84,7 +85,8 @@ const toMovementPayload = (movement, { action = null, eventId = null, occurredAt
   actualExitAt: toDateOrNull(movement.actualExitAt),
   actualReturnAt: toDateOrNull(movement.actualReturnAt),
   lateReturn: movement.lateReturn,
-  report: movement.report,
+  report: resolveEffectiveReport(movement, movement.outpass),
+  reportManuallySet: hasManualReport(movement),
   exitGate: movement.exitGate?.toString() || null,
   exitGateCode: movement.exitGateCode || null,
   returnGate: movement.returnGate?.toString() || null,
@@ -94,7 +96,7 @@ const toMovementPayload = (movement, { action = null, eventId = null, occurredAt
 const findMovementForEvent = (query) => Movement.findOne(query)
   .select(
     '_id outpassId registerNumber studentName hostelName expectedExitAt expectedReturnAt ' +
-      'actualExitAt actualReturnAt state lateReturn report exitGate exitGateCode ' +
+      'actualExitAt actualReturnAt state lateReturn report reportManuallySet exitGate exitGateCode ' +
       'returnGate returnGateCode exitScan returnScan'
   )
   .populate('outpass', 'outpassId studentId status hodStatus sisterStatus wardenStatus rejectionReason requestType phone')
@@ -106,6 +108,7 @@ const emitOutpassUpdated = (req, outpass, extra = {}) => {
   if (!io || !outpass) return;
 
   const payload = {
+    outpassObjectId: String(outpass._id),
     outpassId: outpass.outpassId,
     studentId: String(outpass.studentId),
     status: outpass.status,
@@ -113,7 +116,8 @@ const emitOutpassUpdated = (req, outpass, extra = {}) => {
     sisterStatus: outpass.sisterStatus,
     wardenStatus: outpass.wardenStatus,
     rejectionReason: outpass.rejectionReason || '',
-    report: extra.report ?? null,
+    report: extra.report ?? (outpass.status || 'Pending'),
+    reportManuallySet: extra.reportManuallySet ?? false,
     movementState: extra.movementState || null,
     actualExitAt: toDateOrNull(extra.actualExitAt),
     actualReturnAt: toDateOrNull(extra.actualReturnAt),
@@ -148,7 +152,8 @@ const emitSuccessfulMovement = async (req, result) => {
 
     io.to(MOVEMENT_EVENT_ROOM).emit(MOVEMENT_EVENT_NAME, payload);
     emitOutpassUpdated(req, movement.outpass, {
-      report: movement.report,
+      report: resolveEffectiveReport(movement, movement.outpass),
+      reportManuallySet: hasManualReport(movement),
       movementState: movement.state,
       actualExitAt: movement.actualExitAt,
       actualReturnAt: movement.actualReturnAt,
@@ -200,6 +205,7 @@ export const updateMovementReport = async (req, res, next) => {
     if (!movement) return res.status(404).json({ message: 'Movement not found' });
 
     movement.report = report;
+    movement.reportManuallySet = true;
     await movement.save();
 
     const io = req.app?.get?.('io');
@@ -212,7 +218,8 @@ export const updateMovementReport = async (req, res, next) => {
           occurredAt: new Date(),
         }));
         emitOutpassUpdated(req, eventMovement.outpass, {
-          report: eventMovement.report,
+          report: resolveEffectiveReport(eventMovement, eventMovement.outpass),
+          reportManuallySet: true,
           movementState: eventMovement.state,
           actualExitAt: eventMovement.actualExitAt,
           actualReturnAt: eventMovement.actualReturnAt,
@@ -225,6 +232,7 @@ export const updateMovementReport = async (req, res, next) => {
       movementId: movement._id.toString(),
       outpassId: movement.outpassId,
       report: movement.report,
+      reportManuallySet: true,
     });
   } catch (error) {
     next(error);

@@ -309,11 +309,7 @@ export default function StudentDashboard() {
               onViewDetails={setDetailId}
               onEdit={scrollToEdit}
             />
-            <MyRequestsTable
-              requests={filteredRequests}
-              onViewDetails={setDetailId}
-              onEdit={scrollToEdit}
-            />
+            <MyRequestsTable requests={filteredRequests} />
           </section>
 
         </>

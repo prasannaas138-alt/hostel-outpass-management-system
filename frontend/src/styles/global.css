@@ -261,6 +261,14 @@ label {
   border-color: var(--border);
 }
 
+/* Manual or automatic Warden report is intentionally visually distinct from
+   the existing approval/movement status pill. */
+.status-report {
+  background: var(--blue-50);
+  color: var(--navy-800);
+  border-color: var(--navy-100);
+}
+
 /* Student-facing work-in-progress states */
 .status-waiting-sister {
   background: var(--amber-100);

@@ -237,7 +237,7 @@ export default function OutpassDetails({ request, user, onBack, onEdit }) {
               <span className="info-row__icon info-row__icon--report" aria-hidden="true">✓</span>
               <span className="info-row__text">
                 <em>Report</em>
-                <strong>{request.report || '—'}</strong>
+                <strong>{request.report || getDisplayStatus(request)}</strong>
               </span>
             </div>
           </div>
