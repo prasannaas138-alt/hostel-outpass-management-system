@@ -252,12 +252,20 @@ export default function QrScanSheet({ open, onClose, onScanComplete }) {
 
         {isSuccess ? (
           <div className="qrscan-success" role="status" aria-live="polite">
+            <img
+              className="qrscan-verification-logo"
+              src="/st-joseph-logo.png"
+              alt="St. Joseph University"
+              onError={(event) => { event.target.style.display = 'none'; }}
+            />
+            {result?.outpassId ? <p className="qrscan-verification-id">{result.outpassId}</p> : null}
             <div className="qrscan-success-ring" aria-hidden="true">
               <svg viewBox="0 0 52 52" className="qrscan-success-svg">
                 <circle className="qrscan-success-circle" cx="26" cy="26" r="24" fill="none" />
                 <path className="qrscan-success-check" fill="none" d="M14 27l8 8 16-16" />
               </svg>
             </div>
+            <p className="qrscan-success-status">APPROVED</p>
             <h3 className="qrscan-success-title">{successTitle}</h3>
             <p className="qrscan-success-subtitle">{successSubtitle}</p>
             <p className="qrscan-success-time">
@@ -267,15 +275,18 @@ export default function QrScanSheet({ open, onClose, onScanComplete }) {
             {showLate ? (
               <p className="qrscan-late" role="note">Late return recorded</p>
             ) : null}
-            {result?.outpassId ? (
-              <p className="muted qrscan-outpass">Outpass {result.outpassId}</p>
-            ) : null}
           </div>
         ) : null}
 
         {phase === 'rejected' ? (
-          <div className="qrscan-notice qrscan-notice--error" role="alert">
-            <strong>Scan not recorded</strong>
+          <div className="qrscan-rejected" role="alert">
+            <div className="qrscan-rejected__icon" aria-hidden="true">
+              <svg viewBox="0 0 52 52" className="qrscan-rejected__svg">
+                <circle className="qrscan-rejected__circle" cx="26" cy="26" r="24" fill="none" />
+                <path className="qrscan-rejected__x" fill="none" d="M17 17l18 18M35 17L17 35" />
+              </svg>
+            </div>
+            <strong>SCAN NOT RECORDED</strong>
             <p>{rejection?.message || 'Scan failed. Please try again.'}</p>
           </div>
         ) : null}
