@@ -162,6 +162,86 @@ export default function OutpassDetails({ request, user, onBack, onEdit }) {
         </header>
 
         <div className="outpass-card__body">
+          <p className="outpass-card__eyebrow">Outpass slip</p>
+          <h1 className="outpass-card__title">{request.requestType} request</h1>
+          {studentLine ? <p className="outpass-card__student">{studentLine}</p> : null}
+          <hr className="outpass-card__rule" />
+
+          <div className="outpass-card__info">
+            <div className="info-row">
+              <span className="info-row__icon info-row__icon--date"><CalendarIcon /></span>
+              <span className="info-row__text">
+                <em>Request/Out Date</em>
+                <strong>{formatOutpassDate(request.date)}</strong>
+              </span>
+            </div>
+            <div className="info-row">
+              <span className="info-row__icon info-row__icon--out"><ClockIcon /></span>
+              <span className="info-row__text">
+                <em>Out Time</em>
+                <strong>{request.outTime ? formatTime(request.outTime) : '—'}</strong>
+              </span>
+            </div>
+            <div className="info-row">
+              <span className="info-row__icon info-row__icon--out"><ClockIcon /></span>
+              <span className="info-row__text">
+                <em>Out Day</em>
+                <strong>{request.outDay || '--'}</strong>
+              </span>
+            </div>
+            <div className="info-row">
+              <span className="info-row__icon info-row__icon--return"><ClockIcon /></span>
+              <span className="info-row__text">
+                <em>Return Date</em>
+                <strong>{formatOutpassDate(request.returnDate || request.date)}</strong>
+              </span>
+            </div>
+            <div className="info-row">
+              <span className="info-row__icon info-row__icon--return"><ClockIcon /></span>
+              <span className="info-row__text">
+                <em>Return Day</em>
+                <strong>{request.returnDay || '--'}</strong>
+              </span>
+            </div>
+            <div className="info-row">
+              <span className="info-row__icon info-row__icon--return"><ClockIcon /></span>
+              <span className="info-row__text">
+                <em>Return Time</em>
+                <strong>{request.returnTime ? formatTime(request.returnTime) : '—'}</strong>
+              </span>
+            </div>
+            <div className="info-row">
+              <span className="info-row__icon info-row__icon--reason"><ReasonIcon /></span>
+              <span className="info-row__text">
+                <em>Destination</em>
+                <strong>{request.destination || '—'}</strong>
+              </span>
+            </div>
+            <div className="info-row">
+              <span className="info-row__icon info-row__icon--reason"><ReasonIcon /></span>
+              <span className="info-row__text">
+                <em>Reason</em>
+                <strong>{request.reason || '—'}</strong>
+              </span>
+            </div>
+            {approvals.map((item, index) => (
+              <div className={`info-row ${index === 0 ? 'approval-labels' : ''}`} key={item.label}>
+                <span className="info-row__icon info-row__icon--approval">{item.icon}</span>
+                <span className="info-row__text">
+                  <em>{item.label}</em>
+                  <strong className={`info-value--${approvalClass(item.value)}`}>{approvalLabel(item.value)}</strong>
+                </span>
+              </div>
+            ))}
+            <div className="info-row outpass-report-row">
+              <span className="info-row__icon info-row__icon--report" aria-hidden="true">✓</span>
+              <span className="info-row__text">
+                <em>Report</em>
+                <strong>{request.report || '—'}</strong>
+              </span>
+            </div>
+          </div>
+
           {isApprovedValid ? (
             <div className="outpass-card__final outpass-card__final--approved" role="status">
               <span className="outpass-card__glyph"><CheckIcon /></span>
@@ -192,12 +272,6 @@ export default function OutpassDetails({ request, user, onBack, onEdit }) {
               <p>This outpass is not valid for gate exit yet.</p>
             </div>
           )}
-          {request.report ? (
-            <div className="outpass-report">
-              <span>Report</span>
-              <strong>{request.report}</strong>
-            </div>
-          ) : null}
         </div>
       </article>
     </section>

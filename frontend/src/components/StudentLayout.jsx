@@ -1,19 +1,20 @@
 import { useState, useEffect, useRef } from 'react';
-import { useNavigate } from 'react-router-dom';
+import { useLocation, useNavigate } from 'react-router-dom';
 import { useAuth } from '../context/AuthContext';
 import '../styles/layout.css';
 
 const STUDENT_NAV = [
-  { id: 'dashboard', label: 'Dashboard', icon: '🏠', href: '#dashboard' },
-  { id: 'apply-new-outpass', label: 'Apply for Outpass', icon: '📝', href: '#apply-new-outpass' },
-  { id: 'request-history', label: 'My Requests', icon: '📋', href: '#request-history' },
-  { id: 'outpass-history', label: 'Outpass History', icon: '🕘', href: '#outpass-history' },
+  { id: 'dashboard', label: 'Dashboard', icon: '🏠', href: '#dashboard', routePath: '/student-dashboard' },
+  { id: 'apply-new-outpass', label: 'Apply for Outpass', icon: '📝', href: '#apply-new-outpass', routePath: '/student-dashboard' },
+  { id: 'request-history', label: 'My Requests', icon: '📋', href: '#request-history', routePath: '/student-dashboard' },
+  { id: 'outpass-history', label: 'Outpass History', icon: '🕘', href: '/student/outpass-history', routePath: '/student/outpass-history' },
   { id: 'profile', label: 'Profile', icon: '👤', href: '#profile' },
 ];
 
 export default function StudentLayout({ title, subtitle, actions, children, onNavSelected }) {
   const { user, logout } = useAuth();
   const navigate = useNavigate();
+  const location = useLocation();
   const [logoutOpen, setLogoutOpen] = useState(false);
   const [mobileNavOpen, setMobileNavOpen] = useState(false);
   const [activeSection, setActiveSection] = useState('dashboard');
@@ -25,20 +26,26 @@ export default function StudentLayout({ title, subtitle, actions, children, onNa
   };
 
   useEffect(() => {
-    const hash = window.location.hash?.replace('#', '') || 'dashboard';
-    setActiveSection(hash);
+    const hash = window.location.hash?.replace('#', '') || '';
+    const isHistoryPage = location.pathname === '/student/outpass-history';
+    setActiveSection(isHistoryPage ? 'outpass-history' : (hash || 'dashboard'));
     const onHashChange = () => {
       const h = window.location.hash?.replace('#', '') || 'dashboard';
       setActiveSection(h);
     };
     window.addEventListener('hashchange', onHashChange);
     return () => window.removeEventListener('hashchange', onHashChange);
-  }, []);
+  }, [location.pathname]);
 
   const handleNavClick = (event, id) => {
     event.preventDefault();
+    const item = STUDENT_NAV.find((navItem) => navItem.id === id);
     setActiveSection(id);
     setMobileNavOpen(false);
+    if (item?.routePath && location.pathname !== item.routePath) {
+      navigate(item.routePath);
+      return;
+    }
     onNavSelected?.(id);
     // Profile is a modal overlay managed by the dashboard — it is not a
     // scroll section, so skip fragment lookup / URL hash fallback.

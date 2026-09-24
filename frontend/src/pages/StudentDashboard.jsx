@@ -3,7 +3,6 @@ import api from '../services/api';
 import StudentLayout from '../components/StudentLayout';
 import ApplyOutpassForm from '../components/ApplyOutpassForm';
 import MyRequestsList from '../components/MyRequestsList';
-import OutpassHistory from '../components/OutpassHistory';
 import StudentProfile from '../components/StudentProfile';
 import { MyRequestsTable } from '../components/RequestDetails';
 import OutpassDetails from '../components/OutpassDetails';
@@ -11,7 +10,6 @@ import LoadingState from '../components/LoadingState';
 import ErrorState from '../components/ErrorState';
 import QrScanSheet from '../components/QrScanSheet';
 import {
-  getDisplayStatus,
   isExpiredRequest,
   matchesStatusFilter,
 } from '../utils/outpassStatus';
@@ -47,8 +45,6 @@ export default function StudentDashboard() {
   const [loadError, setLoadError] = useState('');
   const [saving, setSaving] = useState(false);
   const [statusFilter, setStatusFilter] = useState('All');
-  const [historyTypeFilter, setHistoryTypeFilter] = useState('All');
-  const [historySearch, setHistorySearch] = useState('');
   const [detailId, setDetailId] = useState(null);
   const [profileViewActive, setProfileViewActive] = useState(false);
   const [qrScannerOpen, setQrScannerOpen] = useState(false);
@@ -75,24 +71,6 @@ export default function StudentDashboard() {
     [requests, nowTick],
   );
 
-  // Outpass History: ONLY outpasses whose Return Date + Return Time has
-  // passed. An active approved outpass must NEVER appear here — this is
-  // what keeps the two sections mutually exclusive.
-  const historyRequests = useMemo(
-    () => requests.filter((item) => isExpiredRequest(item)),
-    [requests, nowTick],
-  );
-
-  const visibleHistoryRequests = useMemo(() => {
-    const term = historySearch.trim().toLowerCase();
-    return historyRequests.filter((item) => {
-      if (historyTypeFilter !== 'All' && item.requestType !== historyTypeFilter) return false;
-      if (!term) return true;
-      const haystack = `${item.requestType || ''} ${item.reason || ''} ${getDisplayStatus(item)} ${item.date || ''}`.toLowerCase();
-      return haystack.includes(term);
-    });
-  }, [historyRequests, historyTypeFilter, historySearch]);
-
   const filteredRequests = useMemo(
     () => visibleRequests.filter((item) => matchesStatusFilter(item, statusFilter)),
     [visibleRequests, statusFilter],
@@ -109,15 +87,6 @@ export default function StudentDashboard() {
     });
     return counts;
   }, [visibleRequests]);
-
-  const historyCounts = useMemo(() => {
-    const counts = { All: historyRequests.length, Home: 0, Outing: 0 };
-    historyRequests.forEach((item) => {
-      if (item.requestType === 'Home') counts.Home += 1;
-      else if (item.requestType === 'Outing') counts.Outing += 1;
-    });
-    return counts;
-  }, [historyRequests]);
 
   const detailRequest = useMemo(() => requests.find((item) => item._id === detailId) || null, [requests, detailId]);
 
@@ -347,29 +316,6 @@ export default function StudentDashboard() {
             />
           </section>
 
-          <section id="outpass-history" className="panel">
-            <div className="panel-heading">
-              <div>
-                <p className="eyebrow">Outpass history</p>
-                <h2>Expired outpasses<picture>
-  <source srcset="https://fonts.gstatic.com/s/e/notoemoji/latest/1f47b/512.webp" type="image/webp"/>
-  <img src="https://fonts.gstatic.com/s/e/notoemoji/latest/1f47b/512.gif" alt="👻" width="32" height="32"/>
-</picture></h2>
-              </div>
-            </div>
-
-            <OutpassHistory
-              requests={visibleHistoryRequests}
-              loading={loading}
-              error={error || loadError}
-              counts={historyCounts}
-              typeFilter={historyTypeFilter}
-              onTypeFilterChange={setHistoryTypeFilter}
-              search={historySearch}
-              onSearchChange={setHistorySearch}
-              onViewDetails={setDetailId}
-            />
-          </section>
         </>
       )}
 

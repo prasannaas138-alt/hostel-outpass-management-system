@@ -188,6 +188,13 @@
   border: 1px solid var(--navy-100);
 }
 
+.info-row__icon--report {
+  background: var(--green-50);
+  color: var(--green-700);
+  border: 1px solid var(--green-100);
+  font-weight: 800;
+}
+
 .info-row__text {
   display: grid;
   gap: 0.05rem;

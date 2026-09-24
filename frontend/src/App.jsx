@@ -2,6 +2,7 @@ import { Navigate, Route, Routes } from 'react-router-dom';
 import LoginPage from './pages/LoginPage';
 import RegisterPage from './pages/RegisterPage';
 import StudentDashboard from './pages/StudentDashboard';
+import StudentOutpassHistoryPage from './pages/StudentOutpassHistoryPage';
 import HodDashboard from './pages/HodDashboard';
 import SisterDashboard from './pages/SisterDashboard';
 import WardenDashboard from './pages/WardenDashboard';
@@ -44,6 +45,14 @@ export default function App() {
         }
       />
       <Route path="/student" element={<Navigate to="/student-dashboard" replace />} />
+      <Route
+        path="/student/outpass-history"
+        element={
+          <ProtectedRoute roles={["Student"]}>
+            <StudentOutpassHistoryPage />
+          </ProtectedRoute>
+        }
+      />
       <Route
         path="/hod-dashboard"
         element={
