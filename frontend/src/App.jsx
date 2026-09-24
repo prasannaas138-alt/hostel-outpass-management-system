@@ -6,6 +6,7 @@ import HodDashboard from './pages/HodDashboard';
 import SisterDashboard from './pages/SisterDashboard';
 import WardenDashboard from './pages/WardenDashboard';
 import GateAdministrationPage from './pages/GateAdministrationPage';
+import OutpassHistoryPage from './pages/OutpassHistoryPage';
 import ProtectedRoute from './components/ProtectedRoute';
 import { useAuth } from './context/AuthContext';
 
@@ -90,6 +91,31 @@ export default function App() {
         element={
           <ProtectedRoute roles={["Warden"]}>
             <GateAdministrationPage role="Warden" />
+          </ProtectedRoute>
+        }
+      />
+
+      <Route
+        path="/hod/history"
+        element={
+          <ProtectedRoute roles={["HOD"]}>
+            <OutpassHistoryPage role="HOD" />
+          </ProtectedRoute>
+        }
+      />
+      <Route
+        path="/sister/history"
+        element={
+          <ProtectedRoute roles={["Sister"]}>
+            <OutpassHistoryPage role="Sister" />
+          </ProtectedRoute>
+        }
+      />
+      <Route
+        path="/warden/history"
+        element={
+          <ProtectedRoute roles={["Warden"]}>
+            <OutpassHistoryPage role="Warden" />
           </ProtectedRoute>
         }
       />

@@ -5,7 +5,6 @@ import { useAuth } from "../context/AuthContext";
 import WardenProfile from "../components/WardenProfile";
 import StaffRequestTable from "../components/StaffRequestTable";
 import RequestDetailModal from "../components/RequestDetailModal";
-import RoleOutpassHistory from "../components/RoleOutpassHistory";
 import AlertBanner from "../components/AlertBanner";
 import LoadingState from "../components/LoadingState";
 import ErrorState from "../components/ErrorState";
@@ -209,7 +208,7 @@ export default function SisterDashboard() {
           <button
             type="button"
             className="wd-nav-item"
-            onClick={() => goTo("sister-history")}
+            onClick={() => navigate("/sister/history")}
           >
             <IconHistory size={18} />
             Outpass History
@@ -349,10 +348,6 @@ export default function SisterDashboard() {
               onClose={() => setDetailId("")}
             />
           ) : null}
-          <RoleOutpassHistory
-            id="sister-history"
-            endpoint="/outpasses/history/sister"
-          />
         </main>
         <nav className="wd-bottomnav" aria-label="Sister mobile navigation">
           <button
@@ -374,7 +369,7 @@ export default function SisterDashboard() {
           <button
             type="button"
             className="wd-bottomnav-item"
-            onClick={() => goTo("sister-history")}
+            onClick={() => navigate("/sister/history")}
           >
             <IconClock size={20} />
             <span>History</span>

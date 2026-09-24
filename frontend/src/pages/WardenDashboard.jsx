@@ -3,7 +3,6 @@ import api from '../services/api';
 import { useAuth } from '../context/AuthContext';
 import WardenLayout from '../components/WardenLayout';
 import WardenProfile from '../components/WardenProfile';
-import WardenOutpassHistory from '../components/WardenOutpassHistory';
 import {
   IconArrowLeft,
   IconUsers,
@@ -334,9 +333,6 @@ export default function WardenDashboard() {
             />
           ) : null}
 
-          <WardenOutpassHistory
-            endpoint="/outpasses/warden/history"
-          />
         </>
       )}
     </WardenLayout>

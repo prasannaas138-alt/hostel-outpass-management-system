@@ -19,7 +19,7 @@ import '../styles/notifications.css';
 // no page reloads) exactly like the redesigned reference layout.
 export const WARDEN_NAV = [
   { id: 'dashboard', label: 'Dashboard', icon: IconHome },
-  { id: 'history', label: 'Outpass History', icon: IconHistory },
+  { id: 'history', label: 'Outpass History', icon: IconHistory, path: '/warden/history' },
   { id: 'gates', label: 'Gate Administration', icon: IconBuilding, path: '/warden/gates' },
   { id: 'profile', label: 'Profile', icon: IconUser },
 ];

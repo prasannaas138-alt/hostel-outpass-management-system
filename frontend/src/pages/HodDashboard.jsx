@@ -9,12 +9,11 @@ import RequestReviewCard from '../components/RequestReviewCard';
 import StaffRequestTable from '../components/StaffRequestTable';
 import RequestDetailModal from '../components/RequestDetailModal';
 import WardenProfile from '../components/WardenProfile';
-import RoleOutpassHistory from '../components/RoleOutpassHistory';
 import ProfileChangeRequests from '../components/ProfileChangeRequests';
 import HodStudentsProfile from '../components/HodStudentsProfile';
 import HodDownloads from './HodDownloads';
 import StaffLiveMovements from '../components/StaffLiveMovements';
-import { IconUsers, IconClock, IconCheck, IconAlert, IconDownload, IconBuilding } from '../components/WardenIcons';
+import { IconUsers, IconClock, IconCheck, IconAlert, IconDownload, IconBuilding, IconHistory } from '../components/WardenIcons';
 import { formatTime12Hour as formatTime } from '../utils/timeFormat';
 import '../styles/dashboard.css';
 import '../styles/student.css';
@@ -26,7 +25,7 @@ import '../styles/hod-students.css';
 // HOD navigation = the shared staff nav + the HOD-only Students Profile item.
 const HOD_NAV = [
   WARDEN_NAV[0], // Dashboard
-  WARDEN_NAV[1], // Outpass History
+  { id: 'history', label: 'Outpass History', icon: IconHistory, path: '/hod/history' },
   { id: 'downloads', label: 'Downloads', icon: IconDownload },
   { id: 'students', label: 'Students Profile', icon: IconUsers },
   { id: 'gates', label: 'Gate Administration', icon: IconBuilding, path: '/hod/gates' },
@@ -212,10 +211,6 @@ export default function HodDashboard() {
           />
         ) : null}
       </section>
-      <RoleOutpassHistory
-        id="hod-history"
-        endpoint="/outpasses/history/hod"
-      />
       </>}
     </WardenLayout>
   );
