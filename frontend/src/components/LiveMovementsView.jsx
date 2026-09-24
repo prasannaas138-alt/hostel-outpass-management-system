@@ -25,6 +25,12 @@ const formatInstant = (value) => {
   return Number.isNaN(date.getTime()) ? '—' : date.toLocaleString();
 };
 
+const formatDateLabel = (value) => {
+  if (!value) return '—';
+  const [year, month, date] = String(value).split('-');
+  return `${date}/${month}/${year}`;
+};
+
 const statusLabel = (state) => {
   if (state === 'OUTSIDE') return 'Outside';
   if (state === 'RETURNED') return 'Returned';
@@ -134,8 +140,6 @@ export default function LiveMovementsView() {
   const outing = visible.filter((movement) => movement.requestType === 'Outing');
   const homeGoing = visible.filter((movement) => movement.requestType === 'Home' && dateOnlyIST(movement.actualExitAt) === selectedDate);
   const homeNeedReturn = visible.filter((movement) => movement.requestType === 'Home' && movement.state === 'OUTSIDE' && dateOnlyIST(movement.expectedReturnAt) === selectedDate);
-  const homeReturned = visible.filter((movement) => movement.requestType === 'Home' && dateOnlyIST(movement.actualReturnAt) === selectedDate);
-
 
   return (
     <section className="staff-live-movements" aria-label="Live student movements">
@@ -156,22 +160,59 @@ export default function LiveMovementsView() {
       {loadError ? <p className="staff-live-movements__error">{loadError}</p> : null}
       {loading ? <p className="staff-live-movements__empty">Loading movements…</p> : null}
 
-      <div className="staff-live-movements__section">
-        <div className="staff-live-movements__section-head"><h3>Outing</h3><span>{outing.length}</span></div>
-        <MovementTable rows={outing} emptyMessage="No Outing movement records for this date." />
-      </div>
-      <div className="staff-live-movements__section">
-        <div className="staff-live-movements__section-head"><h3>Students Going Home Today</h3><span>{homeGoing.length}</span></div>
-        <MovementTable rows={homeGoing} emptyMessage="No Home EXIT records for this date." />
-      </div>
-      <div className="staff-live-movements__section">
-        <div className="staff-live-movements__section-head"><h3>Students Who Need to Return Home Today</h3><span>{homeNeedReturn.length}</span></div>
-        <MovementTable rows={homeNeedReturn} emptyMessage="No Home students are currently due to return on this date." />
-      </div>
-      <div className="staff-live-movements__section">
-        <div className="staff-live-movements__section-head"><h3>Students Who Returned Home</h3><span>{homeReturned.length}</span></div>
-        <MovementTable rows={homeReturned} emptyMessage="No Home RETURN records for this date." />
-      </div>
+      <section className="lm-card lm-card--outing">
+        <div className="lm-card__head">
+          <div className="lm-card__title-wrap">
+            <span className="lm-card__icon lm-card__icon--outing" aria-hidden="true">🚶</span>
+            <div>
+              <h3>Outing</h3>
+              <p>Students who are going out for outing (not to home).</p>
+            </div>
+          </div>
+          <span className="lm-card__count">{outing.length}</span>
+        </div>
+        <MovementTable rows={outing} emptyMessage="No outing movement records for this date." />
+      </section>
+
+      <section className="lm-card lm-card--home">
+        <div className="lm-card__head">
+          <div className="lm-card__title-wrap">
+            <span className="lm-card__icon lm-card__icon--home" aria-hidden="true">🏠</span>
+            <div>
+              <h3>Home Movement</h3>
+              <p>Students who are going home or need to return home.</p>
+            </div>
+          </div>
+        </div>
+
+        <section className="lm-subsection lm-subsection--going">
+          <div className="lm-subsection__head">
+            <div className="lm-subsection__title-wrap">
+              <span className="lm-subsection__icon" aria-hidden="true">🏡</span>
+              <h4>Students Going Home Today</h4>
+            </div>
+            <div className="lm-subsection__meta">
+              <span className="lm-date-chip">Out Date: {formatDateLabel(selectedDate)}</span>
+              <span className="lm-card__count">{homeGoing.length}</span>
+            </div>
+          </div>
+          <MovementTable rows={homeGoing} emptyMessage="No students are going home on this date." />
+        </section>
+
+        <section className="lm-subsection lm-subsection--return">
+          <div className="lm-subsection__head">
+            <div className="lm-subsection__title-wrap">
+              <span className="lm-subsection__icon" aria-hidden="true">🔁</span>
+              <h4>Students Who Need to Return Home Today</h4>
+            </div>
+            <div className="lm-subsection__meta">
+              <span className="lm-date-chip">Return Date: {formatDateLabel(selectedDate)}</span>
+              <span className="lm-card__count">{homeNeedReturn.length}</span>
+            </div>
+          </div>
+          <MovementTable rows={homeNeedReturn} emptyMessage="No students need to return home on this date." />
+        </section>
+      </section>
     </section>
   );
 }
