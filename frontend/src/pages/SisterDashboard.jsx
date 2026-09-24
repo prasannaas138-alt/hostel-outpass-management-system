@@ -9,6 +9,7 @@ import AlertBanner from "../components/AlertBanner";
 import LoadingState from "../components/LoadingState";
 import ErrorState from "../components/ErrorState";
 import NotificationBell from "../components/NotificationBell";
+import StaffLiveMovements from "../components/StaffLiveMovements";
 import {
   IconHome,
   IconClock,
@@ -288,6 +289,8 @@ export default function SisterDashboard() {
               </article>
             ))}
           </div>
+           <StaffLiveMovements />
+
           <section className="wd-panel" id="sister-pending">
             <div>
               <p className="wd-greet-eyebrow">Pending reviewreview<picture>

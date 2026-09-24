@@ -13,6 +13,8 @@ import RoleOutpassHistory from '../components/RoleOutpassHistory';
 import ProfileChangeRequests from '../components/ProfileChangeRequests';
 import HodStudentsProfile from '../components/HodStudentsProfile';
 import HodDownloads from './HodDownloads';
+import StaffLiveMovements from '../components/StaffLiveMovements';
+import GateQrPanel from '../components/GateQrPanel';
 import { IconUsers, IconClock, IconCheck, IconAlert, IconDownload } from '../components/WardenIcons';
 import { formatTime12Hour as formatTime } from '../utils/timeFormat';
 import '../styles/dashboard.css';
@@ -160,6 +162,9 @@ export default function HodDashboard() {
           ['Expired Outpasses', history.filter((item) => String(item.status).toLowerCase() === 'expired').length, 'Not returned yet', IconAlert, 'wd-card-icon--red'],
         ].map(([label, value, sub, Icon, tone]) => <article className="wd-card" key={label}><span className={`wd-card-icon ${tone}`}><Icon size={20} /></span><p className="wd-card-label">{label}</p><p className="wd-card-value">{value}</p><p className="wd-card-sub">{sub}</p></article>)}
       </div>
+
+      <GateQrPanel allowCreate />
+      <StaffLiveMovements />
 
       <section id="pending-home-requests" className="panel">
         <div className="panel-heading">

@@ -1,5 +1,8 @@
 import { Router } from 'express';
-import { scanGateQr } from '../controllers/movementController.js';
+import {
+  getStaffLiveMovements,
+  scanGateQr,
+} from '../controllers/movementController.js';
 import { authorizeRoles, protect } from '../middleware/auth.js';
 
 const router = Router();
@@ -8,5 +11,10 @@ const router = Router();
 // movement: the student identity comes from the JWT, and the role guard means a
 // Student token is required (the existing roles, no new authentication).
 router.post('/scan', protect, authorizeRoles('Student'), scanGateQr);
+
+// Initial read-only movement snapshot for the staff dashboards. The same
+// visibility is intentionally shared by HOD, Sister, and Warden; no hostel
+// filtering or movement mutation is added here.
+router.get('/staff/live', protect, authorizeRoles('HOD', 'Sister', 'Warden'), getStaffLiveMovements);
 
 export default router;

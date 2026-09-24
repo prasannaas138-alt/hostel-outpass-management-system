@@ -18,6 +18,8 @@ import LoadingState from '../components/LoadingState';
 import ErrorState from '../components/ErrorState';
 import StaffRequestTable from '../components/StaffRequestTable';
 import RequestDetailModal from '../components/RequestDetailModal';
+import StaffLiveMovements from '../components/StaffLiveMovements';
+import GateQrPanel from '../components/GateQrPanel';
 import { getDisplayStatus } from '../utils/outpassStatus';
 import { formatTime12Hour as formatTime } from '../utils/timeFormat';
 import '../styles/warden-dashboard.css';
@@ -285,6 +287,11 @@ export default function WardenDashboard() {
               </article>
             ))}
           </div>
+
+           <GateQrPanel />
+
+           <StaffLiveMovements />
+
 
           <section className="wd-panel" aria-label="Pending review">
             <div className="wd-panel-head wd-panel-head--single">

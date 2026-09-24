@@ -544,4 +544,38 @@ const scanFirstExit = async ({ student, gate, gateSnapshot, attempt, now }) => {
 };
 
 
+// GET /api/movements/staff/live
+// Read-only current movement snapshot for the staff dashboards. This queries only
+// Movement documents; it never reads ScanLog or writes any movement state.
+export const getStaffLiveMovements = async () => {
+  const movements = await Movement.find({})
+    .select(
+      '_id outpassId registerNumber studentName hostelName expectedExitAt expectedReturnAt ' +
+        'actualExitAt actualReturnAt state lateReturn exitGate exitGateCode ' +
+        'returnGate returnGateCode createdAt updatedAt'
+    )
+    .sort({ state: 1, updatedAt: -1, _id: -1 })
+    .lean();
+
+  return movements.map((movement) => ({
+    movementId: movement._id,
+    outpassId: movement.outpassId,
+    registerNumber: movement.registerNumber,
+    studentName: movement.studentName,
+    hostelName: movement.hostelName,
+    expectedExitAt: movement.expectedExitAt,
+    expectedReturnAt: movement.expectedReturnAt,
+    actualExitAt: movement.actualExitAt,
+    actualReturnAt: movement.actualReturnAt,
+    state: movement.state,
+    lateReturn: movement.lateReturn,
+    exitGate: movement.exitGate,
+    exitGateCode: movement.exitGateCode,
+    returnGate: movement.returnGate,
+    returnGateCode: movement.returnGateCode,
+    createdAt: movement.createdAt,
+    updatedAt: movement.updatedAt,
+  }));
+};
+
 

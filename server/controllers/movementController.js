@@ -1,4 +1,9 @@
-import { scanExitGate } from '../services/movementService.js';
+import {
+  getStaffLiveMovements as listStaffLiveMovements,
+  scanExitGate,
+} from '../services/movementService.js';
+import Movement from '../models/Movement.js';
+import ScanLog from '../models/ScanLog.js';
 
 // ---------------------------------------------------------------------------
 // Movement scan controller - HTTP glue only.
@@ -57,6 +62,69 @@ const toRejectionResponse = (result) => ({
   ...(result.expectedReturnAt ? { expectedReturnAt: toDateOrNull(result.expectedReturnAt) } : {}),
 });
 
+const MOVEMENT_EVENT_ROOM = 'staff:movements';
+const MOVEMENT_EVENT_NAME = 'movement:updated';
+
+const emitSuccessfulMovement = async (req, result) => {
+  const io = req.app?.get?.('io');
+  if (!io) return;
+
+  try {
+    const movement = await Movement.findOne({ outpassId: result.outpassId })
+      .select(
+        '_id outpassId registerNumber studentName hostelName expectedExitAt expectedReturnAt ' +
+          'actualExitAt actualReturnAt state lateReturn exitGate exitGateCode ' +
+          'returnGate returnGateCode exitScan returnScan'
+      )
+      .lean();
+
+    if (!movement) return;
+
+    const linkedScanId = result.action === 'RETURN' ? movement.returnScan : movement.exitScan;
+    let scanLog = linkedScanId
+      ? await ScanLog.findById(linkedScanId).select('_id occurredAt').lean()
+      : null;
+
+    if (!scanLog) {
+      scanLog = await ScanLog.findOne({
+        outpassId: movement.outpassId,
+        action: result.action,
+        result: 'SUCCESS',
+      })
+        .sort({ _id: -1 })
+        .select('_id occurredAt')
+        .lean();
+    }
+
+    const payload = {
+      eventId: scanLog?._id?.toString() || null,
+      action: result.action,
+      movementState: movement.state,
+      occurredAt: toDateOrNull(scanLog?.occurredAt),
+      movementId: movement._id.toString(),
+      outpassId: movement.outpassId,
+      registerNumber: movement.registerNumber,
+      studentName: movement.studentName,
+      hostelName: movement.hostelName,
+      expectedExitAt: toDateOrNull(movement.expectedExitAt),
+      expectedReturnAt: toDateOrNull(movement.expectedReturnAt),
+      actualExitAt: toDateOrNull(movement.actualExitAt),
+      actualReturnAt: toDateOrNull(movement.actualReturnAt),
+      lateReturn: movement.lateReturn,
+      exitGate: movement.exitGate?.toString() || null,
+      exitGateCode: movement.exitGateCode || null,
+      returnGate: movement.returnGate?.toString() || null,
+      returnGateCode: movement.returnGateCode || null,
+    };
+
+    io.to(MOVEMENT_EVENT_ROOM).emit(MOVEMENT_EVENT_NAME, payload);
+  } catch {
+    // Realtime delivery is optional; a valid REST movement response must remain
+    // successful even if Socket.IO or the post-success lookups are unavailable.
+    console.error('Failed to emit movement:updated event');
+  }
+};
+
 // POST /api/movements/scan
 // Scans the permanent gate QR as the authenticated student. The server decides
 // whether this is an EXIT (first) or RETURN (second) scan.
@@ -71,11 +139,27 @@ export const scanGateQr = async (req, res, next) => {
     });
 
     if (result.ok) {
+      // Emit only after the service has committed a successful movement. The
+      // helper is best-effort, so realtime delivery cannot change this REST
+      // response or make a valid scan fail.
+      await emitSuccessfulMovement(req, result);
+
       // 201: an EXIT created the movement, or a RETURN closed it.
       return res.status(201).json(toSuccessResponse(result));
     }
 
     return res.status(result.httpStatus).json(toRejectionResponse(result));
+  } catch (error) {
+    next(error);
+  }
+};
+// GET /api/movements/staff/live
+// Initial read-only snapshot for the staff live-movement views. Real-time
+// updates will be layered on later; this endpoint itself does not poll.
+export const getStaffLiveMovements = async (req, res, next) => {
+  try {
+    const movements = await listStaffLiveMovements();
+    res.json({ success: true, movements });
   } catch (error) {
     next(error);
   }
