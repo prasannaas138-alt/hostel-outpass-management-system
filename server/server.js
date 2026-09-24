@@ -16,7 +16,7 @@ if (!process.env.JWT_SECRET) {
 }
 
 const PORT = process.env.PORT || 5000;
-const FRONTEND_ORIGIN = 'hostel-outpass-management-system.vercel.app';
+const FRONTEND_ORIGIN = 'https://hostel-outpass-management-system.vercel.app';
 const STAFF_MOVEMENT_ROOM = 'staff:movements';
 const STAFF_ROLES = new Set(['HOD', 'Sister', 'Warden']);
 

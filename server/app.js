@@ -20,7 +20,7 @@ const indexHtmlPath = path.join(frontendDistPath, 'index.html');
 // Allow all origins for easier deployment to Vercel/Render without CORS issues
 app.use(
   cors({
-    origin: 'hostel-outpass-management-system.vercel.app',
+    origin: 'https://hostel-outpass-management-system.vercel.app',
     credentials: true,
   })
 );
