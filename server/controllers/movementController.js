@@ -212,11 +212,13 @@ export const updateMovementReport = async (req, res, next) => {
     if (io) {
       const eventMovement = await findMovementForEvent({ _id: movement._id });
       if (eventMovement) {
-        io.to(MOVEMENT_EVENT_ROOM).emit(MOVEMENT_EVENT_NAME, toMovementPayload(eventMovement, {
+        const movementPayload = toMovementPayload(eventMovement, {
           action: 'REPORT',
           eventId: null,
           occurredAt: new Date(),
-        }));
+        });
+        io.to(MOVEMENT_EVENT_ROOM).emit(MOVEMENT_EVENT_NAME, movementPayload);
+        io.to(`student:${eventMovement.outpass.studentId}`).emit(MOVEMENT_EVENT_NAME, movementPayload);
         emitOutpassUpdated(req, eventMovement.outpass, {
           report: resolveEffectiveReport(eventMovement, eventMovement.outpass),
           reportManuallySet: true,

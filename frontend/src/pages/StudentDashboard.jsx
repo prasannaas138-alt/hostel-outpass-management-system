@@ -14,7 +14,12 @@ import {
   matchesStatusFilter,
 } from '../utils/outpassStatus';
 import { normalizeTo24Hour } from '../utils/timeFormat';
-import { connectMovementSocket, disconnectMovementSocket, subscribeToOutpassUpdates } from '../services/movementSocket';
+import {
+  connectMovementSocket,
+  disconnectMovementSocket,
+  subscribeToMovementUpdates,
+  subscribeToOutpassUpdates,
+} from '../services/movementSocket';
 import '../styles/dashboard.css';
 import '../styles/student.css';
 import '../styles/apply-requests.css';
@@ -115,16 +120,26 @@ export default function StudentDashboard() {
 
   useEffect(() => {
     connectMovementSocket();
-    const unsubscribe = subscribeToOutpassUpdates((event) => {
-      if (!event?.outpassObjectId) return;
-      setRequests((current) => current.map((request) => (
-        String(request._id) === String(event.outpassObjectId)
-          ? { ...request, ...event }
-          : request
-      )));
-    });
+
+    const applyRealtimeUpdate = (event) => {
+      if (!event) return;
+      setRequests((current) => current.map((request) => {
+        const matchesObjectId = event.outpassObjectId &&
+          String(request._id) === String(event.outpassObjectId);
+        const matchesOutpassId = event.outpassId &&
+          String(request.outpassId) === String(event.outpassId);
+        return matchesObjectId || matchesOutpassId ? { ...request, ...event } : request;
+      }));
+    };
+
+    // Approval/outpass events update the request by ObjectId; movement events
+    // carry the authoritative Warden Report and can also be matched by the
+    // permanent outpassId. Both use the existing shared authenticated socket.
+    const unsubscribeOutpass = subscribeToOutpassUpdates(applyRealtimeUpdate);
+    const unsubscribeMovement = subscribeToMovementUpdates(applyRealtimeUpdate);
     return () => {
-      unsubscribe();
+      unsubscribeOutpass();
+      unsubscribeMovement();
       disconnectMovementSocket();
     };
   }, []);
