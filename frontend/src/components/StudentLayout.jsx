@@ -1,6 +1,7 @@
 import { useState, useEffect, useRef } from 'react';
 import { useLocation, useNavigate } from 'react-router-dom';
 import { useAuth } from '../context/AuthContext';
+import PlatformFooter from './PlatformFooter';
 import '../styles/layout.css';
 
 const STUDENT_NAV = [
@@ -133,6 +134,7 @@ export default function StudentLayout({ title, subtitle, actions, children, onNa
           </header>
 
           {children}
+          <PlatformFooter />
         </main>
 
         <nav className="student-bottomnav" aria-label="Student mobile">

@@ -2,6 +2,7 @@ import { useState } from 'react';
 import { useNavigate } from 'react-router-dom';
 import { useAuth } from '../context/AuthContext';
 import NotificationBell from './NotificationBell';
+import PlatformFooter from './PlatformFooter';
 import {
   IconMenu,
   IconClose,
@@ -144,6 +145,7 @@ alt="St. Joseph University"
 
         <main className="wd-main" id="wd-main">
           {children}
+          <PlatformFooter />
         </main>
 
         <nav className="wd-bottomnav" aria-label="Mobile navigation">

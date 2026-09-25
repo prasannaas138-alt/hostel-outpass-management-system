@@ -10,6 +10,7 @@ import AlertBanner from "../components/AlertBanner";
 import LoadingState from "../components/LoadingState";
 import ErrorState from "../components/ErrorState";
 import NotificationBell from "../components/NotificationBell";
+import PlatformFooter from "../components/PlatformFooter";
 import {
   IconHome,
   IconClock,
@@ -374,6 +375,7 @@ export default function SisterDashboard() {
               onClose={() => setDetailId("")}
             />
           ) : null}
+          <PlatformFooter />
         </main>
         <nav className="wd-bottomnav" aria-label="Sister mobile navigation">
           <button

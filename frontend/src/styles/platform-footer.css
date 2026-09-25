@@ -1,0 +1,47 @@
+/* ==========================================================================
+   PlatformFooter — minimal support/contact footer shared by the authenticated
+   portals (Student / Sister / Warden / HOD layouts). Visuals only: single
+   centered line, existing global.css design tokens, mobile-first.
+   ========================================================================== */
+.platform-footer {
+  margin-top: 0.25rem;
+  padding: 0.8rem 0.5rem;
+  border-top: 1px solid var(--border, #e2e8f0);
+  text-align: center;
+}
+
+.platform-footer__text {
+  margin: 0;
+  font-size: var(--text-xs, 0.75rem);
+  line-height: 1.6;
+  color: var(--muted, #64748b);
+}
+
+/* Visually recognizable as a link: brand blue + underline. */
+.platform-footer__link {
+  color: var(--blue-600, #2563eb);
+  font-weight: 600;
+  text-decoration: underline;
+  text-underline-offset: 2px;
+}
+
+.platform-footer__link:hover {
+  color: var(--blue-700, #1d4ed8);
+}
+
+.platform-footer__link:focus-visible {
+  outline: 2px solid var(--blue-500, #3b82f6);
+  outline-offset: 2px;
+  border-radius: 4px;
+}
+
+/* Narrow screens: let the sentence wrap and keep the email on one line. */
+@media (max-width: 480px) {
+  .platform-footer {
+    padding: 0.7rem 0.25rem;
+  }
+
+  .platform-footer__link {
+    overflow-wrap: anywhere;
+  }
+}
