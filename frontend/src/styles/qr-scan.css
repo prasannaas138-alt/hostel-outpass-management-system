@@ -195,61 +195,126 @@
 }
 
 .qrscan-success-ring {
+  --ring-size: clamp(152px, 46vw, 196px);
   position: relative;
   z-index: 1;
+  isolation: isolate;
   display: grid;
   place-items: center;
-  width: 126px;
-  height: 126px;
-  margin-top: 0.15rem;
+  width: var(--ring-size);
+  height: var(--ring-size);
+  margin-top: 0.55rem;
+  border: 5px solid rgba(255, 255, 255, 0.96);
   border-radius: 50%;
-  background: var(--verification-soft);
-  box-shadow: 0 0 0 8px var(--verification-ring), 0 0 30px var(--verification-glow);
-  animation: qrscan-verification-breathe 2.8s ease-in-out infinite;
+  background: var(--verification-accent);
+  box-shadow:
+    0 0 0 7px color-mix(in srgb, var(--verification-accent) 24%, transparent),
+    0 0 34px var(--verification-glow),
+    0 0 64px color-mix(in srgb, var(--verification-accent) 26%, transparent);
+  animation: qrscan-verification-breathe 2.4s ease-in-out infinite;
   will-change: transform, box-shadow;
 }
 
+/* Expanding halo: grows away from the circle, fades, then repeats. */
+.qrscan-success-ring::before {
+  content: '';
+  position: absolute;
+  inset: -30px;
+  z-index: 0;
+  border-radius: 50%;
+  background: radial-gradient(
+    circle,
+    color-mix(in srgb, var(--verification-accent) 58%, transparent) 0%,
+    color-mix(in srgb, var(--verification-glow) 70%, transparent) 42%,
+    transparent 72%
+  );
+  filter: blur(10px);
+  opacity: 0.4;
+  animation: qrscan-glow-expand 2.4s ease-in-out infinite;
+  pointer-events: none;
+  will-change: transform, opacity;
+}
+
+/* Second, independent dashed orbit ring around the breathing circle. */
 .qrscan-success-ring::after {
   content: '';
   position: absolute;
-  inset: -7px;
-  border: 1px dashed color-mix(in srgb, var(--verification-accent) 52%, transparent);
+  inset: -13px;
+  z-index: 1;
+  border: 3px dashed color-mix(in srgb, var(--verification-accent) 72%, white);
   border-radius: 50%;
+  opacity: 0.88;
   pointer-events: none;
-  animation: qrscan-status-orbit 3.4s linear infinite;
+  animation: qrscan-status-orbit 3.2s linear infinite reverse;
+}
+
+/* Sweeping highlight orbit; separate from the dashed ring for depth. */
+.qrscan-success-orbit {
+  position: absolute;
+  inset: -22px;
+  z-index: 1;
+  border-radius: 50%;
+  background: conic-gradient(
+    from 0deg,
+    transparent 0deg 212deg,
+    color-mix(in srgb, var(--verification-accent) 35%, transparent) 258deg,
+    var(--verification-ring) 300deg,
+    #ffffff 326deg,
+    var(--verification-accent) 344deg,
+    transparent 360deg
+  );
+  -webkit-mask: radial-gradient(farthest-side, transparent calc(100% - 5px), #000 calc(100% - 4px));
+  mask: radial-gradient(farthest-side, transparent calc(100% - 5px), #000 calc(100% - 4px));
+  filter: drop-shadow(0 0 6px var(--verification-glow));
+  opacity: 0.9;
+  pointer-events: none;
+  animation: qrscan-status-orbit 2.7s linear infinite;
 }
 
 .qrscan-success-svg {
-  width: 100%;
-  height: 100%;
+  position: relative;
+  z-index: 2;
+  width: calc(100% - 34px);
+  height: calc(100% - 34px);
+  overflow: visible;
 }
 
 .qrscan-success-circle {
-  stroke: var(--verification-accent);
-  stroke-width: 3;
-  stroke-dasharray: 151;
-  stroke-dashoffset: 151;
+  stroke: rgba(255, 255, 255, 0.78);
+  stroke-width: 2.5;
+  stroke-dasharray: 100;
+  stroke-dashoffset: 100;
   animation: qrscan-ring 0.7s ease-out forwards;
 }
 
 .qrscan-verification-icon {
-  stroke: var(--verification-accent);
-  stroke-width: 4;
+  stroke: #ffffff;
+  stroke-width: 4.5;
   stroke-linecap: round;
   stroke-linejoin: round;
-  stroke-dasharray: 58;
-  stroke-dashoffset: 58;
-  animation: qrscan-check 0.5s ease-out 0.45s forwards;
+  stroke-dasharray: 100;
+  stroke-dashoffset: 100;
+  animation: qrscan-check 0.6s ease-out 0.35s forwards;
 }
 
 .qrscan-success-status {
   position: relative;
   z-index: 1;
-  margin: 0.1rem 0 -0.15rem;
-  color: var(--verification-deep);
-  font-size: 1.1rem;
+  display: inline-flex;
+  align-items: center;
+  justify-content: center;
+  min-height: 34px;
+  margin: 0.7rem 0 -0.1rem;
+  padding: 0.3rem 0.95rem;
+  border: 1px solid color-mix(in srgb, var(--verification-accent) 55%, white);
+  border-radius: 999px;
+  background: var(--verification-accent);
+  box-shadow: 0 0 18px var(--verification-glow);
+  color: #ffffff;
+  font-size: 0.82rem;
   font-weight: 900;
-  letter-spacing: 0.16em;
+  letter-spacing: 0.2em;
+  animation: qrscan-status-pulse 2.4s ease-in-out infinite;
 }
 
 .qrscan-success-title {
@@ -258,40 +323,47 @@
   isolation: isolate;
   width: fit-content;
   max-width: 100%;
-  margin: 0.15rem auto 0;
-  padding: 0.38rem 0.85rem 0.42rem;
-  border: 1px solid color-mix(in srgb, var(--verification-accent) 58%, white);
-  border-radius: 12px;
-  background: #fff;
-  font-size: 1.6rem;
+  margin: 0.45rem auto 0;
+  padding: 0.52rem 1rem 0.56rem;
+  border: 2px solid var(--verification-accent);
+  border-radius: 16px;
+  background: #ffffff;
+  box-shadow:
+    0 0 0 1px color-mix(in srgb, var(--verification-accent) 25%, transparent),
+    0 0 20px var(--verification-glow);
+  font-size: clamp(1.35rem, 5vw, 1.72rem);
   line-height: 1.15;
-  letter-spacing: 0.04em;
+  letter-spacing: 0.055em;
   color: var(--verification-deep);
   overflow-wrap: anywhere;
+  animation: qrscan-result-glow 2.4s ease-in-out infinite;
 }
 
+/* Travelling luminous outline around the result banner. */
 .qrscan-success-title::before {
   content: '';
   position: absolute;
-  inset: -3px;
+  inset: -6px;
   z-index: -1;
-  border-radius: 15px;
+  padding: 4px;
+  border-radius: 21px;
   background: conic-gradient(
-    from 0deg,
-    transparent 0deg,
-    transparent 245deg,
-    var(--verification-accent) 305deg,
-    var(--verification-glow) 330deg,
-    transparent 350deg
+    from var(--qrscan-outline-angle, 0deg),
+    transparent 0deg 238deg,
+    color-mix(in srgb, var(--verification-accent) 40%, transparent) 286deg,
+    var(--verification-accent) 322deg,
+    #ffffff 344deg,
+    var(--verification-glow) 354deg,
+    transparent 360deg
   );
   -webkit-mask: linear-gradient(#000 0 0) content-box, linear-gradient(#000 0 0);
   -webkit-mask-composite: xor;
   mask: linear-gradient(#000 0 0) content-box, linear-gradient(#000 0 0);
   mask-composite: exclude;
-  padding: 2px;
-  opacity: 0.88;
+  opacity: 1;
+  filter: drop-shadow(0 0 5px var(--verification-glow));
   pointer-events: none;
-  animation: qrscan-result-outline 2.6s linear infinite;
+  animation: qrscan-result-outline 2.1s linear infinite;
 }
 
 .qrscan-success-subtitle {
@@ -334,20 +406,84 @@
   font-weight: 800;
 }
 
+/* Registered so the conic outline gradient can animate its travel angle. */
+@property --qrscan-outline-angle {
+  syntax: '<angle>';
+  inherits: false;
+  initial-value: 0deg;
+}
+
+/* Stroke-draw definitions are required for the SVG ring and door icon to be
+   visible; without these keyframes the dash offset stayed hidden. */
+@keyframes qrscan-ring {
+  to { stroke-dashoffset: 0; }
+}
+
+@keyframes qrscan-check {
+  to { stroke-dashoffset: 0; }
+}
+
+/* Strong, continuous circle breathing: scale up, glow expands and fades,
+   then the circle settles back to its normal size. */
 @keyframes qrscan-verification-breathe {
   0%, 100% {
-    transform: scale(0.98);
-    box-shadow: 0 0 0 7px var(--verification-ring), 0 0 20px var(--verification-glow);
+    transform: scale(0.97);
+    box-shadow:
+      0 0 0 7px color-mix(in srgb, var(--verification-accent) 24%, transparent),
+      0 0 30px var(--verification-glow),
+      0 0 58px color-mix(in srgb, var(--verification-accent) 20%, transparent);
   }
   50% {
-    transform: scale(1.06);
-    box-shadow: 0 0 0 11px color-mix(in srgb, var(--verification-accent) 12%, transparent),
-                0 0 38px var(--verification-glow);
+    transform: scale(1.07);
+    box-shadow:
+      0 0 0 13px color-mix(in srgb, var(--verification-accent) 14%, transparent),
+      0 0 52px var(--verification-glow),
+      0 0 92px color-mix(in srgb, var(--verification-accent) 34%, transparent);
+  }
+}
+
+/* Separate outward halo pulse behind the circle. */
+@keyframes qrscan-glow-expand {
+  0%, 100% {
+    transform: scale(0.86);
+    opacity: 0.2;
+  }
+  48% {
+    transform: scale(1.14);
+    opacity: 0.7;
+  }
+  76% {
+    transform: scale(1.24);
+    opacity: 0.1;
+  }
+}
+
+@keyframes qrscan-status-pulse {
+  0%, 100% {
+    transform: scale(1);
+    box-shadow: 0 0 10px var(--verification-glow);
+  }
+  50% {
+    transform: scale(1.05);
+    box-shadow: 0 0 28px var(--verification-glow);
+  }
+}
+
+@keyframes qrscan-result-glow {
+  0%, 100% {
+    box-shadow:
+      0 0 0 1px color-mix(in srgb, var(--verification-accent) 22%, transparent),
+      0 0 12px color-mix(in srgb, var(--verification-glow) 55%, transparent);
+  }
+  50% {
+    box-shadow:
+      0 0 0 2px color-mix(in srgb, var(--verification-accent) 45%, transparent),
+      0 0 30px var(--verification-glow);
   }
 }
 
 @keyframes qrscan-result-outline {
-  to { transform: rotate(1turn); }
+  to { --qrscan-outline-angle: 360deg; }
 }
 
 @keyframes qrscan-success-glow {
@@ -477,7 +613,11 @@
   }
 
   .qrscan-success-ring,
+  .qrscan-success-ring::before,
   .qrscan-success-ring::after,
+  .qrscan-success-orbit,
+  .qrscan-success-status,
+  .qrscan-success-title,
   .qrscan-success-title::before {
     animation: none;
   }
