@@ -9,6 +9,7 @@ const STUDENT_NAV = [
   { id: 'apply-new-outpass', label: 'Apply for Outpass', icon: '📝', href: '#apply-new-outpass', routePath: '/student-dashboard' },
   { id: 'request-history', label: 'My Requests', icon: '📋', href: '#request-history', routePath: '/student-dashboard' },
   { id: 'outpass-history', label: 'Outpass History', icon: '🕘', href: '/student/outpass-history', routePath: '/student/outpass-history' },
+  { id: 'live-movement', label: 'Live Movement', icon: '🚶', href: '/student/live-movement', routePath: '/student/live-movement' },
   { id: 'profile', label: 'Profile', icon: '👤', href: '#profile' },
 ];
 
@@ -28,8 +29,12 @@ export default function StudentLayout({ title, subtitle, actions, children, onNa
 
   useEffect(() => {
     const hash = window.location.hash?.replace('#', '') || '';
-    const isHistoryPage = location.pathname === '/student/outpass-history';
-    setActiveSection(isHistoryPage ? 'outpass-history' : (hash || 'dashboard'));
+    // Route-backed sections are real pages (Outpass History, Live Movement),
+    // so the active item follows the pathname instead of the scroll hash.
+    const routeSection = STUDENT_NAV.find(
+      (item) => item.routePath && item.routePath !== '/student-dashboard' && item.routePath === location.pathname,
+    );
+    setActiveSection(routeSection ? routeSection.id : (hash || 'dashboard'));
     const onHashChange = () => {
       const h = window.location.hash?.replace('#', '') || 'dashboard';
       setActiveSection(h);

@@ -151,6 +151,12 @@ const emitSuccessfulMovement = async (req, result) => {
     });
 
     io.to(MOVEMENT_EVENT_ROOM).emit(MOVEMENT_EVENT_NAME, payload);
+    // The student Live Movement page renders only the authenticated student's
+    // own rows, so the same payload is delivered to that student's private room
+    // (joined on socket connect) — no extra event, no second connection.
+    if (movement.outpass?.studentId) {
+      io.to(`student:${movement.outpass.studentId}`).emit(MOVEMENT_EVENT_NAME, payload);
+    }
     emitOutpassUpdated(req, movement.outpass, {
       report: resolveEffectiveReport(movement, movement.outpass),
       reportManuallySet: hasManualReport(movement),
@@ -244,6 +250,19 @@ export const updateMovementReport = async (req, res, next) => {
 export const getStaffLiveMovements = async (req, res, next) => {
   try {
     const movements = await listStaffLiveMovements();
+    res.json({ success: true, movements });
+  } catch (error) {
+    next(error);
+  }
+};
+
+// GET /api/movements/my/live
+// Student-scoped snapshot for the Student Live Movement page: only the
+// authenticated student's own movements. The identity always comes from the
+// JWT, so the client cannot widen the query to other students.
+export const getMyLiveMovements = async (req, res, next) => {
+  try {
+    const movements = await listStaffLiveMovements({ student: req.user._id });
     res.json({ success: true, movements });
   } catch (error) {
     next(error);

@@ -115,13 +115,19 @@ export default function LiveMovementsView({ role = 'Warden' }) {
   const [reportError, setReportError] = useState('');
   const bufferedEvents = useRef(new Map());
 
+  // Students read their own JWT-scoped snapshot; staff keep the shared staff
+  // endpoint. The realtime subscription, the layout and the row renderer are
+  // identical for both roles — only the source snapshot is scoped.
+  const isStudent = role === 'Student';
+  const snapshotEndpoint = isStudent ? '/movements/my/live' : '/movements/staff/live';
+
   useEffect(() => {
     let active = true;
     let unsubscribe = () => {};
 
     const loadSnapshot = async () => {
       try {
-        const { data } = await api.get('/movements/staff/live');
+        const { data } = await api.get(snapshotEndpoint);
         if (!active) return;
         const snapshot = Array.isArray(data?.movements) ? data.movements : [];
         const buffered = [...bufferedEvents.current.values()];
@@ -155,7 +161,7 @@ export default function LiveMovementsView({ role = 'Warden' }) {
       unsubscribe();
       disconnectMovementSocket();
     };
-  }, []);
+  }, [snapshotEndpoint]);
 
   const openReportEditor = (movement) => {
     setReportMovement(movement);
@@ -194,12 +200,16 @@ export default function LiveMovementsView({ role = 'Warden' }) {
   const homeNeedReturn = visible.filter((movement) => movement.requestType === 'Home' && movement.state === 'OUTSIDE' && dateOnlyIST(movement.expectedReturnAt) === selectedDate);
 
   return (
-    <section className="staff-live-movements" aria-label="Live student movements">
+    <section className="staff-live-movements" aria-label={isStudent ? 'My live movements' : 'Live student movements'}>
       <div className="staff-live-movements__heading">
         <div>
           <p className="staff-live-movements__eyebrow">Live movement</p>
-          <h2>Student movements</h2>
-          <p className="staff-live-movements__description">View actual EXIT and RETURN records for a selected date.</p>
+          <h2>{isStudent ? 'My movements' : 'Student movements'}</h2>
+          <p className="staff-live-movements__description">
+            {isStudent
+              ? 'Your own EXIT and RETURN records for a selected date.'
+              : 'View actual EXIT and RETURN records for a selected date.'}
+          </p>
         </div>
         <div className="staff-live-movements__controls">
           <label className="staff-live-movements__date">Movement date
@@ -218,7 +228,7 @@ export default function LiveMovementsView({ role = 'Warden' }) {
             <span className="lm-card__icon lm-card__icon--outing" aria-hidden="true">🚶</span>
             <div>
               <h3>Outing</h3>
-              <p>Students who are going out for outing (not to home).</p>
+              <p>{isStudent ? 'Your outing movements (not to home).' : 'Students who are going out for outing (not to home).'}</p>
             </div>
           </div>
           <span className="lm-card__count">{outing.length}</span>
@@ -232,7 +242,7 @@ export default function LiveMovementsView({ role = 'Warden' }) {
             <span className="lm-card__icon lm-card__icon--home" aria-hidden="true">🏠</span>
             <div>
               <h3>Home Movement</h3>
-              <p>Students who are going home or need to return home.</p>
+              <p>{isStudent ? 'Your home movements and expected returns.' : 'Students who are going home or need to return home.'}</p>
             </div>
           </div>
         </div>
@@ -241,28 +251,28 @@ export default function LiveMovementsView({ role = 'Warden' }) {
           <div className="lm-subsection__head">
             <div className="lm-subsection__title-wrap">
               <span className="lm-subsection__icon" aria-hidden="true">🏡</span>
-              <h4>Students Going Home Today</h4>
+              <h4>{isStudent ? 'Going Home Today' : 'Students Going Home Today'}</h4>
             </div>
             <div className="lm-subsection__meta">
               <span className="lm-date-chip">Out Date: {formatDateLabel(selectedDate)}</span>
               <span className="lm-card__count">{homeGoing.length}</span>
             </div>
           </div>
-          <MovementTable rows={homeGoing} emptyMessage="No students are going home on this date." canEditReport={role === 'Warden'} onEditReport={openReportEditor} />
+          <MovementTable rows={homeGoing} emptyMessage={isStudent ? 'No home movement records for this date.' : 'No students are going home on this date.'} canEditReport={role === 'Warden'} onEditReport={openReportEditor} />
         </section>
 
         <section className="lm-subsection lm-subsection--return">
           <div className="lm-subsection__head">
             <div className="lm-subsection__title-wrap">
               <span className="lm-subsection__icon" aria-hidden="true">🔁</span>
-              <h4>Students Who Need to Return Home Today</h4>
+              <h4>{isStudent ? 'Need to Return Home Today' : 'Students Who Need to Return Home Today'}</h4>
             </div>
             <div className="lm-subsection__meta">
               <span className="lm-date-chip">Return Date: {formatDateLabel(selectedDate)}</span>
               <span className="lm-card__count">{homeNeedReturn.length}</span>
             </div>
           </div>
-          <MovementTable rows={homeNeedReturn} emptyMessage="No students need to return home on this date." canEditReport={role === 'Warden'} onEditReport={openReportEditor} />
+          <MovementTable rows={homeNeedReturn} emptyMessage={isStudent ? 'No return-home records for this date.' : 'No students need to return home on this date.'} canEditReport={role === 'Warden'} onEditReport={openReportEditor} />
         </section>
       </section>
 

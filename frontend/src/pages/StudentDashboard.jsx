@@ -5,7 +5,6 @@ import ApplyOutpassForm from '../components/ApplyOutpassForm';
 import MyRequestsList from '../components/MyRequestsList';
 import StudentProfile from '../components/StudentProfile';
 import { MyRequestsTable } from '../components/RequestDetails';
-import OutpassDetails from '../components/OutpassDetails';
 import LoadingState from '../components/LoadingState';
 import ErrorState from '../components/ErrorState';
 import QrScanSheet from '../components/QrScanSheet';
@@ -50,7 +49,6 @@ export default function StudentDashboard() {
   const [loadError, setLoadError] = useState('');
   const [saving, setSaving] = useState(false);
   const [statusFilter, setStatusFilter] = useState('All');
-  const [detailId, setDetailId] = useState(null);
   const [profileViewActive, setProfileViewActive] = useState(false);
   const [qrScannerOpen, setQrScannerOpen] = useState(false);
 
@@ -92,8 +90,6 @@ export default function StudentDashboard() {
     });
     return counts;
   }, [visibleRequests]);
-
-  const detailRequest = useMemo(() => requests.find((item) => item._id === detailId) || null, [requests, detailId]);
 
   // Self-contained loader: owns its loading/error lifecycle so a failed
   // initial load shows a retry state instead of an unhandled rejection.
@@ -220,7 +216,6 @@ export default function StudentDashboard() {
 
   const scrollToEdit = (id) => {
     setSelectedId(id);
-    setDetailId(null);
     setProfileViewActive(false);
     setTimeout(() => {
       document.getElementById('apply-new-outpass')?.scrollIntoView({ behavior: 'smooth', block: 'start' });
@@ -233,15 +228,8 @@ export default function StudentDashboard() {
       subtitle="Apply for outpass, track approvals, and show your approved outpass at the gate."
       onNavSelected={handleNavSelected}
     >
-      {detailRequest ? (
-        <OutpassDetails
-          request={detailRequest}
-          user={user}
-          onBack={() => setDetailId(null)}
-          onEdit={scrollToEdit}
-        />
-      ) : (
-        <>
+      {/* The outpass slip is no longer reachable from the Student Dashboard:
+          no request card button opens it, so no slip view is rendered here. */}
       <section id="dashboard" className="student-hero">
               <h1>Hello, {firstName} <picture>
   <source srcset="https://fonts.gstatic.com/s/e/notoemoji/latest/1f44b/512.webp" type="image/webp"/>
@@ -321,14 +309,10 @@ export default function StudentDashboard() {
               counts={requestCounts}
               statusFilter={statusFilter}
               onStatusFilterChange={setStatusFilter}
-              onViewDetails={setDetailId}
               onEdit={scrollToEdit}
             />
             <MyRequestsTable requests={filteredRequests} />
           </section>
-
-        </>
-      )}
 
       {qrScannerOpen ? (
         <QrScanSheet

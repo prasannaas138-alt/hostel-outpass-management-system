@@ -3,6 +3,7 @@ import LoginPage from './pages/LoginPage';
 import RegisterPage from './pages/RegisterPage';
 import StudentDashboard from './pages/StudentDashboard';
 import StudentOutpassHistoryPage from './pages/StudentOutpassHistoryPage';
+import StudentLiveMovementPage from './pages/StudentLiveMovementPage';
 import HodDashboard from './pages/HodDashboard';
 import SisterDashboard from './pages/SisterDashboard';
 import WardenDashboard from './pages/WardenDashboard';
@@ -50,6 +51,14 @@ export default function App() {
         element={
           <ProtectedRoute roles={["Student"]}>
             <StudentOutpassHistoryPage />
+          </ProtectedRoute>
+        }
+      />
+      <Route
+        path="/student/live-movement"
+        element={
+          <ProtectedRoute roles={["Student"]}>
+            <StudentLiveMovementPage />
           </ProtectedRoute>
         }
       />

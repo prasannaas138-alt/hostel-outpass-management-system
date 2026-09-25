@@ -53,14 +53,15 @@ const TypeIcon = ({ requestType }) => (
  * │         📅 09/13/2026 · 08:30–16:30  │
  * │         👤 Leave / Outing         ›  │
  * │ ──────────────────────────────────── │
- * │ [ Outpass ]       [ Edit and reapply]│
+ * │                [ Edit and reapply ]  │
  * └──────────────────────────────────────┘
  *
- * Renders only below 980px (desktop shows the request tables). "Outpass"
- * opens the outpass details view; there is intentionally no download
- * button — the screen itself is the official outpass display.
+ * Renders only below 980px (desktop shows the request tables). This card is
+ * information only: the "Outpass" slip button was removed, so the card can no
+ * longer open the outpass slip. "Edit and reapply" (rejected requests only)
+ * opens the existing apply form and is not a slip view.
  */
-export default function StudentRequestCard({ request, variant = '', onViewDetails, onEdit }) {
+export default function StudentRequestCard({ request, variant = '', onEdit }) {
 
   return (
     <article className={`history-card ref-card ${variant}`.trim()}>
@@ -89,16 +90,13 @@ export default function StudentRequestCard({ request, variant = '', onViewDetail
         </span>
       </div>
 
-      <div className="history-card__actions ref-card__actions">
-        <button className="secondary-button requests-details-btn" type="button" onClick={() => onViewDetails(request._id)}>
-          Outpass
-        </button>
-        {request.status === 'Rejected' && onEdit ? (
+      {request.status === 'Rejected' && onEdit ? (
+        <div className="history-card__actions ref-card__actions">
           <button className="link-button" type="button" onClick={() => onEdit(request._id)}>
             Edit and reapply
           </button>
-        ) : null}
-      </div>
+        </div>
+      ) : null}
 
       {request.rejectionReason ? <AlertBanner type="error" message={request.rejectionReason} /> : null}
     </article>

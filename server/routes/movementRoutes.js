@@ -1,6 +1,7 @@
 import { Router } from 'express';
 import {
   getStaffLiveMovements,
+  getMyLiveMovements,
   scanGateQr,
   updateMovementReport,
 } from '../controllers/movementController.js';
@@ -17,6 +18,10 @@ router.post('/scan', protect, authorizeRoles('Student'), scanGateQr);
 // visibility is intentionally shared by HOD, Sister, and Warden; no hostel
 // filtering or movement mutation is added here.
 router.get('/staff/live', protect, authorizeRoles('HOD', 'Sister', 'Warden'), getStaffLiveMovements);
+
+// The Student Live Movement page reads only the authenticated student's own
+// movements from the same read-only snapshot query (identity from the JWT).
+router.get('/my/live', protect, authorizeRoles('Student'), getMyLiveMovements);
 router.patch('/:id/report', protect, authorizeRoles('Warden'), updateMovementReport);
 
 export default router;

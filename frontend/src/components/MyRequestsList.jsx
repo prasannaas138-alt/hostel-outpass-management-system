@@ -14,7 +14,6 @@ export default function MyRequestsList(props) {
     statusFilter,
     onStatusFilterChange,
     showSearch = false,
-    onViewDetails,
     onEdit,
   } = props;
 
@@ -59,7 +58,6 @@ export default function MyRequestsList(props) {
               key={request._id}
               request={request}
               variant="requests-card"
-              onViewDetails={onViewDetails}
               onEdit={onEdit}
             />
           ))}

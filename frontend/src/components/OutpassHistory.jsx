@@ -5,6 +5,7 @@ import StudentRequestCard from './StudentRequestCard';
 import StatusBadge from './StatusBadge';
 import Pagination from './Pagination';
 import { formatDate, formatTime12Hour as formatTime } from '../utils/timeFormat';
+import { getDisplayStatus } from '../utils/outpassStatus';
 
 // Outpass History pagination — exactly 30 records per page, newest first.
 // Pages are computed dynamically from the currently filtered list.
@@ -24,7 +25,6 @@ export default function OutpassHistory(props) {
     onTypeFilterChange,
     search,
     onSearchChange,
-    onViewDetails,
   } = props;
 
   const [page, setPage] = useState(1);
@@ -84,7 +84,6 @@ export default function OutpassHistory(props) {
                 key={request._id}
                 request={request}
                 variant="history-compact"
-                onViewDetails={onViewDetails}
               />
             ))}
           </div>
@@ -98,7 +97,7 @@ export default function OutpassHistory(props) {
                   <th scope="col">Time</th>
                   <th scope="col">Reason</th>
                   <th scope="col">Status</th>
-                  <th scope="col">Actions</th>
+                  <th scope="col">Report</th>
                 </tr>
               </thead>
               <tbody>
@@ -109,11 +108,11 @@ export default function OutpassHistory(props) {
                     <td>{formatTime(request.outTime)}-{formatTime(request.returnTime)}</td>
                     <td className="requests-reason-cell">{request.reason}</td>
                     <td><StatusBadge request={request} /></td>
-                    <td>
-                      <div className="table-actions">
-                        <button className="link-button" type="button" onClick={() => onViewDetails(request._id)}>Outpass</button>
-                      </div>
-                    </td>
+                    {/* Information only: Status is the system status, Report is the
+                        Warden verification. There is intentionally NO action column
+                        and no Outpass button — the outpass slip is never opened from
+                        the student history table. */}
+                    <td><span className="status-badge status-report">{request.report || getDisplayStatus(request)}</span></td>
                   </tr>
                 ))}
               </tbody>

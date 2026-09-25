@@ -2,21 +2,16 @@ import { useEffect, useMemo, useState } from 'react';
 import api from '../services/api';
 import StudentLayout from '../components/StudentLayout';
 import OutpassHistory from '../components/OutpassHistory';
-import OutpassDetails from '../components/OutpassDetails';
 import { isExpiredRequest, getDisplayStatus } from '../utils/outpassStatus';
 import { connectMovementSocket, disconnectMovementSocket, subscribeToOutpassUpdates } from '../services/movementSocket';
-import { useAuth } from '../context/AuthContext';
 import '../styles/history-profile.css';
-import '../styles/outpass-details.css';
 
 export default function StudentOutpassHistoryPage() {
-  const { user } = useAuth();
   const [requests, setRequests] = useState([]);
   const [loading, setLoading] = useState(true);
   const [error, setError] = useState('');
   const [historyTypeFilter, setHistoryTypeFilter] = useState('All');
   const [search, setSearch] = useState('');
-  const [detailId, setDetailId] = useState(null);
   const [nowTick, setNowTick] = useState(0);
 
   useEffect(() => {
@@ -81,40 +76,29 @@ export default function StudentOutpassHistoryPage() {
     return counts;
   }, [historyRequests]);
 
-  const detailRequest = requests.find((item) => item._id === detailId) || null;
-
   return (
     <StudentLayout
       title="Outpass History"
       subtitle="Review your expired outpasses and verification details."
     >
-      {detailRequest ? (
-        <OutpassDetails
-          request={detailRequest}
-          user={user}
-          onBack={() => setDetailId(null)}
-        />
-      ) : (
-        <section id="outpass-history" className="panel">
-          <div className="panel-heading">
-            <div>
-              <p className="eyebrow">Outpass history</p>
-              <h2>Expired outpasses</h2>
-            </div>
+      <section id="outpass-history" className="panel">
+        <div className="panel-heading">
+          <div>
+            <p className="eyebrow">Outpass history</p>
+            <h2>Expired outpasses</h2>
           </div>
-          <OutpassHistory
-            requests={visibleHistoryRequests}
-            loading={loading}
-            error={error}
-            counts={historyCounts}
-            typeFilter={historyTypeFilter}
-            onTypeFilterChange={setHistoryTypeFilter}
-            search={search}
-            onSearchChange={setSearch}
-            onViewDetails={setDetailId}
-          />
-        </section>
-      )}
+        </div>
+        <OutpassHistory
+          requests={visibleHistoryRequests}
+          loading={loading}
+          error={error}
+          counts={historyCounts}
+          typeFilter={historyTypeFilter}
+          onTypeFilterChange={setHistoryTypeFilter}
+          search={search}
+          onSearchChange={setSearch}
+        />
+      </section>
     </StudentLayout>
   );
 }

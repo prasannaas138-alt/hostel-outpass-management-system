@@ -545,11 +545,14 @@ const scanFirstExit = async ({ student, gate, gateSnapshot, attempt, now }) => {
 };
 
 
-// GET /api/movements/staff/live
-// Read-only current movement snapshot for the staff dashboards. This queries only
-// Movement documents; it never reads ScanLog or writes any movement state.
-export const getStaffLiveMovements = async () => {
-  const movements = await Movement.find({})
+// GET /api/movements/staff/live  |  GET /api/movements/my/live
+// Read-only current movement snapshot for the live-movement views. This queries
+// only Movement documents; it never reads ScanLog or writes any movement state.
+// `filter` lets the student-scoped endpoint narrow the same snapshot to the
+// authenticated student; callers that need the shared staff visibility pass no
+// filter, so the staff query is unchanged.
+export const getStaffLiveMovements = async (filter = {}) => {
+  const movements = await Movement.find(filter)
     .select(
       '_id outpassId registerNumber studentName hostelName expectedExitAt expectedReturnAt ' +
         'actualExitAt actualReturnAt state lateReturn report reportManuallySet exitGate exitGateCode ' +
