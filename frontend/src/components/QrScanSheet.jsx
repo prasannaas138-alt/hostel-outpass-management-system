@@ -266,25 +266,14 @@ export default function QrScanSheet({ open, onClose, onScanComplete }) {
             />
             {result?.outpassId ? <p className="qrscan-verification-id">{result.outpassId}</p> : null}
             <div className="qrscan-success-ring" aria-hidden="true">
-              <span className="qrscan-success-orbit" />
-              <svg viewBox="0 0 52 52" className="qrscan-success-svg">
-                <circle className="qrscan-success-circle" pathLength="100" cx="26" cy="26" r="24" fill="none" />
-                {isReturn ? (
-                  <path
-                    className="qrscan-verification-icon"
-                    pathLength="100"
-                    fill="none"
-                    d="M35 14h6a3 3 0 0 1 3 3v24a3 3 0 0 1-3 3h-6M8 32h20M22 24l8 8-8 8"
-                  />
-                ) : (
-                  <path
-                    className="qrscan-verification-icon"
-                    pathLength="100"
-                    fill="none"
-                    d="M17 14h-6a3 3 0 0 0-3 3v24a3 3 0 0 0 3 3h6M24 32h20M36 24l8 8-8 8"
-                  />
-                )}
-              </svg>
+              {/* The old SVG stroke icon (door / arrow path drawn across the
+                  circle) and the rotating orbit highlight are gone; the circle
+                  now shows one large state emoji. */}
+              <span
+                className={`qrscan-success-emoji ${isReturn ? 'qrscan-success-emoji--return' : 'qrscan-success-emoji--exit'}`}
+              >
+                {isReturn ? '↪' : '🏃🏻‍➡️'}
+              </span>
             </div>
             <p className="qrscan-success-status">{isReturn ? 'ENTRY' : 'EXIT'}</p>
             <h3 className="qrscan-success-title">{successTitle}</h3>
