@@ -4,6 +4,7 @@ import Outpass from '../models/Outpass.js';
 import ScanLog from '../models/ScanLog.js';
 import { resolveExpectedInstants } from '../utils/ist.js';
 import { hasManualReport, resolveEffectiveReport } from '../utils/movementReport.js';
+import { resolveMovementStatus, resolveMovementStatusKey } from '../utils/movementStatus.js';
 
 // ---------------------------------------------------------------------------
 // Movement scan service - EXIT + RETURN on the same permanent gate QR.
@@ -577,6 +578,11 @@ export const getStaffLiveMovements = async (filter = {}) => {
     actualReturnAt: movement.actualReturnAt,
     state: movement.state,
     lateReturn: movement.lateReturn,
+    // Display-only derived status ('Outside' | 'Returned' | 'Late Returned')
+    // plus its CSS key, so every live-movement table (Student / HOD / Sister /
+    // Warden) shows the same wording without re-implementing the mapping.
+    movementStatus: resolveMovementStatus(movement),
+    movementStatusKey: resolveMovementStatusKey(movement),
     report: resolveEffectiveReport(movement, movement.outpass),
     reportManuallySet: hasManualReport(movement),
     exitGate: movement.exitGate,

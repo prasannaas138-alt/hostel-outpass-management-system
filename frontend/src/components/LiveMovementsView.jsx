@@ -9,6 +9,11 @@ import { todayIST } from '../utils/timeFormat';
 import '../styles/staff-live-movements.css';
 
 const movementKey = (movement) => movement?.movementId || movement?._id;
+
+// The two values a Warden may save manually. The automatic Report can instead
+// resolve to the derived movement status (e.g. 'Late Returned'), which is never
+// a valid manual value, so the editor must never treat it as one.
+const MANUAL_REPORT_VALUES = ['Returned', 'Not Returned'];
 const pad2 = (value) => String(value).padStart(2, '0');
 
 const dateOnlyIST = (value) => {
@@ -31,11 +36,21 @@ const formatDateLabel = (value) => {
   return `${date}/${month}/${year}`;
 };
 
-const statusLabel = (state) => {
-  if (state === 'OUTSIDE') return 'Outside';
-  if (state === 'RETURNED') return 'Returned';
-  return state || '—';
+// The backend resolves the human readable movement status — including the
+// derived 'Late Returned' — and ships it with every snapshot row and realtime
+// event, so the wording and the colour key stay defined in ONE place on the
+// server (server/utils/movementStatus.js). The `state` fallbacks below only
+// cover payloads built before those two fields existed.
+const statusLabel = (movement) => {
+  if (movement?.movementStatus) return movement.movementStatus;
+  if (movement?.state === 'OUTSIDE') return 'Outside';
+  if (movement?.state === 'RETURNED') return 'Returned';
+  return movement?.state || '—';
 };
+
+// 'outside' | 'returned' | 'late-returned' — selects the pill colour
+// (amber / green / red) without duplicating the status mapping here.
+const statusKey = (movement) => movement?.movementStatusKey || String(movement?.state || '').toLowerCase();
 
 const mergeByMovementId = (rows, incoming) => {
   const next = new Map(rows.filter((row) => movementKey(row)).map((row) => [movementKey(row), row]));
@@ -76,8 +91,8 @@ const MovementTable = ({ rows, emptyMessage, canEditReport, onEditReport }) => (
             <td>{formatInstant(movement.expectedReturnAt)}</td>
             <td>{formatInstant(movement.actualReturnAt)}</td>
             <td>
-              <span className={`movement-status movement-status--${String(movement.state || '').toLowerCase()}`}>
-                {statusLabel(movement.state)}
+              <span className={`movement-status movement-status--${statusKey(movement)}`}>
+                {statusLabel(movement)}
               </span>
             </td>
             <td>
@@ -165,12 +180,12 @@ export default function LiveMovementsView({ role = 'Warden' }) {
 
   const openReportEditor = (movement) => {
     setReportMovement(movement);
-    setReportValue(movement.report || '');
+    setReportValue(MANUAL_REPORT_VALUES.includes(movement.report) ? movement.report : '');
     setReportError('');
   };
 
   const saveReport = async () => {
-    if (!reportMovement || !['Returned', 'Not Returned'].includes(reportValue)) return;
+    if (!reportMovement || !MANUAL_REPORT_VALUES.includes(reportValue)) return;
     setReportSaving(true);
     setReportError('');
     try {

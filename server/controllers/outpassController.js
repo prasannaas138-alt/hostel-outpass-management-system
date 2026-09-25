@@ -8,6 +8,7 @@ import { createOutpassPdf } from '../utils/pdf.js';
 import { buildIstInstant, toDateOnlyString, to24HourString } from '../utils/ist.js';
 import { notifyNewOutpass, markOutpassNotificationsRead } from '../services/notificationService.js';
 import { hasManualReport, resolveEffectiveReport } from '../utils/movementReport.js';
+import { resolveMovementStatus, resolveMovementStatusKey } from '../utils/movementStatus.js';
 
 const ACTIVE_STATUSES = ['Pending', 'Approved'];
 
@@ -23,7 +24,7 @@ const emitOutpassUpdated = async (req, outpass) => {
 
   try {
     const movement = await Movement.findOne({ outpass: outpass._id })
-      .select('state report reportManuallySet expectedReturnAt actualExitAt actualReturnAt')
+      .select('state lateReturn report reportManuallySet expectedReturnAt actualExitAt actualReturnAt')
       .lean();
     const payload = {
       outpassObjectId: String(outpass._id),
@@ -37,6 +38,8 @@ const emitOutpassUpdated = async (req, outpass) => {
       report: movement ? resolveEffectiveReport(movement, outpass) : (outpass.status || 'Pending'),
       reportManuallySet: hasManualReport(movement),
       movementState: movement?.state || null,
+      movementStatus: resolveMovementStatus(movement),
+      movementStatusKey: resolveMovementStatusKey(movement),
       actualExitAt: movement?.actualExitAt || null,
       actualReturnAt: movement?.actualReturnAt || null,
     };
@@ -55,7 +58,7 @@ const emitOutpassUpdated = async (req, outpass) => {
 const withMovementInfo = async (outpass) => {
   if (!outpass) return outpass;
   const movement = await Movement.findOne({ outpass: outpass._id })
-    .select('state report reportManuallySet expectedReturnAt actualExitAt actualReturnAt')
+    .select('state lateReturn report reportManuallySet expectedReturnAt actualExitAt actualReturnAt')
     .lean();
   const value = typeof outpass.toObject === 'function' ? outpass.toObject() : outpass;
   return {
@@ -63,6 +66,8 @@ const withMovementInfo = async (outpass) => {
     report: movement ? resolveEffectiveReport(movement, value) : (value.status || 'Pending'),
     reportManuallySet: hasManualReport(movement),
     movementState: movement?.state || null,
+    movementStatus: resolveMovementStatus(movement),
+    movementStatusKey: resolveMovementStatusKey(movement),
     actualExitAt: movement?.actualExitAt || null,
     actualReturnAt: movement?.actualReturnAt || null,
   };

@@ -35,7 +35,9 @@ const indicatorValue = (value) => {
 const buildIndicators = (request, role) => {
   const list = [];
   if (request.requestType === 'Home' && (role === 'sister' || role === 'warden')) {
-    list.push({ label: 'HOD Approval', value: request.hodStatus });
+    // Label wording only ('HOD Requested'): the approval logic, API, status
+    // values and permissions are unchanged.
+    list.push({ label: 'HOD Requested', value: request.hodStatus });
   }
   if (role !== 'hod') {
     // Sister approval is required for BOTH Home and Outing outpasses, so the
@@ -48,7 +50,7 @@ const buildIndicators = (request, role) => {
     list.push({ label: 'Warden Approval', value: request.wardenStatus });
   }
   if (role === 'hod') {
-    list.push({ label: 'HOD Approval', value: request.hodStatus });
+    list.push({ label: 'HOD Requested', value: request.hodStatus });
   }
   if (role === 'sister' && request.requestType === 'Outing') {
     list.push({ label: 'Warden Approval', value: request.wardenStatus });

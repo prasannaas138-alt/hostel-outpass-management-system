@@ -67,7 +67,9 @@ export default function RequestReviewCard({
           {renderDetail('Reason', item.reason)}
           {renderDetail('Report', item.report || '—')}
           <div className='approval-row'>
-            <span>HOD Approval</span>
+            {/* Label wording only: 'HOD Requested'. The approval flow, the
+                hodStatus values and the API are untouched. */}
+            <span>HOD Requested</span>
             {approvalDot(item.hodStatus)}
           </div>
           <div className='approval-row'>

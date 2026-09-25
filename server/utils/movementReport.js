@@ -1,8 +1,21 @@
+// The derived movement status wording lives in ONE module so the automatic
+// Report and the Status column can never drift apart.
+import {
+  MOVEMENT_STATUS_LATE_RETURNED,
+  MOVEMENT_STATUS_RETURNED,
+} from './movementStatus.js';
+
 export const MANUAL_REPORT_VALUES = new Set(['Returned', 'Not Returned']);
 
 const automaticMovementReport = (movement, now = new Date()) => {
   if (!movement) return null;
-  if (movement.state === 'RETURNED') return 'Returned';
+  // The AUTOMATIC Report follows the authoritative movement status, so a late
+  // RETURN reports 'Late Returned' just like the Status column does. A manual
+  // Warden Report still wins in resolveEffectiveReport below and is never
+  // overwritten by this derivation.
+  if (movement.state === 'RETURNED') {
+    return movement.lateReturn === true ? MOVEMENT_STATUS_LATE_RETURNED : MOVEMENT_STATUS_RETURNED;
+  }
   if (movement.state === 'OUTSIDE') {
     return movement.expectedReturnAt && new Date(movement.expectedReturnAt).getTime() <= now.getTime()
       ? 'Overdue'

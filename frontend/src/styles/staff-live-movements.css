@@ -122,6 +122,15 @@
   color: var(--green-700);
 }
 
+/* Late RETURN (actualReturnAt > expectedReturnAt, decided by the server on the
+   RETURN scan) — red so it can never be mistaken for the on-time green
+   'Returned' pill. The label text and this key both come from the backend
+   (server/utils/movementStatus.js). */
+.movement-status--late-returned {
+  background: var(--red-50);
+  color: var(--red-700);
+}
+
 
 .lm-card {
   display: grid;

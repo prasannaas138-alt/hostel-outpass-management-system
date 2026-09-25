@@ -5,6 +5,7 @@ import {
 import Movement from '../models/Movement.js';
 import ScanLog from '../models/ScanLog.js';
 import { hasManualReport, resolveEffectiveReport } from '../utils/movementReport.js';
+import { resolveMovementStatus, resolveMovementStatusKey } from '../utils/movementStatus.js';
 
 // ---------------------------------------------------------------------------
 // Movement scan controller - HTTP glue only.
@@ -85,6 +86,11 @@ const toMovementPayload = (movement, { action = null, eventId = null, occurredAt
   actualExitAt: toDateOrNull(movement.actualExitAt),
   actualReturnAt: toDateOrNull(movement.actualReturnAt),
   lateReturn: movement.lateReturn,
+  // Derived display status ('Outside' | 'Returned' | 'Late Returned') and its
+  // CSS key. They travel with every realtime movement:updated payload, so the
+  // open live-movement tables flip to 'Late Returned' (red) without a refresh.
+  movementStatus: resolveMovementStatus(movement),
+  movementStatusKey: resolveMovementStatusKey(movement),
   report: resolveEffectiveReport(movement, movement.outpass),
   reportManuallySet: hasManualReport(movement),
   exitGate: movement.exitGate?.toString() || null,
@@ -119,6 +125,8 @@ const emitOutpassUpdated = (req, outpass, extra = {}) => {
     report: extra.report ?? (outpass.status || 'Pending'),
     reportManuallySet: extra.reportManuallySet ?? false,
     movementState: extra.movementState || null,
+    movementStatus: extra.movementStatus || null,
+    movementStatusKey: extra.movementStatusKey || null,
     actualExitAt: toDateOrNull(extra.actualExitAt),
     actualReturnAt: toDateOrNull(extra.actualReturnAt),
   };
@@ -161,6 +169,8 @@ const emitSuccessfulMovement = async (req, result) => {
       report: resolveEffectiveReport(movement, movement.outpass),
       reportManuallySet: hasManualReport(movement),
       movementState: movement.state,
+      movementStatus: resolveMovementStatus(movement),
+      movementStatusKey: resolveMovementStatusKey(movement),
       actualExitAt: movement.actualExitAt,
       actualReturnAt: movement.actualReturnAt,
     });
@@ -229,6 +239,8 @@ export const updateMovementReport = async (req, res, next) => {
           report: resolveEffectiveReport(eventMovement, eventMovement.outpass),
           reportManuallySet: true,
           movementState: eventMovement.state,
+          movementStatus: resolveMovementStatus(eventMovement),
+          movementStatusKey: resolveMovementStatusKey(eventMovement),
           actualExitAt: eventMovement.actualExitAt,
           actualReturnAt: eventMovement.actualReturnAt,
         });
