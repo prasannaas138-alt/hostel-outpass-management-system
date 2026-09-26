@@ -55,11 +55,27 @@ const emitOutpassUpdated = async (req, outpass) => {
 // history tables can read registerNumber / roomNumber / phone / parentPhone /
 // parentGuardianName / batch / hostelName directly from the student's LIVE
 // database values (never hardcoded).
-const withMovementInfo = async (outpass) => {
-  if (!outpass) return outpass;
-  const movement = await Movement.findOne({ outpass: outpass._id })
-    .select('state lateReturn report reportManuallySet expectedReturnAt actualExitAt actualReturnAt')
-    .lean();
+//
+// --- Movement enrichment (single + batched) --------------------------------
+// ONE projection string, so the single-row reader and the list reader can never
+// disagree about which Movement fields reach the response.
+const MOVEMENT_INFO_SELECT =
+  'state lateReturn report reportManuallySet expectedReturnAt actualExitAt actualReturnAt';
+
+// The batched reader additionally needs the Movement's own `outpass` reference
+// to map each document back to its row. That projection does NOT exist in the
+// single-row select above, so it is added only here - which also keeps
+// GET /api/outpasses/:id selecting exactly the fields it selected before.
+// The extra key is internal: it is never spread into a response row.
+const MOVEMENT_INFO_SELECT_LIST = `${MOVEMENT_INFO_SELECT} outpass`;
+
+// Applies one Movement document (or null when the outpass has no movement yet)
+// to one outpass row. Pure and synchronous on purpose: the exact same
+// enrichment runs for a single read and for every row of a list, so a list row
+// is byte-for-byte the same as it was when each row was loaded on its own.
+// Without a movement the row keeps its previous values and every movement field
+// stays null / status-derived, exactly as before.
+const applyMovementInfo = (outpass, movement) => {
   const value = typeof outpass.toObject === 'function' ? outpass.toObject() : outpass;
   return {
     ...value,
@@ -73,7 +89,54 @@ const withMovementInfo = async (outpass) => {
   };
 };
 
-const withMovementInfoList = (outpasses) => Promise.all(outpasses.map(withMovementInfo));
+// Single-outpass reader (GET /api/outpasses/:id): unchanged - one outpass, one
+// lookup, same projection and same enrichment as before.
+const withMovementInfo = async (outpass) => {
+  if (!outpass) return outpass;
+  const movement = await Movement.findOne({ outpass: outpass._id })
+    .select(MOVEMENT_INFO_SELECT)
+    .lean();
+  return applyMovementInfo(outpass, movement);
+};
+
+// List reader: ONE batched Movement query for the whole list instead of one
+// query per row (the previous N+1). Rows keep their original order and are
+// enriched through applyMovementInfo above.
+//
+// Matching is done on the STRING form of the outpass reference, never on object
+// identity: every value returned by lean() is a distinct object, so an ObjectId
+// key would never match a row's own _id. The `outpass` field is indexed UNIQUE
+// (server/models/Movement.js), so at most one movement exists per outpass; if a
+// duplicate ever existed anyway, the FIRST document wins, which is what the
+// previous per-row findOne() would have returned.
+//
+// A row without an _id (impossible for a database result) simply gets no
+// movement: the old per-row findOne({ outpass: undefined }) had its undefined
+// stripped by Mongoose and could have matched an arbitrary other document.
+const withMovementInfoList = async (outpasses) => {
+  // Empty list: answer with [] without touching the database (the previous
+  // Promise.all([]) also resolved to [] without a query).
+  if (!outpasses.length) return [];
+
+  const outpassIds = outpasses.map((outpass) => outpass?._id).filter(Boolean);
+  if (!outpassIds.length) {
+    return outpasses.map((outpass) => applyMovementInfo(outpass, null));
+  }
+
+  const movements = await Movement.find({ outpass: { $in: outpassIds } })
+    .select(MOVEMENT_INFO_SELECT_LIST)
+    .lean();
+
+  const movementByOutpass = new Map();
+  for (const movement of movements) {
+    const key = String(movement.outpass);
+    if (!movementByOutpass.has(key)) movementByOutpass.set(key, movement);
+  }
+
+  return outpasses.map((outpass) =>
+    applyMovementInfo(outpass, movementByOutpass.get(String(outpass?._id)) || null)
+  );
+};
 
 const enrichOutpass = (outpass) => {
   const student = outpass.studentId || {};
