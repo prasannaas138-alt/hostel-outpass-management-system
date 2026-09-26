@@ -107,6 +107,13 @@ const pad2 = (value) => String(value).padStart(2, '0');
 // never a raw UTC or browser-local comparison. Without the parameter the
 // response is the full history exactly as before, so existing callers,
 // authorization and role checks are untouched.
+//
+// Since the Phase 1 bounding change above, the same day rule is ALSO applied
+// inside the MongoDB query (buildHistoryFilter). This function therefore stays
+// only as a cheap post-fetch safety re-check over at most HISTORY_MAX_ROWS rows:
+// it keeps the exact previous treatment for any stored shape the query could not
+// classify, and it cannot change the result for the Date values the schema
+// stores (the IST range and this comparison describe the same set of instants).
 const filterBySelectedDate = (outpasses, req) => {
   const selectedDate = String(req.query?.date || '').trim();
   if (!selectedDate) return outpasses;
@@ -115,6 +122,65 @@ const filterBySelectedDate = (outpasses, req) => {
       toDateOnlyString(outpass.date) === selectedDate ||
       toDateOnlyString(outpass.returnDate) === selectedDate
   );
+};
+
+// ---------------------------------------------------------------------------
+// HISTORY QUERY BOUNDING (production readiness - Phase 1)
+//
+// The four history reads below (HOD / Sister / Warden Outpass History and the
+// student's own list) used to load EVERY matching outpass from MongoDB and apply
+// the ?date= filter in JavaScript afterwards, so both the database work and the
+// response grew forever with the outpasses collection. They are now bounded in
+// the query itself:
+//   - a supplied ?date=YYYY-MM-DD becomes a half-open IST day range on the Out
+//     Date OR the Return Date - exactly the rule filterBySelectedDate applies,
+//   - every response is capped at HISTORY_MAX_ROWS rows.
+// The cap is a server constant on purpose: a caller cannot ask for more than
+// this, and no new pagination parameter is introduced - the existing pages keep
+// paginating in the browser over the rows they already receive.
+// ---------------------------------------------------------------------------
+const HISTORY_MAX_ROWS = 1000;
+
+const DAY_MS = 24 * 60 * 60 * 1000;
+
+// "YYYY-MM-DD" -> the instant range of that IST calendar day: [00:00 IST, next
+// day 00:00 IST). Built with the project's existing IST helper
+// (server/utils/ist.js), so the meaning of the day is exactly the one
+// toDateOnlyString() uses - no second timezone implementation. Returns null for
+// anything unusable (missing value, wrong shape, impossible day like 2026-02-31).
+const istDayRange = (value) => {
+  const day = String(value ?? '').trim();
+  const start = buildIstInstant(day, '00:00');
+  if (!start) return null;
+
+  // buildIstInstant() accepts the day syntactically, so a syntactically valid
+  // but IMPOSSIBLE day ("2026-02-31") is rolled over by the engine's lenient
+  // parser to a real one (2026-03-03). Silently querying that other day would
+  // change what ?date= means: the previous comparison was a string equality
+  // against the normalized IST day, which no impossible day could ever match.
+  // The round trip below keeps that exact rule, because toDateOnlyString()
+  // normalizes to the same padded "YYYY-MM-DD" shape it compares against.
+  if (toDateOnlyString(start) !== day) return null;
+
+  return { start, end: new Date(start.getTime() + DAY_MS) };
+};
+
+// Combines an endpoint's own visibility filter with, when the client asked for
+// one, the selected IST day. Returns null when a date was supplied but is not a
+// usable day: the previous post-fetch comparison could never match such a value
+// either, so the caller answers with an empty list instead of querying.
+const buildHistoryFilter = (baseFilter, req) => {
+  const requestedDate = String(req.query?.date || '').trim();
+  if (!requestedDate) return baseFilter;
+
+  const day = istDayRange(requestedDate);
+  if (!day) return null;
+
+  const inDay = { $gte: day.start, $lt: day.end };
+  // Two $or keys cannot live in the same object, so the day is ANDed explicitly.
+  return {
+    $and: [baseFilter, { $or: [{ date: { ...inDay } }, { returnDate: { ...inDay } }] }],
+  };
 };
 
 // to24HourString (24-hour "HH:MM" of any stored time shape, legacy 12-hour
@@ -414,7 +480,17 @@ export const updateOutpass = async (req, res, next) => {
 export const getMyOutpasses = async (req, res, next) => {
   try {
     await refreshExpiredOutpasses();
-    const outpasses = await Outpass.find({ studentId: req.user._id }).sort({ createdAt: -1 }).lean();
+    // Own outpasses only (identity from the JWT), newest first. Bound in the
+    // query: a supplied ?date= now filters in MongoDB and the response can never
+    // exceed HISTORY_MAX_ROWS rows.
+    const filter = buildHistoryFilter({ studentId: req.user._id }, req);
+    if (!filter) return res.json([]);
+
+    const outpasses = await Outpass.find(filter)
+      .sort({ createdAt: -1 })
+      .limit(HISTORY_MAX_ROWS)
+      .lean();
+
     res.json(await withMovementInfoList(outpasses));
   } catch (error) {
     next(error);
@@ -676,13 +752,22 @@ export const downloadOutpassPdf = async (req, res, next) => {
 export const getHodHistory = async (req, res, next) => {
   try {
     await refreshExpiredOutpasses();
-    const outpasses = await Outpass.find({
+    // Bounded in the query: the selected day (when supplied) is part of the
+    // Mongo filter, and the newest HISTORY_MAX_ROWS rows are the hard maximum.
+    const filter = buildHistoryFilter({
       requestType: 'Home',
       $or: [
         { hodStatus: { $in: ['Approved', 'Rejected'] } },
         { status: { $in: ['Approved', 'Rejected', 'Expired'] } },
       ],
-    }).sort({ createdAt: -1 }).populate('studentId', STUDENT_POPULATE).lean();
+    }, req);
+    if (!filter) return res.json([]);
+
+    const outpasses = await Outpass.find(filter)
+      .sort({ createdAt: -1 })
+      .limit(HISTORY_MAX_ROWS)
+      .populate('studentId', STUDENT_POPULATE)
+      .lean();
     const filtered = filterBySelectedDate(outpasses, req);
     res.json(await withMovementInfoList(filtered.map(enrichOutpass)));
   } catch (error) {
@@ -693,12 +778,21 @@ export const getHodHistory = async (req, res, next) => {
 export const getSisterHistory = async (req, res, next) => {
   try {
     await refreshExpiredOutpasses();
-    const outpasses = await Outpass.find({
+    // Bounded in the query: the selected day (when supplied) is part of the
+    // Mongo filter, and the newest HISTORY_MAX_ROWS rows are the hard maximum.
+    const filter = buildHistoryFilter({
       $or: [
         { sisterStatus: { $in: ['Approved', 'Rejected'] } },
         { status: { $in: ['Approved', 'Rejected', 'Expired'] } },
       ],
-    }).sort({ createdAt: -1 }).populate('studentId', STUDENT_POPULATE).lean();
+    }, req);
+    if (!filter) return res.json([]);
+
+    const outpasses = await Outpass.find(filter)
+      .sort({ createdAt: -1 })
+      .limit(HISTORY_MAX_ROWS)
+      .populate('studentId', STUDENT_POPULATE)
+      .lean();
     const filtered = filterBySelectedDate(outpasses, req);
     res.json(await withMovementInfoList(filtered.map(enrichOutpass)));
   } catch (error) {
@@ -711,13 +805,19 @@ export const getWardenHistory = async (req, res, next) => {
     await refreshExpiredOutpasses();
     await rejectExpiredWardenOutpasses();
 
-    const outpasses = await Outpass.find({
+    // Bounded in the query: the selected day (when supplied) is part of the
+    // Mongo filter, and the newest HISTORY_MAX_ROWS rows are the hard maximum.
+    const filter = buildHistoryFilter({
       $or: [
         { wardenStatus: { $in: ['Pending', 'Approved', 'Rejected'] } },
         { status: 'Expired' },
       ],
-    })
+    }, req);
+    if (!filter) return res.json([]);
+
+    const outpasses = await Outpass.find(filter)
       .sort({ createdAt: -1 })
+      .limit(HISTORY_MAX_ROWS)
       .populate('studentId', STUDENT_POPULATE)
       .lean();
 
