@@ -2,7 +2,7 @@ import Gate, { GATE_TOKEN_PREFIX } from '../models/Gate.js';
 import Movement from '../models/Movement.js';
 import Outpass from '../models/Outpass.js';
 import ScanLog from '../models/ScanLog.js';
-import { resolveExpectedInstants } from '../utils/ist.js';
+import { buildIstInstant, resolveExpectedInstants, toDateOnlyString } from '../utils/ist.js';
 import { hasManualReport, resolveEffectiveReport } from '../utils/movementReport.js';
 import { resolveMovementStatus, resolveMovementStatusKey } from '../utils/movementStatus.js';
 
@@ -546,14 +546,71 @@ const scanFirstExit = async ({ student, gate, gateSnapshot, attempt, now }) => {
 };
 
 
+// ---------------------------------------------------------------------------
+// LIVE-MOVEMENT READ BOUNDING (production readiness - Phase 1, Fix #3)
+//
+// GET /api/movements/staff/live used to read EVERY Movement document ever
+// recorded, populate them and sort that whole archive in Node. The staff Live
+// Movement view is an OPERATIONAL "who is out now / recent gate activity" page
+// (the UI defaults to the current IST day and lets staff pick a day), so the
+// staff read is now bounded INSIDE the query:
+//
+//   branch 1  state 'OUTSIDE'                  -> ALWAYS returned, however old
+//             the exit is. A student who never returned must never disappear
+//             from the live view. The scan service refuses a second EXIT while a
+//             movement is open, so this branch is bounded by the student count.
+//   branch 2  state 'RETURNED' + recent return -> recent gate activity. A recent
+//             return implies its exit is recent too (a return always happens
+//             after its exit), so no separate exit-date branch is needed, and
+//             multi-day Home trips stay visible: such a trip is either still
+//             OUTSIDE (branch 1) or has just returned (branch 2).
+//
+// Both branches are served by the EXISTING Movement index
+// { state: 1, actualReturnAt: -1 } (equality on `state`, range on
+// `actualReturnAt`), so NO new index is added. The response is additionally
+// capped. The window is anchored to a whole IST calendar day, so every day
+// inside the window still resolves exactly as before and staff can never see
+// half of a day; older days remain available in Outpass History, which is
+// bounded separately (Phase 1 Fix #1).
+// ---------------------------------------------------------------------------
+export const LIVE_MOVEMENT_WINDOW_DAYS = 7;
+export const LIVE_MOVEMENT_MAX_ROWS = 1000;
+
+const DAY_MS = 24 * 60 * 60 * 1000;
+
+// Start of the window as a real instant: the beginning of the IST calendar day
+// (LIVE_MOVEMENT_WINDOW_DAYS - 1) days before today. Built ONLY from the
+// project's IST helpers (server/utils/ist.js) - no second timezone
+// implementation. Anchoring on the IST day (instead of a rolling now - 7*24h
+// cut) keeps a selected calendar day whole and stable.
+const liveMovementWindowStart = (now = new Date()) => {
+  const todayStartIst = buildIstInstant(toDateOnlyString(now), '00:00');
+  if (!todayStartIst) {
+    // Defensive: an unusable "today" must never disable the bound.
+    return new Date(now.getTime() - LIVE_MOVEMENT_WINDOW_DAYS * DAY_MS);
+  }
+  return new Date(todayStartIst.getTime() - (LIVE_MOVEMENT_WINDOW_DAYS - 1) * DAY_MS);
+};
+
 // GET /api/movements/staff/live  |  GET /api/movements/my/live
-// Read-only current movement snapshot for the live-movement views. This queries
+// Read-only movement snapshot for the live-movement views. This queries
 // only Movement documents; it never reads ScanLog or writes any movement state.
 // `filter` lets the student-scoped endpoint narrow the same snapshot to the
-// authenticated student; callers that need the shared staff visibility pass no
-// filter, so the staff query is unchanged.
-export const getStaffLiveMovements = async (filter = {}) => {
-  const movements = await Movement.find(filter)
+// authenticated student, exactly as before. The staff endpoint instead passes
+// `recentLiveWindow`, which applies the bounded query above and the row cap; the
+// student's own list is untouched (one student's history is inherently small).
+export const getStaffLiveMovements = async (filter = {}, { recentLiveWindow = false } = {}) => {
+  const query = recentLiveWindow
+    ? {
+        ...filter,
+        $or: [
+          { state: 'OUTSIDE' },
+          { state: 'RETURNED', actualReturnAt: { $gte: liveMovementWindowStart() } },
+        ],
+      }
+    : filter;
+
+  const cursor = Movement.find(query)
     .select(
       '_id outpassId registerNumber studentName hostelName expectedExitAt expectedReturnAt ' +
         'actualExitAt actualReturnAt state lateReturn report reportManuallySet exitGate exitGateCode ' +
@@ -561,8 +618,12 @@ export const getStaffLiveMovements = async (filter = {}) => {
     )
     .populate('outpass', 'outpassId studentId status hodStatus sisterStatus wardenStatus rejectionReason requestType phone')
     .populate('student', 'phone')
-    .sort({ state: 1, updatedAt: -1, _id: -1 })
-    .lean();
+    .sort({ state: 1, updatedAt: -1, _id: -1 });
+
+  // Hard server-side maximum, applied by MongoDB - never a JavaScript slice.
+  if (recentLiveWindow) cursor.limit(LIVE_MOVEMENT_MAX_ROWS);
+
+  const movements = await cursor.lean();
 
   return movements.map((movement) => ({
     movementId: movement._id,

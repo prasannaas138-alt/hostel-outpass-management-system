@@ -261,7 +261,9 @@ export const updateMovementReport = async (req, res, next) => {
 
 export const getStaffLiveMovements = async (req, res, next) => {
   try {
-    const movements = await listStaffLiveMovements();
+    // Phase 1 Fix #3: the staff snapshot is bounded inside the MongoDB query
+    // (open movements + a recent IST-day window) and capped server-side.
+    const movements = await listStaffLiveMovements({}, { recentLiveWindow: true });
     res.json({ success: true, movements });
   } catch (error) {
     next(error);
