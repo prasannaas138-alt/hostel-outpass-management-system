@@ -1,0 +1,16 @@
+<?xml version="1.0" encoding="UTF-8"?>
+<!--
+  H.O.M.S. - Hostel Outpass Management System
+
+  Only the PUBLIC entry page is listed. It is the single indexable URL of this
+  single-page application (hash routing means the authenticated screens are
+  fragments of the same document, and they are excluded with a per-screen
+  noindex robots meta tag - see frontend/src/utils/seo.js).
+-->
+<urlset xmlns="http://www.sitemaps.org/schemas/sitemap/0.9">
+  <url>
+    <loc>https://hostel-outpass-management-system.vercel.app/</loc>
+    <changefreq>monthly</changefreq>
+    <priority>1.0</priority>
+  </url>
+</urlset>

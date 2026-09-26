@@ -4,7 +4,65 @@
     <meta charset="UTF-8" />
     <link rel="icon" type="image/png" href="/homs-logo.png" />
     <meta name="viewport" content="width=device-width, initial-scale=1.0" />
-    <title>H.O.M.S</title>
+    <title>H.O.M.S. | Hostel Outpass Management System</title>
+
+    <!-- ===================================================================
+         PUBLIC SEO METADATA
+         Describes the PUBLIC H.O.M.S entry page only. Nothing here exposes an
+         API URL, a token, or any student / staff / outpass / movement data.
+         The authenticated screens live in this same single-page app and are
+         kept out of search results with a per-screen robots meta tag written
+         by src/utils/seo.js (see also src/components/SeoMeta.jsx).
+         =================================================================== -->
+    <meta
+      name="description"
+      content="H.O.M.S. is the Hostel Outpass Management System for hostel students and staff at St. Joseph's University: apply for a hostel outpass, follow approvals and track gate movements."
+    />
+    <meta name="robots" content="index, follow" />
+    <link rel="canonical" href="https://hostel-outpass-management-system.vercel.app/" />
+
+    <!-- Social / sharing preview for the public page. -->
+    <meta property="og:type" content="website" />
+    <meta property="og:site_name" content="H.O.M.S." />
+    <meta property="og:title" content="H.O.M.S. | Hostel Outpass Management System" />
+    <meta
+      property="og:description"
+      content="H.O.M.S. is the Hostel Outpass Management System for hostel students and staff at St. Joseph's University: apply for a hostel outpass, follow approvals and track gate movements."
+    />
+    <meta property="og:url" content="https://hostel-outpass-management-system.vercel.app/" />
+    <meta property="og:image" content="https://hostel-outpass-management-system.vercel.app/homs-logo.png" />
+    <meta
+      property="og:image:alt"
+      content="H.O.M.S. - Hostel Outpass Management System"
+    />
+    <meta property="og:locale" content="en_IN" />
+
+    <!-- Minimal, accurate structured data: what the app IS. No organisation,
+         address, phone, rating, review or award is claimed. -->
+    <script type="application/ld+json">
+      {
+        "@context": "https://schema.org",
+        "@graph": [
+          {
+            "@type": "WebSite",
+            "url": "https://hostel-outpass-management-system.vercel.app/",
+            "name": "H.O.M.S. | Hostel Outpass Management System",
+            "description": "H.O.M.S. is the Hostel Outpass Management System for hostel students and staff at St. Joseph's University: apply for a hostel outpass, follow approvals and track gate movements.",
+            "inLanguage": "en-IN"
+          },
+          {
+            "@type": "WebApplication",
+            "url": "https://hostel-outpass-management-system.vercel.app/",
+            "name": "H.O.M.S.",
+            "alternateName": "Hostel Outpass Management System",
+            "applicationCategory": "BusinessApplication",
+            "operatingSystem": "Any",
+            "inLanguage": "en-IN"
+          }
+        ]
+      }
+    </script>
+
     <!-- PWA: stable start_url/scope so the installed app launches at the
          same origin where the login session is stored. -->
     <link rel="manifest" href="/manifest.webmanifest" />

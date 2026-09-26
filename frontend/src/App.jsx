@@ -11,6 +11,7 @@ import GateAdministrationPage from './pages/GateAdministrationPage';
 import OutpassHistoryPage from './pages/OutpassHistoryPage';
 import LiveMovementPage from './pages/LiveMovementPage';
 import ProtectedRoute from './components/ProtectedRoute';
+import SeoMeta from './components/SeoMeta';
 import { useAuth } from './context/AuthContext';
 
 const roleHome = {
@@ -32,7 +33,11 @@ const HomeRedirect = () => {
 
 export default function App() {
   return (
-    <Routes>
+    <>
+      {/* Indexability only: keeps the public entry page indexable and every
+          authenticated screen noindex. Renders nothing. */}
+      <SeoMeta />
+      <Routes>
       <Route path="/" element={<HomeRedirect />} />
       <Route path="/login" element={<LoginPage />} />
       <Route path="/register" element={<RegisterPage />} />
@@ -165,6 +170,7 @@ export default function App() {
       />
 
       <Route path="*" element={<Navigate to="/" replace />} />
-    </Routes>
+      </Routes>
+    </>
   );
 }

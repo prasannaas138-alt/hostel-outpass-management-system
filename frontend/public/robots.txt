@@ -1,0 +1,14 @@
+# H.O.M.S. - Hostel Outpass Management System
+#
+# Google is welcome to crawl this site: nothing is blocked here.
+#
+# H.O.M.S. is a single-page application, so every screen (public entry page and
+# the authenticated student / HOD / Sister / Warden portals) is served from the
+# same document. The authenticated screens are therefore kept out of the search
+# index with a per-screen robots meta tag (see frontend/src/utils/seo.js) rather
+# than with a Disallow rule here - a Disallow would also stop Google from reading
+# the public entry page.
+User-agent: *
+Allow: /
+
+Sitemap: https://hostel-outpass-management-system.vercel.app/sitemap.xml
